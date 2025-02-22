@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urgency Decision Result</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <div class="container mt-5">
+        <!-- Page Title -->
+        <div class="text-center mb-4">
+            <h2 class="display-5">Urgency Decision Result</h2>
+            <p class="lead">Review the urgency decision based on your input parameters.</p>
+        </div>
+
+        <!-- Selected Parameters -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4>Your Selected Parameters</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Type of Request:</strong> 
+                        <span th:text="${form.requestType == 'ops' ? 'OPS (Ministry of Digital Governance)' : 'Other Public Sector Entity'}"></span>
+                    </li>
+                    <li class="list-group-item"><strong>Has Contract with Contractor:</strong> 
+                        <span th:text="${form.contractWithContractor == 'yes' ? 'Yes' : 'No'}"></span>
+                    </li>
+                    <li class="list-group-item"><strong>Agency Category:</strong> 
+                        <span th:text="${form.agencyCategory}"></span>
+                    </li>
+                    <li class="list-group-item"><strong>Planned Start Date:</strong> 
+                        <span th:text="${form.startDate}"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Urgency Decision -->
+      
+
+        <!-- Recommended Urgency Levels -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Recommended Urgency Levels</h4>
+            </div>
+            <div class="card-body">
+                <h2>Urgency Level Results</h2>
+
+                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                    <div th:each="result, iterStat : ${#sets.toSet(resultsList)}" class="recommendation-box">
+                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                            <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
+                        </h3>
+
+                        <div class="reason-box">
+                            <strong>Why this choice?</strong>
+                            <ul>
+                                <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+                    <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+            <a href="/workflow/infrbroadcat" class="btn btn-primary ml-2">Proceed to Infrastructure Requirements</a>
+            
+        </div>
+
+    </div>
+
+        
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom Styling -->
+    <style>
+        .recommendation-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .recommendation-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .reason-box {
+            background: #eef3f7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+
+</body>
+</html>

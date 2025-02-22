@@ -1,0 +1,16 @@
+resources:
+- name: defaultAzureVM
+  location: local
+  type: Microsoft.Compute/virtualMachines
+- name: defaultSharedResource
+  location: local
+  type: Shared/Resource
+- name: defaultFixedScaling
+  location: local
+  type: Scaling/Fixed
+  properties:
+    capacity: fixed_capacity
+- name: defaultNormalUrgency
+  location: local
+  type: Urgency/Normal
+location: eastus

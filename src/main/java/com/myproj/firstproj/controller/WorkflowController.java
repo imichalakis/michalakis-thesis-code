@@ -1,0 +1,2084 @@
+package com.myproj.firstproj.controller;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.net.MalformedURLException;
+import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import javax.servlet.http.HttpSession;
+import java.nio.file.Files;
+
+import com.myproj.firstproj.model.ParsedResult;
+import com.myproj.firstproj.model.WorkflowForm;
+import com.myproj.firstproj.service.GorgiasService;
+import com.myproj.firstproj.service.WorkflowService;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Collections;
+import io.swagger.client.model.GorgiasQueryResult;
+import io.swagger.client.model.QueryResult;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import javax.servlet.http.HttpSession;
+
+import javax.servlet.http.HttpServletRequest;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.ui.Model;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+
+
+@Controller
+@RequestMapping("/workflow")
+@SessionAttributes("form")
+public class WorkflowController {
+
+    private final WorkflowService workflowService;
+    @Autowired
+    private GorgiasService gorgiasService;
+ 
+
+    private static final Logger log = LoggerFactory.getLogger(WorkflowController.class);
+
+    @Autowired
+    public WorkflowController(WorkflowService workflowService) {
+        this.workflowService = workflowService;
+    }
+  
+//     @GetMapping("/infrtype")
+// public String showInfrastructureTypePage(Model model) {
+//     if (!model.containsAttribute("form")) {
+//         model.addAttribute("form", new WorkflowForm());
+//     }
+//     return "workflow/infrtype"; // Επιστρέφει το infrtype.html στον κατάλογο templates/workflow
+// }
+
+@PostMapping("/reset-status")
+public String resetStatus(HttpServletRequest request, HttpSession session, RedirectAttributes redirectAttributes, Model model) {
+    System.out.println("Resetting session manually...");
+
+    // Fully remove form object from session
+    session.removeAttribute("form");
+
+    // Invalidate session
+    session.invalidate();
+
+    // Create a new session
+    HttpSession newSession = request.getSession(true);
+
+    // Create a new, empty form
+    WorkflowForm newForm = new WorkflowForm();
+    newSession.setAttribute("form", newForm);
+
+    // Reset session attributes to default "Pending" values
+    newSession.setAttribute("urgencyStatus", "⏳ Pending");
+    newSession.setAttribute("infrastructureStatus", "⏳ Pending");
+    newSession.setAttribute("locationStatus", "⏳ Pending");
+    newSession.setAttribute("resourceStatus", "⏳ Pending");
+    newSession.setAttribute("scalabilityStatus", "⏳ Pending");
+
+    // Reset decision-related session attributes
+    newSession.setAttribute("urgencyDecision", null);
+    newSession.setAttribute("infrastructureDecision", "");  // 🔹 FIX: Set to empty string
+    newSession.setAttribute("locationDecision", "");        // 🔹 FIX: Set to empty string
+    newSession.setAttribute("scalabilityAndPerformanceDecision", null);
+    newSession.setAttribute("resourceDecision", null);
+
+    // Ensure model is updated correctly
+    model.addAttribute("urgencyDecision", "Not Provided");
+    model.addAttribute("infrastructureDecision", "Not Provided");
+    model.addAttribute("locationDecision", "Not Provided");
+    model.addAttribute("scalabilityAndPerformanceDecision", "Not Provided");
+    model.addAttribute("resourceDecision", "Not Provided");
+
+    // Debugging logs
+    System.out.println("Session attributes after reset:");
+    Enumeration<String> attributeNames = newSession.getAttributeNames();
+    while (attributeNames.hasMoreElements()) {
+        String name = attributeNames.nextElement();
+        System.out.println(name + " = " + newSession.getAttribute(name));
+    }
+
+    // Flash message to confirm reset
+    redirectAttributes.addFlashAttribute("message", "Statuses and decisions have been reset to pending!");
+
+    return "redirect:/"; // Redirect to home page
+}
+
+
+
+
+
+@GetMapping("/index")
+public String showIndexPage(Model model, SessionStatus sessionStatus){
+    // Ensure the 'form' attribute is present, create a new one if not.
+    if (!model.containsAttribute("form")) {
+        model.addAttribute("form", new WorkflowForm());
+    }
+    // If the form is supposed to be reset, you can reset the session here.
+    // sessionStatus.setComplete(); // Uncomment if you need to reset the session
+
+    return "workflow/index"; // Make sure the 'index.html' exists under 'src/main/resources/templates/workflow'
+}
+
+@GetMapping("/location")
+public String showLocationPage(Model model) {
+    if (!model.containsAttribute("form")) {
+        model.addAttribute("form", new WorkflowForm());
+    }
+    return "workflow/location"; // Επιστρέφει τη σελίδα location.html
+}
+
+
+@GetMapping("/yaml-generated")
+public String showYamlGen(Model model, HttpSession session) {
+    System.out.println("🚀 DEBUG: showYamlGen() triggered. Checking session data...");
+
+    // Retrieve the stored decision from session
+    String yamlDecision = (String) session.getAttribute("finalYamlDecision");
+
+    if (yamlDecision == null) {
+        yamlDecision = "No decision available";
+    }
+
+    System.out.println("✅ YAML Decision Loaded: " + yamlDecision);
+
+    // Add to model for rendering in the HTML
+    
+    model.addAttribute("finalYamlDecision", yamlDecision);
+    return "workflow/yamlgen"; // Επιστρέφει τη σελίδα location.html
+}
+
+@GetMapping("/resource-requirements")
+public String showResourcesPage(Model model) {
+    if (!model.containsAttribute("form")) {
+        model.addAttribute("form", new WorkflowForm());
+    }
+    return "workflow/resource-requirements"; // Επιστρέφει το infrtype.html στον κατάλογο templates/workflow
+}
+
+
+@GetMapping("/scalability-performance")
+public String showScalabilityAndPerformance(Model model) {
+    if (!model.containsAttribute("form")) {
+        model.addAttribute("form", new WorkflowForm());
+    }
+    return "workflow/scalability-performance"; // Επιστρέφει στον κατάλογο templates/workflow
+}
+@GetMapping("/infrtype")
+public String showInfrastructureTypePage(Model model) {
+    if (!model.containsAttribute("form")) {
+        model.addAttribute("form", new WorkflowForm());
+    }
+    return "workflow/infrtype"; // Επιστρέφει το infrtype.html στον κατάλογο templates/workflow
+}
+
+@GetMapping("/infrbroadcat")
+public String showInfrBroadCatPage(Model model) {
+    if (!model.containsAttribute("form")) {
+        model.addAttribute("form", new WorkflowForm());
+    }
+    return "workflow/infrbroadcat"; // Επιστρέφει το infrbroadcat στον κατάλογο templates/workflow
+}
+
+
+
+//     @GetMapping("/combined-decision-result")
+//     public String showCombinedDecisionResult(@ModelAttribute("form") WorkflowForm form, Model model) {
+//        // model.addAttribute("form", new WorkflowForm());
+//            // Εκτέλεση Gorgias Query για την τελική απόφαση
+    
+//     GorgiasQueryResult finalDecisionResult = gorgiasService.executeGorgiasQueryForFinalDecision(form);
+
+//     // Ελέγχουμε αν υπάρχει σφάλμα
+//     if (finalDecisionResult.isHasError()) {
+//         System.out.println("Error in Final Decision: " + finalDecisionResult.getErrorMsg());
+//         model.addAttribute("error", "Error in processing final decision.");
+//     } else if (finalDecisionResult.isHasResult()) {
+//         // Αποθήκευση της τελικής απόφασης και εξήγησης στη φόρμα και το μοντέλο
+//         List<QueryResult> results = finalDecisionResult.getResult();
+//         String finalDecision = results.get(0).getExplanationStr();
+
+//         // Εξαγωγή απόφασης χωρίς παρενθέσεις
+//         int start = finalDecision.indexOf('(') + 1;
+//         int end = finalDecision.indexOf(')');
+//         if (start != 0 && end != -1) {
+//             form.setFinalDecision(finalDecision.substring(start, end));
+//         }
+
+//         model.addAttribute("combinedDecision", form.getFinalDecision());
+//         model.addAttribute("combinedExplanation", results.get(0).getHumanExplanation());
+//     }
+//     String urgencyValue = form.getUrgencyDecision().replace("urgency(", "").replace(")", "");
+//    // String infrastructureValue = form.getInfrastructureDecision().replace("propose_infrastructure(", "").replace(")", "");
+ 
+
+//     // Προσθήκη των intermediate αποφάσεων στο μοντέλο
+//    // System.out.println("sadasdsadsad"+infrastructureValue);
+//     model.addAttribute("infrastructureDecision", form.getInfrastructureDecision());
+//     model.addAttribute("scalabilityAndPerformanceDecision", form.getScalabilityAndPerformanceDecision());
+//     model.addAttribute("urgencyDecision", urgencyValue);
+//     model.addAttribute("scalingDecision", form.getScalingDecision());
+//     model.addAttribute("resourceDecision", form.getResourceDecision());
+//     model.addAttribute("locationDecision", form.getLocationDecision());
+
+//         model.addAttribute("infrastructureDecision", form.getInfrastructureDecision());
+//         model.addAttribute("scalabilityAndPerformanceDecision", form.getScalabilityAndPerformanceDecision());
+
+//         return "workflow/combined-decision-result";
+//     }
+boolean isPending(String status) {
+    return status == null || "⏳ Pending".equals(status);
+}
+    
+@GetMapping("/combined-decision-result")
+public String showCombinedDecisionResult(HttpSession session, Model model) {
+    try {
+        // Retrieve form from session or create a new one if missing
+        WorkflowForm form = (WorkflowForm) session.getAttribute("form");
+        if (form == null) {
+            form = new WorkflowForm(); // Initialize a new form if missing
+            session.setAttribute("form", form);
+        }
+
+        // Retrieve statuses from session
+        String urgencyStatus = (String) session.getAttribute("urgencyStatus");
+        String infrastructureStatus = (String) session.getAttribute("infrastructureStatus");
+        String locationStatus = (String) session.getAttribute("locationStatus");
+        String resourceStatus = (String) session.getAttribute("resourceStatus");
+        String scalabilityStatus = (String) session.getAttribute("scalabilityStatus");
+
+ // Print the collected parameters along with their decisions
+//  System.out.println("Collected Parameters and Decisions:");
+//  System.out.println("----------------------------------------------------");
+//  System.out.println("Primary Goal: " + form.getPrimaryGoal());
+//  System.out.println("Control Requirement: " + form.getControlRequirement());
+//  System.out.println("Data Sensitivity: " + form.isDataSensitivity());
+//  System.out.println("Integration Requirements: " + form.isIntegrationRequirements());
+//  System.out.println("Budget: " + form.getBudget());
+//  System.out.println("Disaster Recovery Needs: " + form.getDisasterRecoveryNeeds());
+//  System.out.println("Latency Requirement: " + form.getLatencyRequirement());
+//  System.out.println("Resource Priority: " + form.getResourcePriority());
+//  System.out.println("Performance Requirement: " + form.getPerformanceRequirement());
+//  System.out.println("Processing Optimization: " + form.getProcessingOptimization());
+//  System.out.println("----------------------------------------------------");
+//  System.out.println("Decisions:");
+//  System.out.println("Urgency Decision: " + form.getUrgencyDecision());
+//  System.out.println("Infrastructure Decision: " + form.getInfrastructureDecision());
+//  System.out.println("Scalability and Performance Decision: " + form.getScalabilityAndPerformanceDecision());
+
+//  System.out.println("Resource Decision: " + form.getResourceDecision());
+//  System.out.println("Location Decision: " + form.getLocationDecision());
+//  System.out.println("----------------------------------------------------");    
+        // Ensure safe retrieval of form attributes, setting "Not Provided" if status is pending
+        model.addAttribute("urgencyDecision", 
+        (!isPending(urgencyStatus) && form.getUrgencyDecision() != null) 
+        ? form.getUrgencyDecision().replace("urgency(", "").replace(")", "") 
+        : null);
+    
+    model.addAttribute("infrastructureDecision", 
+        (!isPending(infrastructureStatus) && form.getInfrastructureDecision() != null) 
+        ? form.getInfrastructureDecision() 
+        : null);
+    
+    model.addAttribute("scalabilityAndPerformanceDecision", 
+        (!isPending(scalabilityStatus) && form.getScalabilityAndPerformanceDecision() != null) 
+        ? form.getScalabilityAndPerformanceDecision() 
+        : null);
+    
+    model.addAttribute("scalingDecision", 
+        (!isPending(scalabilityStatus) && form.getScalingDecision() != null) 
+        ? form.getScalingDecision() 
+        : null);
+    
+    model.addAttribute("resourceDecision", 
+        (!isPending(resourceStatus) && form.getResourceDecision() != null) 
+        ? form.getResourceDecision() 
+        : null);
+    
+    model.addAttribute("locationDecision", 
+        (!isPending(locationStatus) && form.getLocationDecision() != null) 
+        ? form.getLocationDecision() 
+        : null);
+    
+        
+        return "workflow/combined-decision-result";
+
+    } catch (Exception e) {
+        // Log error and return the page safely
+        System.err.println("Unexpected error: " + e.getMessage());
+        model.addAttribute("error", "An unexpected error occurred while processing the decision.");
+        return "workflow/combined-decision-result";
+    }
+}
+
+
+
+
+
+    @GetMapping("/step2")
+    public String showSecondForm(Model model) {
+        if (!model.containsAttribute("form")) {
+            return "redirect:/workflow/index"; // Redirect to start if 'form' is not in the model
+        }
+  
+        return "workflow/step2";
+    }
+
+    @GetMapping("/step3")
+    public String showThirdForm(@ModelAttribute("form") WorkflowForm form, Model model) {
+        if (form == null) {
+            // If 'form' is not present or missing important data, redirect to the index
+            return "redirect:/workflow/index";
+        }
+    
+        // Add the form to the model if it's not already present
+        if (!model.containsAttribute("form")) {
+            model.addAttribute("form", form);
+        }
+    
+        return "workflow/step3";
+    }
+
+
+    @GetMapping("/determineAzureServiceWorkflow/buildNew")
+public String showNewBuild(Model model) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/newBuild"; // the view name should match the template location
+}
+
+   @GetMapping("/determineAzureServiceWorkflow/migrate")
+public String showMigrate(Model model) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/migrate/migrate"; // the view name should match the template location
+}
+@GetMapping("/yaml-result")
+public String showYamlResult(Model model) {
+    // Add attributes and logic needed for the newBuild page
+    return "workflow/yaml-result"; // the view name should match the template location
+}
+
+   @GetMapping("/determineAzureServiceWorkflow/migrate/liftAndShift")
+public String showContainerizedOrNot(Model model) {
+    // Add attributes and logic needed for the newBuild page
+
+    return "determineAzureServiceWorkflow/migrate/liftAndShift/containerizedOrNot/containerizedOrNot"; // the view name should match the template location
+}
+   @GetMapping("/determineAzureServiceWorkflow/migrate/liftAndShift/containerized")
+public String showContainerized(Model model) {
+    // Add attributes and logic needed for the newBuild page
+
+    return "determineAzureServiceWorkflow/migrate/liftAndShift/containerizedOrNot/containerized/containerized"; // the view name should match the template location
+}
+   @GetMapping("/determineAzureServiceWorkflow/migrate/liftAndShift/notContainerized")
+public String showNotContainerized(Model model) {
+    // Add attributes and logic needed for the newBuild page
+
+    return "determineAzureServiceWorkflow/migrate/liftAndShift/containerizedOrNot/notContainerized/notContainerized"; // the view name should match the template location
+}
+
+   @GetMapping("/determineAzureServiceWorkflow/migrate/liftAndShift/notContainerized/cotsapp")
+public String showCotsapp(Model model) {
+    // Add attributes and logic needed for the newBuild page
+
+    return "determineAzureServiceWorkflow/migrate/liftAndShift/containerizedOrNot/notContainerized/cotsappOrNot/cotsapp"; // the view name should match the template location
+}
+
+   @GetMapping("/determineAzureServiceWorkflow/migrate/liftAndShift/notContainerized/notCotsapp")
+public String showNotCotsapp(Model model) {
+    // Add attributes and logic needed for the newBuild page
+
+    return "determineAzureServiceWorkflow/migrate/liftAndShift/containerizedOrNot/notContainerized/cotsappOrNot/notCotsapp"; // the view name should match the template location
+}
+
+
+    @GetMapping("/determineAzureServiceWorkflow/buildNew/fullControl")
+public String showfullControl(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    form.setServiceName("Virtual Machine");
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/fullControl"; // the view name should match the template location
+}
+ @GetMapping("/determineAzureServiceWorkflow/buildNew/notControl")
+public String showNotControl(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/notControl"; // the view name should match the template location
+}
+@GetMapping("/determineAzureServiceWorkflow/buildNew/notControl/HPCWorkload")
+public String showHPCWokrload(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+            // Ρύθμιση του serviceName στο WorkflowForm
+    form.setServiceName("Azure Batch"); // Θέτουμε το serviceName στο "Azure Batch" για αυτήν την περίπτωση
+
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/HPCOrNotWorkload/HPCWorkload"; // the view name should match the template location
+}
+
+
+
+
+@GetMapping("/determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload")
+public String showNotHPCWokrload(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/HPCOrNotWorkload/notHPCWorkload"; // the view name should match the template location
+}
+
+@GetMapping("/determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/SBapps")
+public String showSBapps(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    form.setServiceName("Spring Boot Apps");
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/HPCOrNotWorkload/SBOrNotApps/SBapps"; // the view name should match the template location
+}
+
+
+@GetMapping("/determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/notSBapps")
+public String shownotSBapps(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/HPCOrNotWorkload/SBOrNotApps/notSBapps"; // the view name should match the template location
+}
+
+@GetMapping("/determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/notSBapps/notEventDriven")
+public String showNotEventDriven(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/HPCOrNotWorkload/SBOrNotApps/eventOrNotDrivenWorkload/notEventDrivenWorkload"; // the view name should match the template location
+}
+
+@GetMapping("/determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/notSBapps/eventDriven")
+public String showEventDriven(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    // Add attributes and logic needed for the newBuild page
+    return "determineAzureServiceWorkflow/buildNew/fullOrNotControl/HPCOrNotWorkload/SBOrNotApps/eventOrNotDrivenWorkload/eventDrivenWorkload"; // the view name should match the template location
+}
+
+@PostMapping("/buildNewOrMigration")
+public String buildNewOrMigration(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("newBuild".equals(form.getBuildNewOrMigrate())) {
+        return "redirect:determineAzureServiceWorkflow/buildNew";
+    } else {
+        // Handle other cases
+        return "redirect:determineAzureServiceWorkflow/migrate";
+    }
+}
+
+@PostMapping("/fullOrNotControl")
+public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getFullControl())) {
+        return "redirect:determineAzureServiceWorkflow/buildNew/fullControl";
+    } else {
+        // Handle other cases
+        return"redirect:determineAzureServiceWorkflow/buildNew/notControl";
+    }
+}
+    @PostMapping("/HPCOrNotWorkload")
+    public String HPCOrNotWorkload(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getHPCWorkload())) {
+        return "redirect:determineAzureServiceWorkflow/buildNew/notControl/HPCWorkload";
+    } else {
+        // Handle other cases
+        return"redirect:determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload";
+    }
+}
+
+ @PostMapping("/cloudOrNotOptimised")
+    public String cloudOrNotOptimised(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getCloudOptimised())) {
+        return "redirect:determineAzureServiceWorkflow/buildNew/notControl";
+    } else {
+        // Handle other cases
+        return"redirect:determineAzureServiceWorkflow/migrate/liftAndShift";
+    }
+}
+
+ @PostMapping("/SBOrNotApps")
+    public String SBOrNotApps(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getSBapps())) {
+        return "redirect:determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/SBapps";
+    } else {
+        // Handle other cases
+        return"redirect:determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/notSBapps";
+    }
+}
+
+@PostMapping("/eventDrivenOrNot")
+    public String eventDrivenOrNot(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getEventDriven())) {
+        return "redirect:determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/notSBapps/eventDriven";
+    } else {
+        // Handle other cases
+        return"redirect:determineAzureServiceWorkflow/buildNew/notControl/notHPCWorkload/notSBapps/notEventDriven";
+    }
+}
+
+
+    @PostMapping("/submit-to-gorgias")
+    public String handleFormSubmission(
+            @ModelAttribute("form") WorkflowForm form,
+            RedirectAttributes redirectAttributes) {
+           // System.out.println("Form received with step: " + form.getStep()); // Add this line for debugging
+           // Log the form fields
+           log.info("Form attributes: {}", form);
+
+        workflowService.processFormData(form);
+        // Handle the new form data
+        
+        
+       // String chosenService = workflowService.determineAzureService(form);
+        
+        
+        String nextStep = workflowService.determineNextStep(form);
+
+        redirectAttributes.addFlashAttribute("form", form);
+        if ("complete".equals(nextStep)) {
+            return "redirect:/workflow/complete"; // Redirect to the completion page
+        } else {
+            return "redirect:/workflow/" + nextStep; // Redirect to the next step
+        }
+        // if(nextStep.equals("step3"))
+        // {
+        //     String chosenService = workflowService.determineAzureService(form);
+            
+
+        //     return "redirect:/workflow/determineAzureServiceWorkflow/determineAzureService";
+        // }
+        // else {
+           
+        //     return "redirect:/workflow/" + nextStep;
+        // }
+
+    }
+
+    @GetMapping("/complete")
+    public String showCompletion(@ModelAttribute("form") WorkflowForm form, Model model) {
+        if (form == null) {
+            return "redirect:/workflow/index"; // Redirect to start if 'form' is not in the model
+        }
+        return "workflow/complete";
+    }
+    @PostMapping("/create-yaml")
+    public String createYamlForService(@ModelAttribute("form") WorkflowForm form, RedirectAttributes redirectAttributes) {
+        try {
+            // Κλήση της μεθόδου δημιουργίας YAML με βάση το επιλεγμένο service
+            createAzureYamlFileForService(form.getServiceName());
+    
+            // Προσθήκη μηνύματος επιβεβαίωσης στο RedirectAttributes
+            redirectAttributes.addFlashAttribute("message", "Το YAML αρχείο δημιουργήθηκε επιτυχώς για το service: " + form.getServiceName());
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "Σφάλμα κατά τη δημιουργία του YAML αρχείου: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return "redirect:/workflow/yaml-result";
+    }
+    
+    private void createAzureYamlFileForService(String serviceName) throws IOException {
+        Map<String, Object> yamlData = new HashMap<>();
+        List<Map<String, Object>> resources = new ArrayList<>();
+    
+        if ("Azure Batch".equalsIgnoreCase(serviceName)) {
+            Map<String, Object> batchService = new HashMap<>();
+            batchService.put("type", "Microsoft.Batch/batchAccounts");
+            batchService.put("name", "myAzureBatch");
+            batchService.put("location", "eastus");
+            resources.add(batchService);
+        } else if ("Azure Spring Apps".equalsIgnoreCase(serviceName)) {
+            Map<String, Object> springApp = new HashMap<>();
+            springApp.put("type", "Microsoft.AppPlatform/Spring");
+            springApp.put("name", "mySpringApp");
+            springApp.put("location", "eastus");
+            resources.add(springApp);
+        } else if ("Virtual Machine".equalsIgnoreCase(serviceName)) {
+            Map<String, Object> virtualMachine = new HashMap<>();
+            virtualMachine.put("type", "Microsoft.Compute/virtualMachines");
+            virtualMachine.put("name", "myAzureVM");
+            virtualMachine.put("location", "eastus");
+    
+            Map<String, Object> hardwareProfile = new HashMap<>();
+            hardwareProfile.put("vmSize", "Standard_D2s_v3");  // Μέγεθος της VM
+    
+            Map<String, Object> osDisk = new HashMap<>();
+            osDisk.put("createOption", "FromImage");
+    
+            Map<String, Object> storageProfile = new HashMap<>();
+            storageProfile.put("osDisk", osDisk);
+    
+            Map<String, Object> networkInterface = new HashMap<>();
+            networkInterface.put("id", "[resourceId('Microsoft.Network/networkInterfaces', 'myNic')]");
+    
+            List<Map<String, Object>> networkInterfacesList = new ArrayList<>();
+            networkInterfacesList.add(networkInterface);
+    
+            Map<String, Object> networkProfile = new HashMap<>();
+            networkProfile.put("networkInterfaces", networkInterfacesList);
+    
+            Map<String, Object> vmProperties = new HashMap<>();
+            vmProperties.put("hardwareProfile", hardwareProfile);
+            vmProperties.put("storageProfile", storageProfile);
+            vmProperties.put("networkProfile", networkProfile);
+    
+            virtualMachine.put("properties", vmProperties);
+            resources.add(virtualMachine);
+        }
+        else if ("Spring Boot Apps".equalsIgnoreCase(serviceName)) {
+            Map<String, Object> springBootApp = new HashMap<>();
+            springBootApp.put("type", "Microsoft.AppPlatform/Spring/bootApps");
+            springBootApp.put("name", "mySpringBootApp");
+            springBootApp.put("location", "eastus");
+    
+            Map<String, Object> sku = new HashMap<>();
+            sku.put("name", "B0");
+            sku.put("tier", "Basic");
+    
+            springBootApp.put("sku", sku);
+    
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("public", true);
+    
+            Map<String, Object> configServer = new HashMap<>();
+            configServer.put("uri", "https://config-server.example.com");
+            properties.put("configServer", configServer);
+    
+            springBootApp.put("properties", properties);
+            resources.add(springBootApp);
+        }
+    
+        // Άλλες επιλογές services μπορούν να προστεθούν εδώ
+    
+        yamlData.put("resources", resources);
+    
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        Yaml yaml = new Yaml(options);
+    
+        try (FileWriter writer = new FileWriter("azure_infrastructure.yaml")) {
+            yaml.dump(yamlData, writer);
+            // Αντιγραφή του αρχείου στο φάκελο static για λήψη
+            Files.copy(Paths.get("azure_infrastructure.yaml"), Paths.get("src/main/resources/static/azure_infrastructure.yaml"), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+
+    @PostMapping("/process-urgency")
+    public String processUrgency(@ModelAttribute("form") WorkflowForm form, HttpSession session, Model model) {
+        System.out.println("Executing Gorgias Query for Urgency...");
+    
+        // Store input values in model
+        model.addAttribute("startDate", form.getStartDate());
+        model.addAttribute("agencyCategory", form.getAgencyCategory());
+        model.addAttribute("requestType", form.getRequestType());
+        model.addAttribute("contractWithContractor", form.getContractWithContractor());
+    
+        // Execute Gorgias query
+        List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForUrgency(form);
+    
+        if (parsedResults != null && !parsedResults.isEmpty()) {
+            List<Map<String, Object>> resultsList = new ArrayList<>();
+            Set<String> uniqueUrgencyDecisions = new LinkedHashSet<>(); // To remove duplicates
+    
+            for (ParsedResult result : parsedResults) {
+                Map<String, Object> resultMap = new HashMap<>();
+    
+                // Extract raw result
+                String rawResult = result.getMainResult();
+                System.out.println("Raw Urgency Result: " + rawResult);
+    
+                String extractedUrgency = rawResult.contains("(") && rawResult.contains(")")
+                        ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+                        : rawResult;
+    
+                System.out.println("Extracted Urgency Decision: " + extractedUrgency);
+    
+                // Convert to human-readable text
+                String humanReadableUrgency = gorgiasService.mapMainResultToNaturalLanguage(extractedUrgency, form).trim();
+                if (!humanReadableUrgency.isEmpty()) {
+                    uniqueUrgencyDecisions.add(humanReadableUrgency);
+                }
+    
+                // Convert supporting facts
+                List<String> supportingFacts = result.getSupportingFacts();
+                List<String> naturalLanguageFacts = new ArrayList<>();
+                for (String fact : supportingFacts) {
+                    String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", ""));
+                    naturalLanguageFacts.add(convertedFact);
+                }
+    
+                // Store data
+                resultMap.put("naturalLanguageMainResult", humanReadableUrgency);
+                resultMap.put("convertedFact", naturalLanguageFacts);
+                resultsList.add(resultMap);
+            }
+    
+            // Store final decision
+            String finalUrgencyDecision = String.join("; ", uniqueUrgencyDecisions);
+            form.setUrgencyDecision(finalUrgencyDecision);
+            System.out.println("DEBUG: Urgency Decision = " + finalUrgencyDecision);
+    
+            // ✅ Store in session & update Welcome Page
+            model.addAttribute("urgencyDecision", finalUrgencyDecision);
+            session.setAttribute("urgencyDecision", finalUrgencyDecision);
+    
+            session.setAttribute("urgencyStatus", "✅ Completed"); // ✅ Mark as Completed
+            System.out.println("Session after processing: urgencyStatus=" + 
+                session.getAttribute("urgencyStatus") + 
+                ", urgencyDecision=" + session.getAttribute("urgencyDecision"));
+    
+            // ✅ Add to model
+               System.out.println("Session Attributes Before Rendering Home Page:");
+     Enumeration<String> attributeNames = session.getAttributeNames();
+     while (attributeNames.hasMoreElements()) {
+         String name = attributeNames.nextElement();
+         System.out.println(name + " = " + session.getAttribute(name));
+     }
+            model.addAttribute("resultsList", resultsList);
+            model.addAttribute("urgencyDecision","✅ Completed");
+            model.addAttribute("form", form);
+            System.out.println("Session Attributes Before Rendering Home Page:");
+             attributeNames = session.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String name = attributeNames.nextElement();
+                System.out.println(name + " = " + session.getAttribute(name));
+            }
+        } else {
+            // If no results were found, set status as "No Decision"
+            session.setAttribute("urgencyStatus", "❌ No Decision");
+            model.addAttribute("error", "No results found or an error occurred.");
+        }
+    
+        return "workflow/urgency-result";
+    }
+    
+    
+
+
+
+//     @PostMapping("/process-urgency")
+// public String processUrgency(@ModelAttribute("form") WorkflowForm form, Model model) {
+//     // Εκτέλεση του Gorgias Query για το Urgency
+//     GorgiasQueryResult gorgiasResponseForUrgency = gorgiasService.executeGorgiasQueryForUrgency(form);
+    
+//     if (gorgiasResponseForUrgency != null && gorgiasResponseForUrgency.isHasError()) {
+//         System.out.println(gorgiasResponseForUrgency.getErrorMsg());
+//     } else if (gorgiasResponseForUrgency != null && gorgiasResponseForUrgency.isHasResult()) {
+//         // Ανάλυση και καταγραφή αποτελεσμάτων
+//         List<QueryResult> results = gorgiasResponseForUrgency.getResult();
+//         if (!results.isEmpty()) {
+//             QueryResult result = results.get(0);  // Παίρνουμε το πρώτο αποτέλεσμα για παρουσίαση
+//             String explanation = result.getExplanationStr();
+//             String humanExplanation = result.getHumanExplanation();
+            
+//             // Αποθήκευση αποτελεσμάτων στη φόρμα και στο μοντέλο
+//             explanation = explanation.replaceAll("[\\[\\]()]", "");
+//             form.setUrgencyDecision(result.getVariables().get("X"));
+            
+//            // form.setUrgencyDecision(explanation);
+//             //System.out.println(form.getUrgencyDecision());
+//             model.addAttribute("urgencyExplanation", explanation);
+//             model.addAttribute("urgencyDecision", form.getUrgencyDecision());
+
+            
+//             model.addAttribute("urgencyHumanExplanation", humanExplanation);
+//         }
+//     } else {
+//         System.out.println("No results for urgency query.");
+//         model.addAttribute("urgencyExplanation", "No results available.");
+//         model.addAttribute("urgencyHumanExplanation", "The system could not determine an urgency level based on the input provided.");
+//     }
+    
+//     // Προσθήκη των δεδομένων του query στο μοντέλο για προβολή στην σελίδα `urgency-result`
+//     model.addAttribute("urgencyDecision", form.getUrgencyDecision());
+//     model.addAttribute("gorgiasResponseForUrgency", gorgiasResponseForUrgency);
+    
+//     return "workflow/urgency-result"; // Σελίδα εμφάνισης αποτελεσμάτων
+// }
+
+
+@PostMapping("/process-location")
+public String processLocation(@ModelAttribute("form") WorkflowForm form, Model model,HttpSession session) {
+    System.out.println("Executing Gorgias Query for Location...");
+    
+    // Execute the query
+    List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForLocation(form);
+    
+    if (parsedResults == null || parsedResults.isEmpty()) {
+        System.out.println("Gorgias Query returned no results.");
+        model.addAttribute("error", "No results found or an error occurred.");
+        return "workflow/location-result";
+    }
+
+    System.out.println("Results found: " + parsedResults.size());
+
+    List<Map<String, Object>> resultsList = new ArrayList<>();
+    Set<String> locationDecisions = new LinkedHashSet<>(); // Unique decisions
+
+    for (ParsedResult result : parsedResults) {
+        Map<String, Object> resultMap = new HashMap<>();
+        
+        // Extract and normalize location decision
+        String rawResult = result.getMainResult();
+        System.out.println("Raw Result: " + rawResult);
+        
+        String extractedLocation = rawResult.contains("(") && rawResult.contains(")")
+                ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+                : rawResult;
+        
+        System.out.println("Extracted Location: " + extractedLocation);
+
+        // Convert to human-readable format
+        String humanReadableLocation = gorgiasService.mapMainResultToNaturalLanguage(extractedLocation, form).trim();
+        if (!humanReadableLocation.isEmpty()) {
+            locationDecisions.add(humanReadableLocation);
+        }
+
+        // Process supporting facts (convert to natural language)
+        List<String> supportingFacts = result.getSupportingFacts();
+        List<String> naturalLanguageFacts = new ArrayList<>();
+        for (String fact : supportingFacts) {
+            String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", ""));
+            naturalLanguageFacts.add(convertedFact);
+        }
+
+        // Store processed data
+        resultMap.put("naturalLanguageMainResult", humanReadableLocation);
+        resultMap.put("convertedFact", naturalLanguageFacts);
+        resultsList.add(resultMap);
+    }
+
+    // Store unique location decisions as a **List**
+    form.setLocationDecision(String.join(";", locationDecisions)); 
+    session.setAttribute("locationDecision", form.getLocationDecision());
+    
+            session.setAttribute("locationStatus", "✅ Completed");
+    model.addAttribute("resultsList", resultsList);
+    model.addAttribute("form", form);
+
+    return "workflow/location-result";
+}
+
+
+
+
+
+
+@PostMapping("/process-infrastructure")
+public String processInfrastructure(@ModelAttribute("form") WorkflowForm form, Model model) {
+    // Εκτέλεση του Gorgias Query για το Infrastructure
+    GorgiasQueryResult gorgiasResponseForInfrastructure = gorgiasService.executeGorgiasQueryForInfrastructure(form);
+    
+    // Έλεγχος αν υπάρχει σφάλμα στο αποτέλεσμα
+    if (gorgiasResponseForInfrastructure.isHasError()) {
+        System.out.println(gorgiasResponseForInfrastructure.getErrorMsg());
+    } else {
+        // Αν δεν υπάρχει σφάλμα, ελέγχουμε αν υπάρχουν αποτελέσματα
+        if (gorgiasResponseForInfrastructure.isHasResult()) {
+            List<QueryResult> results = gorgiasResponseForInfrastructure.getResult();
+            for (QueryResult queryResult : results) {
+                // Εκτύπωση αποτελεσμάτων και επεξήγηση
+                System.out.println("ExplanationStr: " + queryResult.getExplanationStr());
+                System.out.println(queryResult.getHumanExplanation());
+                //pairno to apotelesma pou me endiaferei
+                // Εκτύπωση του κειμένου εντός παρενθέσεων
+                //System.out.println(form.getInfrastructureDecision());
+                }
+
+             //   String decision = results.get(0).getExplanationStr();
+                
+                String decision = results.get(0).getVariables().get("X");
+                form.setInfrastructureDecision(decision);
+                System.out.println(decision);
+            //     int start = decision.indexOf('(') + 1; // Βρίσκουμε τη θέση μετά το ανοιχτό παρένθεση
+            //     int end = decision.indexOf(')'); // Βρίσκουμε τη θέση του κλειστού παρένθεση
+        
+            //     if (start != 0 && end != -1) { // Έλεγχος αν υπάρχουν παρενθέσεις
+            //          form.setInfrastructureDecision(decision.substring(start, end));
+            //         //System.out.println(form.getInfrastructureDecision());
+            // }
+        }
+    }
+    boolean suggestScalabilityForm = form.isHighScalability() || form.isHighPerformance();
+    // Προσθήκη του αποτελέσματος στο μοντέλο για προβολή στη σελίδα
+    model.addAttribute("suggestScalabilityForm", suggestScalabilityForm);
+
+    model.addAttribute("gorgiasResponseForInfrastructure", gorgiasResponseForInfrastructure);
+    model.addAttribute("infrastructureDecision", form.getInfrastructureDecision());
+    // Κατεύθυνση στη σελίδα αποτελεσμάτων
+    return "workflow/infrastructure-result-page";
+}
+
+
+@PostMapping("/process-infrastructure2")
+public String processInfrastructure2(@ModelAttribute("form") WorkflowForm form, Model model) {
+    // Εκτέλεση του Gorgias Query για το Infrastructure
+    // GorgiasQueryResult gorgiasResponseForInfrastructure = gorgiasService.executeGorgiasQueryForInfrastructure(form);
+    
+    // // Έλεγχος αν υπάρχει σφάλμα στο αποτέλεσμα
+    // if (gorgiasResponseForInfrastructure.isHasError()) {
+    //     System.out.println(gorgiasResponseForInfrastructure.getErrorMsg());
+    // } else {
+    //     // Αν δεν υπάρχει σφάλμα, ελέγχουμε αν υπάρχουν αποτελέσματα
+    //     if (gorgiasResponseForInfrastructure.isHasResult()) {
+    //         List<QueryResult> results = gorgiasResponseForInfrastructure.getResult();
+    //         for (QueryResult queryResult : results) {
+    //             // Εκτύπωση αποτελεσμάτων και επεξήγηση
+    //             System.out.println("ExplanationStr: " + queryResult.getExplanationStr());
+    //             System.out.println(queryResult.getHumanExplanation());
+    //             //pairno to apotelesma pou me endiaferei
+    //             // Εκτύπωση του κειμένου εντός παρενθέσεων
+    //             //System.out.println(form.getInfrastructureDecision());
+    //             }
+
+    //          //   String decision = results.get(0).getExplanationStr();
+                
+    //             String decision = results.get(0).getVariables().get("X");
+    //             form.setInfrastructureDecision(decision);
+    //             System.out.println(decision);
+    //         //     int start = decision.indexOf('(') + 1; // Βρίσκουμε τη θέση μετά το ανοιχτό παρένθεση
+    //         //     int end = decision.indexOf(')'); // Βρίσκουμε τη θέση του κλειστού παρένθεση
+        
+    //         //     if (start != 0 && end != -1) { // Έλεγχος αν υπάρχουν παρενθέσεις
+    //         //          form.setInfrastructureDecision(decision.substring(start, end));
+    //         //         //System.out.println(form.getInfrastructureDecision());
+    //         // }
+    //     }
+    // }
+    // boolean suggestScalabilityForm = form.isHighScalability() || form.isHighPerformance();
+    // // Προσθήκη του αποτελέσματος στο μοντέλο για προβολή στη σελίδα
+    // model.addAttribute("suggestScalabilityForm", suggestScalabilityForm);
+
+    // model.addAttribute("gorgiasResponseForInfrastructure", gorgiasResponseForInfrastructure);
+    // model.addAttribute("infrastructureDecision", form.getInfrastructureDecision());
+    // // Κατεύθυνση στη σελίδα αποτελεσμάτων
+    return "workflow/infrastructure2-result-page";
+}
+
+
+
+@PostMapping("/process-scalability")
+public String processScalability(@ModelAttribute("form") WorkflowForm form, Model model, HttpSession session) {
+    System.out.println("Executing Gorgias Query for Scalability & Performance...");
+
+    // Store form attributes in the model
+    model.addAttribute("expectedLoad", form.getExpectedLoad());
+    model.addAttribute("peakTimes", form.getPeakTimes());
+    model.addAttribute("responseTime", form.getResponseTime());
+    model.addAttribute("costSensitivity", form.getCostSensitivity());
+
+    // Execute Gorgias query
+    List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForScalability(form);
+
+    if (parsedResults == null || parsedResults.isEmpty()) {
+        System.out.println("Gorgias Query returned no results.");
+        model.addAttribute("error", "No results found or an error occurred.");
+        return "workflow/scalability-result";
+    }
+
+    System.out.println("Results found: " + parsedResults.size());
+
+    List<Map<String, Object>> resultsList = new ArrayList<>();
+    List<String> scalabilityDecisions = new ArrayList<>();
+
+    for (ParsedResult result : parsedResults) {
+        Map<String, Object> resultMap = new HashMap<>();
+        
+        // Extract main result safely
+        String rawResult = result.getMainResult();
+        if (rawResult == null) {
+            System.out.println("Error: Main result is null.");
+            continue;  // Skip processing if null
+        }
+
+        System.out.println("Raw Result: " + rawResult);
+
+        // Extract only X from scalability_decision(X)
+        String extractedDecision = rawResult.contains("(") && rawResult.contains(")")
+                ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+                : rawResult;
+
+        System.out.println("Extracted Scalability Decision: " + extractedDecision);
+
+        // Convert main result into human-readable format
+        String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form);
+
+        // Process supporting facts (convert to natural language)
+        List<String> supportingFacts = result.getSupportingFacts();
+        List<String> naturalLanguageFacts = new ArrayList<>();
+        if (supportingFacts != null) {
+            for (String fact : supportingFacts) {
+                if (fact != null) {
+                    String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", ""));
+                    naturalLanguageFacts.add(convertedFact);
+                }
+            }
+        }
+
+        // Store processed data
+        resultMap.put("naturalLanguageMainResult", humanReadableDecision);
+        resultMap.put("convertedFact", naturalLanguageFacts);
+        resultsList.add(resultMap);
+
+        System.out.println("Converted Facts: " + naturalLanguageFacts);
+
+        // Add extracted scalability decision
+        scalabilityDecisions.add(humanReadableDecision);
+    }
+
+    if (scalabilityDecisions.isEmpty()) {
+        model.addAttribute("error", "No valid decisions found.");
+    } else {
+        form.setScalabilityAndPerformanceDecision(String.join(", ", scalabilityDecisions));
+        form.setScalabilityAndPerformanceDecision(removeDuplicates(form.getScalabilityAndPerformanceDecision()));
+        session.setAttribute("scalabilityAndPerformanceDecision",form.getScalabilityAndPerformanceDecision() );
+    
+            session.setAttribute("scalabilityStatus", "✅ Completed"); 
+        model.addAttribute("resultsList", resultsList);
+    }
+
+    model.addAttribute("form", form);
+    return "workflow/scalability-result";
+}
+
+
+@PostMapping("/process-resource-requirements")
+public String processResourceRequirements(@ModelAttribute("form") WorkflowForm form, Model model, HttpSession session) {
+    System.out.println("Executing Gorgias Query for Resource Requirements...");
+    // Debug: Print received form values
+   
+    // Execute the query
+    List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForResources(form);
+    
+    if (parsedResults == null || parsedResults.isEmpty()) {
+        System.out.println("Gorgias Query returned no results.");
+        model.addAttribute("error", "No results found or an error occurred.");
+        return "workflow/resource-requirements-result";
+    }
+
+    System.out.println("Results found: " + parsedResults.size());
+
+    List<Map<String, Object>> resultsList = new ArrayList<>();
+    List<String> resourceDecisions = new ArrayList<>();
+
+    for (ParsedResult result : parsedResults) {
+        Map<String, Object> resultMap = new HashMap<>();
+        
+        // Extract only X from resource_decision(X)
+        String rawResult = result.getMainResult();
+        System.out.println("Raw Result: " + rawResult);
+        
+        String extractedResource = rawResult.contains("(") && rawResult.contains(")")
+                ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+                : rawResult;
+        
+        System.out.println("Extracted Resource Decision: " + extractedResource);
+
+        // Convert main result into a human-readable format
+        String humanReadableResource = gorgiasService.mapMainResultToNaturalLanguage(extractedResource, form);
+
+        // Process supporting facts (convert to natural language)
+        List<String> supportingFacts = result.getSupportingFacts();
+        List<String> naturalLanguageFacts = new ArrayList<>();
+        for (String fact : supportingFacts) {
+            String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", ""));
+            naturalLanguageFacts.add(convertedFact);
+        }
+
+        // Store processed data
+        resultMap.put("naturalLanguageMainResult", humanReadableResource);
+        resultMap.put("convertedFact", naturalLanguageFacts);
+        resultsList.add(resultMap);
+
+        System.out.println("Converted Facts: " + naturalLanguageFacts);
+
+        // Add extracted resource decision
+        resourceDecisions.add(humanReadableResource);
+    }
+
+    form.setResourceDecision(String.join(", ", resourceDecisions));
+    session.setAttribute("resourceDecision", form.getResourceDecision());
+    
+            session.setAttribute("resourceStatus", "✅ Completed"); 
+    model.addAttribute("resultsList", resultsList);
+    model.addAttribute("form", form);
+
+    return "workflow/resource-requirements-result";
+}
+
+
+
+// @PostMapping("/process-resource-requirements")
+// public String processResourceRequirements(@ModelAttribute("form") WorkflowForm form, Model model) {
+//     // Εκτέλεση του ερωτήματος
+//     Map<String, GorgiasQueryResult> results = gorgiasService.evaluateResourceRequirements(form);
+//    // form.setResourceDecision(results.get("resource").getResult().get(0).getExplanationStr());
+//     //form.setScalingDecision(results.get("scaling").getResult().get(0).getExplanationStr());
+//     String resourceDecision = results.get("resource").getResult().get(0).getExplanationStr();
+//     String scalingDecision = results.get("scaling").getResult().get(0).getExplanationStr();
+//     int start = resourceDecision.indexOf('(') + 1; // Βρίσκουμε τη θέση μετά το ανοιχτό παρένθεση
+//     int end = resourceDecision.indexOf(')'); // Βρίσκουμε τη θέση του κλειστού παρένθεση
+//     int start1 = scalingDecision.indexOf('(') + 1;
+//     int end1 = scalingDecision.indexOf(')'); 
+//     if (start != 0 && end != -1) { // Έλεγχος αν υπάρχουν παρενθέσεις
+//          form.setResourceDecision(resourceDecision.substring(start, end));   
+//     }
+//     if (start1 != 0 && end1 != -1) { // Έλεγχος αν υπάρχουν παρενθέσεις
+//         form.setScalingDecision(scalingDecision.substring(start1, end1));   
+//    }
+
+//     System.out.println(form.getResourceDecision());
+//     System.out.println(form.getScalingDecision());
+//     // Προσθήκη των αποτελεσμάτων στο μοντέλο για εμφάνιση στην προβολή
+//     model.addAttribute("resourceDecision", form.getResourceDecision());
+//     model.addAttribute("scalingDecision", form.getScalingDecision());
+
+
+//     model.addAttribute("gorgiasResponseForResource", results.get("resource"));
+//     model.addAttribute("gorgiasResponseForScaling", results.get("scaling"));
+//    // System.out.println(results.get("resource").getResult().get(0).getExplanationStr());
+
+//     return "workflow/resource-requirements-result";
+// }
+    // @PostMapping("/process-decision")
+    // public String processDecision(@ModelAttribute("form") WorkflowForm form, Model model)
+    // {
+        
+
+       
+        //GorgiasResponse gorgiasResponse = gorgiasService.processDecision(form);
+//          GorgiasQueryResult gorgiasResponseForUrgency = gorgiasService.executeGorgiasQueryForUrgency(form);
+//          if(gorgiasResponseForUrgency.isHasError()) {
+//                 System.out.println(gorgiasResponseForUrgency.getErrorMsg());
+//             }else {
+//                 if(gorgiasResponseForUrgency.isHasResult()) {
+//                     List<QueryResult>results=gorgiasResponseForUrgency.getResult();
+//                     for(QueryResult queryResult:results) {
+                       
+//                         System.out.println("ExplanationStr:"+queryResult.getExplanationStr());
+//                         System.out.println(queryResult.getHumanExplanation());
+                        
+
+
+//                      }
+//                  }
+
+
+//              }
+//          GorgiasQueryResult gorgiasResponseForLocation = gorgiasService.executeGorgiasQueryForLocation(form);
+//          boolean showContinueWithAzure = false;
+//          if(gorgiasResponseForLocation.isHasError()) {
+//             System.out.println(gorgiasResponseForLocation.getErrorMsg());
+//         } else {
+//             if(gorgiasResponseForLocation.isHasResult()) {
+//                 List<QueryResult> results = gorgiasResponseForLocation.getResult();
+//                 if (!results.isEmpty()) {
+//                     QueryResult firstResult = results.get(0);
+//                     if (firstResult.getExplanationStr().toLowerCase().contains("azure")) {
+//                         showContinueWithAzure = true;
+//                     }
+//                     // The loop can still be used for other logic if needed
+//                     for(QueryResult queryResult: results) {
+//                         System.out.println("ExplanationStr:" + queryResult.getExplanationStr());
+//                         System.out.println(queryResult.getHumanExplanation());
+//                     }
+//                 }
+//             }
+//         }
+//        // Add the Urgency response from Gorgias Cloud to the model
+//         model.addAttribute("gorgiasResponseForUrgency", gorgiasResponseForUrgency);
+//        // Add the Location response from Gorgias Cloud to the model
+//         model.addAttribute("gorgiasResponseForLocation", gorgiasResponseForLocation);
+//        // model.addAttribute("gorgiasResponse", gorgiasResponse);
+//       // model.addAttribute("message", "The processDecision method was executed.");
+//         model.addAttribute("showContinueWithAzure", showContinueWithAzure);
+
+
+//          // Δημιουργία αρχείου YAML με τις παραμέτρους της φόρμας
+//    // Δημιουργία Virtual Machine Resource
+// //    if (showContinueWithAzure==true){
+// //    String location = form.getDeploymentLocation();
+// //     Map<String, Object> virtualMachine = new HashMap<>();
+// //     virtualMachine.put("type", "Microsoft.Compute/virtualMachines");
+// //     virtualMachine.put("name", "myAzureVM");
+// //     virtualMachine.put("location", location);
+
+// //     Map<String, Object> hardwareProfile = new HashMap<>();
+    
+// //     Map<String, Object> osDisk = new HashMap<>();
+// //     osDisk.put("createOption", "FromImage");
+// //     Map<String, Object> storageProfile = new HashMap<>();
+// //     storageProfile.put("osDisk", osDisk);
+
+// //     Map<String, Object> networkInterface = new HashMap<>();
+// //     networkInterface.put("id", "[resourceId('Microsoft.Network/networkInterfaces', 'myNic')]");
+// //     List<Map<String, Object>> networkInterfacesList = new ArrayList<>();
+// //     networkInterfacesList.add(networkInterface);
+
+// //     Map<String, Object> networkProfile = new HashMap<>();
+// //     networkProfile.put("networkInterfaces", networkInterfacesList);
+
+// //     Map<String, Object> vmProperties = new HashMap<>();
+// //     vmProperties.put("hardwareProfile", hardwareProfile);
+// //     vmProperties.put("storageProfile", storageProfile);
+// //     vmProperties.put("networkProfile", networkProfile);
+// //     virtualMachine.put("properties", vmProperties);
+
+// //     // Δημιουργία Virtual Network Resource
+// //     Map<String, Object> virtualNetwork = new HashMap<>();
+// //     virtualNetwork.put("type", "Microsoft.Network/virtualNetworks");
+// //     virtualNetwork.put("name", "myVNet");
+// //     virtualNetwork.put("location", location);
+
+// //     Map<String, Object> addressSpace = new HashMap<>();
+// //     List<String> addressPrefixes = new ArrayList<>();
+// //     addressPrefixes.add("10.0.0.0/16");
+// //     addressSpace.put("addressPrefixes", addressPrefixes);
+
+// //     Map<String, Object> subnetProperties = new HashMap<>();
+// //     subnetProperties.put("addressPrefix", "10.0.0.0/24");
+
+// //     Map<String, Object> subnet = new HashMap<>();
+// //     subnet.put("name", "default");
+// //     subnet.put("properties", subnetProperties);
+
+// //     List<Map<String, Object>> subnetsList = new ArrayList<>();
+// //     subnetsList.add(subnet);
+
+// //     Map<String, Object> vnetProperties = new HashMap<>();
+// //     vnetProperties.put("addressSpace", addressSpace);
+// //     vnetProperties.put("subnets", subnetsList);
+// //     virtualNetwork.put("properties", vnetProperties);
+
+// //     // Δημιουργία Storage Account Resource
+// //     Map<String, Object> storageAccount = new HashMap<>();
+// //     storageAccount.put("type", "Microsoft.Storage/storageAccounts");
+// //     storageAccount.put("name", "mystorageaccount");
+// //     storageAccount.put("location", location);
+// //     storageAccount.put("kind", "StorageV2");
+
+// //     Map<String, Object> sku = new HashMap<>();
+// //     sku.put("name", "Standard_LRS");
+// //     storageAccount.put("sku", sku);
+
+// //     // Συνδυασμός όλων των πόρων σε ένα YAML αρχείο
+// //     List<Map<String, Object>> resources = new ArrayList<>();
+// //     resources.add(virtualMachine);
+// //     resources.add(virtualNetwork);
+// //     resources.add(storageAccount);
+    
+// //     Map<String, Object> yamlData = new HashMap<>();
+// //     yamlData.put("resources", resources);
+
+
+
+// //     // Ρυθμίσεις YAML και αποθήκευση σε αρχείο
+// //     DumperOptions options = new DumperOptions();
+// //     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+// //     Yaml yaml = new Yaml(options);
+
+// //     try (FileWriter writer = new FileWriter("myYAMLGENERATION.yaml")) {
+// //         yaml.dump(yamlData, writer);
+// //     } catch (IOException e) {
+// //         e.printStackTrace();
+// //     }
+// // }
+//     // Επιστροφή στη σελίδα αποτελεσμάτων
+//     return "workflow/result-page";
+//     }
+
+@PostMapping("/save-selections")
+@ResponseBody
+public ResponseEntity<?> saveSelections(@RequestBody Map<String, List<String>> selections, HttpSession session) {
+    try {
+        // Retrieve existing WorkflowForm or create a new one
+        WorkflowForm form = (WorkflowForm) session.getAttribute("form");
+        if (form == null) {
+            form = new WorkflowForm();
+            session.setAttribute("form", form);
+        }
+
+        // Save user selections
+        form.setInfrastructureDecision(selections.get("infrastructure") != null ? selections.get("infrastructure").get(0) : null);
+        form.setScalabilityAndPerformanceDecision(selections.get("scalability") != null ? String.join(",", selections.get("scalability")) : null);
+        form.setUrgencyDecision(selections.get("urgency") != null ? selections.get("urgency").get(0) : null);
+        form.setResourceDecision(selections.get("resources") != null ? String.join(",", selections.get("resources")) : null);
+        form.setLocationDecision(selections.get("location") != null ? selections.get("location").get(0) : null);
+     // Normalize and extract meaningful selections
+     form.setInfrastructureDecision(extractKeyword(selections.get("infrastructure") != null ? selections.get("infrastructure").get(0) : null));
+     form.setScalabilityAndPerformanceDecision(extractKeyword(selections.get("scalability") != null ? String.join(",", selections.get("scalability")) : null));
+     form.setUrgencyDecision(extractKeyword(selections.get("urgency") != null ? selections.get("urgency").get(0) : null));
+     form.setResourceDecision(extractKeyword(selections.get("resources") != null ? String.join(",", selections.get("resources")) : null));
+     form.setLocationDecision(extractKeyword(selections.get("location") != null ? selections.get("location").get(0) : null));
+
+        // Store updated form in session
+        session.setAttribute("form", form);
+        System.out.println("----------------------------------------------------");
+        System.out.println("User Selections Received (Normalized):");
+        System.out.println("Infrastructure: " + form.getInfrastructureDecision());
+        System.out.println("Scalability & Performance: " + form.getScalabilityAndPerformanceDecision());
+        System.out.println("Urgency: " + form.getUrgencyDecision());
+        System.out.println("Computing Resources: " + form.getResourceDecision());
+        System.out.println("Location: " + form.getLocationDecision());
+        System.out.println("----------------------------------------------------");
+
+        return ResponseEntity.ok(Collections.singletonMap("message", "Selections saved successfully"));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "An error occurred while saving selections"));
+    }
+}
+
+private String extractKeyword(String input) {
+    if (input == null || input.isEmpty()) {
+        return "unknown";
+    }
+    
+    // Extract text before colon (:) if present
+    String[] parts = input.split(":");
+    String keyword = parts[0].trim().toLowerCase().replace(" ", "_"); 
+
+    return keyword;
+}
+
+    
+    @PostMapping("/generate-yaml")
+    public String generateYamlFileBasedOnDecisions(@ModelAttribute("form") WorkflowForm form, RedirectAttributes redirectAttributes, HttpSession session) {
+      
+            
+            // Κλήση της μεθόδου δημιουργίας YAML με βάση τις αποφάσεις από το form
+        //    createYamlFileBasedOnDecisions(form);
+            // Call mapping method to ensure ForFinal variables are set
+            
+
+            System.out.println("=== Collected Parameters and Decisions ===");
+          
+            System.out.println("Decisions:");
+            System.out.println("Urgency Decision: " + getUrgencyShort(form.getUrgencyDecision()));  // ✅ Raw value
+            System.out.println("Infrastructure Decision: " + getFirstValue(form.getInfrastructureDecision()));  // ✅ Raw value
+            System.out.println("Scalability and Performance Decision: " +getScalabilityShort(form.getScalabilityAndPerformanceDecision()) );  // ✅ Raw value
+             System.out.println("Resource Priority: " + form.getResourcePriority());
+            System.out.println("Disaster Recovery: " +form.getDisasterRecoveryNeeds());
+            System.out.println("Budget: " +form.getBudget());
+            System.out.println("latency: "+form.getLatencyRequirement());
+        //     // Προσθήκη μηνύματος επιβεβαίωσης στο RedirectAttributes
+            form.setUrgencyDecision(getUrgencyShort(form.getUrgencyDecision()));
+            form.setInfrastructureDecision(getFirstValue(form.getInfrastructureDecision()));
+            form.setScalabilityAndPerformanceDecision(getScalabilityShort(form.getScalabilityAndPerformanceDecision()));
+            
+        //      redirectAttributes.addFlashAttribute("yamlMessage", "Το YAML αρχείο δημιουργήθηκε επιτυχώς με βάση τις αποφάσεις.");
+        //  } catch (IOException e) {
+        //      redirectAttributes.addFlashAttribute("yamlError", "Σφάλμα κατά τη δημιουργία του YAML αρχείου: " + e.getMessage());
+        //      e.printStackTrace();
+        //  }
+        //createYamlFileBasedOnDecisions(form);
+
+
+        //Here goes all the process like process-urgency and other similar
+        //to execute gorgias query
+            //function yamlgen(form)
+            System.out.println("Executing Gorgias Query for Urgency...");
+    
+            // Store input values in model
+           
+      
+           // ✅ Call Gorgias Service to execute query (Facts are set inside the method)
+    List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForYamlGen(form);
+
+    if (parsedResults != null && !parsedResults.isEmpty()) {
+        processGorgiasResults(parsedResults, form, session);
+        System.out.println("✅ YAML Generation Decision Completed!");
+    } else {
+        System.out.println("❌ No valid results from Gorgias. Marking decision as 'No Decision'.");
+    }
+
+  
+
+            
+
+
+
+        return "redirect:/workflow/yaml-generated";
+    }
+
+    private void processGorgiasResults(List<ParsedResult> parsedResults, WorkflowForm form, HttpSession session) {
+        List<String> finalDecisions = new ArrayList<>();
+    
+        for (ParsedResult result : parsedResults) {
+            String rawResult = result.getMainResult();
+            System.out.println("Raw Gorgias Result: " + rawResult);
+    
+            // Extract meaningful decision
+            String extractedDecision = rawResult.contains("(") && rawResult.contains(")")
+                    ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+                    : rawResult;
+    
+            // Convert into human-readable text
+            String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form).trim();
+            if (!humanReadableDecision.isEmpty()) {
+                finalDecisions.add(humanReadableDecision);
+            }
+    
+            // Extract supporting facts
+            List<String> supportingFacts = result.getSupportingFacts();
+            List<String> convertedFacts = new ArrayList<>();
+            for (String fact : supportingFacts) {
+                convertedFacts.add(gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", "")));
+            }
+    
+            System.out.println("Converted Facts: " + convertedFacts);
+        }
+    
+        // Store final decision
+        String finalDecisionString = String.join("; ", finalDecisions);
+        form.setYamlGenerationDecision(finalDecisionString);
+        // ✅ Store in session so it can be accessed later
+    session.setAttribute("finalYamlDecision", finalDecisionString);
+
+        System.out.println("Final YAML Decision: " + finalDecisionString);
+         // ✅ Store in session so it can be accessed later
+   
+    }
+    @GetMapping("/download-yaml")
+    public ResponseEntity<Resource> downloadYaml(HttpSession session) {
+        // Get the final YAML decision from session
+        String yamlDecision = (String) session.getAttribute("finalYamlDecision");
+    
+        if (yamlDecision == null || yamlDecision.isEmpty()) {
+            System.out.println("❌ ERROR: No YAML decision found in session.");
+            return ResponseEntity.badRequest().body(null);
+        }
+    
+        // Map decision to YAML file name
+        String yamlFileName = mapYamlDecisionToFile(yamlDecision);
+        System.out.println("🧐 Attempting to load file: " + yamlFileName);
+    
+        // ✅ Use ClassPathResource
+        Resource resource = new ClassPathResource("yaml/" + yamlFileName);
+    
+        try {
+            System.out.println("🔍 Checking resource existence: " + resource.exists());
+            System.out.println("🔍 Resource URL: " + resource.getURL());
+    
+            if (!resource.exists()) {
+                System.out.println("❌ ERROR: YAML file not found -> " + yamlFileName);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+        } catch (IOException e) {
+            System.out.println("❌ ERROR: Could not access file -> " + yamlFileName);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    
+        System.out.println("✅ YAML File Found: " + yamlFileName);
+    
+        // Return the file for download
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + yamlFileName + "\"")
+                .body(resource);
+    }
+    
+    
+    
+    
+    private String mapYamlDecisionToFile(String decision) {
+        switch (decision.toLowerCase()) {
+            case "firstyaml":
+            case "auto scaling compute optimized":  // ✅ Ensure it matches the human-readable output
+                return "firstyaml.yaml";
+            case "secondyaml":
+            case "infrastructure as a service, compute optimized - fixed allocation (iaas)":
+                return "secondyaml.yaml";
+            case "thirdyaml":
+            case "platform as a service standard memory deployment": // ✅ Add this case
+                return "thirdyaml.yaml";
+            default:
+                System.out.println("❌ ERROR: No mapping found for decision '" + decision + "'");
+                return "default.yaml";  // Provide a default file
+        }
+    }
+    
+
+
+    
+
+
+    private static String getUrgencyShort(String urgency) {
+        if (urgency.toLowerCase().contains("urgent")) {
+            return "urgent";
+        } else if (urgency.toLowerCase().contains("high")) {
+            return "high";
+        } else if (urgency.toLowerCase().contains("normal")) {
+            return "normal";
+        }
+        return urgency; // Return as is if no match is found
+    }
+    private static String getFirstValue(String value) {
+        if (value.contains(",")) {
+            return value.split(",")[0].trim(); // Take first value before comma and trim spaces
+        }
+        return value; // Return as is if no comma is found
+    }
+    
+    private static String getScalabilityShort(String scalability) {
+        if (scalability.contains(",")) {
+            scalability = scalability.split(",")[0]; // Take first value before comma
+        }
+        
+        if (scalability.toLowerCase().contains("auto scaling")) {
+            return "auto_scaling";
+        } else if (scalability.toLowerCase().contains("fixed allocation")) {
+            return "fixed_allocation";
+        }
+        return scalability; // Return as is if no match is found
+    }
+    
+    public static void createYamlFileBasedOnDecisions(WorkflowForm form) throws IOException {
+        Map<String, Object> yamlData = new HashMap<>();
+        List<Map<String, Object>> resources = new ArrayList<>();
+
+        // Extracting first choices from multi-option inputs
+        String location = extractFirstChoice(form.getLocationDecision());
+        String infrastructure = extractFirstChoice(form.getInfrastructureDecision());
+        String resourceDecision = extractFirstChoice(form.getResourceDecision());
+        String scalability = extractFirstChoice(form.getScalabilityAndPerformanceDecision());
+        String urgency = extractFirstChoice(form.getUrgencyDecision());
+
+        // Assigning Location Decision
+        yamlData.put("location", location.equalsIgnoreCase("azure") ? "eastus" : "local");
+
+        // Adding Infrastructure
+        resources.add(getInfrastructureResource(infrastructure, location));
+
+        // Adding Resource Allocation
+        resources.add(getResourceConfig(resourceDecision, location));
+
+        // Adding Scalability Decision
+        resources.add(getScalabilityConfig(scalability, location));
+
+        // Adding Urgency
+        resources.add(getUrgencyConfig(urgency, location));
+
+        // Finalizing YAML
+        yamlData.put("resources", resources);
+
+        // YAML Formatting & Writing
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        Yaml yaml = new Yaml(options);
+
+        try (FileWriter writer = new FileWriter("deployment_config.yaml")) {
+            yaml.dump(yamlData, writer);
+            Files.copy(Paths.get("deployment_config.yaml"),
+                       Paths.get("src/main/resources/static/deployment_config.yaml"),
+                       StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+    public static Map<String, Object> getInfrastructureResource(String decision, String location) {
+        Map<String, Object> resource = new HashMap<>();
+        switch (decision.toLowerCase()) {
+            case "paas":
+                resource.put("type", "Microsoft.AppPlatform/Spring");
+                resource.put("name", "SpringAppDeployment");
+                break;
+            case "iaas":
+                resource.put("type", "Microsoft.Compute/virtualMachines");
+                resource.put("name", "VMDeployment");
+                break;
+            case "serverless":
+                resource.put("type", "Microsoft.Web/sites");
+                resource.put("name", "FunctionAppDeployment");
+                break;
+            default:
+                resource.put("type", "Generic/Deployment");
+                resource.put("name", "DefaultDeployment");
+        }
+        resource.put("location", location);
+        return resource;
+    }
+    private static Map<String, Object> getResourceConfig(String decision, String location) {
+        Map<String, Object> resource = new HashMap<>();
+        switch (decision.toLowerCase()) {
+            case "high compute":
+                resource.put("type", "Compute/High");
+                resource.put("name", "HighPerformanceCompute");
+                break;
+            case "memory-optimized":
+                resource.put("type", "Memory/Optimized");
+                resource.put("name", "MemoryOptimizedDeployment");
+                break;
+            case "real-time compute":
+                resource.put("type", "Compute/RealTime");
+                resource.put("name", "LowLatencyDeployment");
+                break;
+            default:
+                resource.put("type", "Compute/General");
+                resource.put("name", "DefaultCompute");
+        }
+        resource.put("location", location);
+        return resource;
+    }
+    private static Map<String, Object> getScalabilityConfig(String decision, String location) {
+        Map<String, Object> resource = new HashMap<>();
+        switch (decision.toLowerCase()) {
+            case "auto scaling":
+                resource.put("type", "Scaling/Auto");
+                resource.put("name", "AutoScalingEnabled");
+              
+                break;
+            case "fixed allocation":
+                resource.put("type", "Scaling/Fixed");
+                resource.put("name", "FixedScaling");
+                break;
+            default:
+                resource.put("type", "Scaling/Default");
+                resource.put("name", "DefaultScaling");
+        }
+        resource.put("location", location);
+        return resource;
+    }
+
+    private static Map<String, Object> getUrgencyConfig(String decision, String location) {
+        Map<String, Object> resource = new HashMap<>();
+        switch (decision.toLowerCase()) {
+            case "high urgency":
+                resource.put("type", "Urgency/High");
+                resource.put("name", "CriticalDeployment");
+                break;
+            case "urgent":
+                resource.put("type", "Urgency/Urgent");
+                resource.put("name", "ImmediateDeployment");
+                break;
+            default:
+                resource.put("type", "Urgency/Normal");
+                resource.put("name", "DefaultDeployment");
+        }
+        resource.put("location", location);
+        return resource;
+    }
+    private static String extractFirstChoice(String rawInput) {
+        if (rawInput != null && rawInput.contains(";")) {
+            return rawInput.split(";")[0].trim().split(":")[0].trim(); // Take first part before ":"
+        }
+        return rawInput != null ? rawInput.trim().split(":")[0].trim() : "default";
+    }
+    
+    
+    // Utility function to remove duplicates before passing to the model
+private String removeDuplicates(String input) {
+    if (input == null || input.isEmpty()) return null; // Handle empty case
+    Set<String> uniqueValues = Arrays.stream(input.split(","))
+            .map(String::trim) // Remove leading/trailing spaces
+            .filter(value -> !value.isEmpty()) // Remove empty values
+            .collect(Collectors.toSet()); // Store unique values
+    return String.join(", ", uniqueValues); // Convert back to a string
+}
+    // private void createYamlFileBasedOnDecisions(WorkflowForm form) throws IOException {
+    //     Map<String, Object> yamlData = new HashMap<>();
+    //     List<Map<String, Object>> resources = new ArrayList<>();
+    //     System.out.println("DECISIONS PRINT");
+    //     System.out.println("LOCATION"+form.getLocationDecision());
+    //     System.out.println("      "+form.getUrgencyDecision());
+    //     System.out.println("      "+form.getScalabilityAndPerformanceDecision());
+    //     System.out.println("      "+form.getResourceDecision());
+    //     System.out.println("      "+form.getInfrastructureDecision());
+    //     String location = form.getLocationDecision().equalsIgnoreCase("azure_cloud") ? "eastus" : "local";
+    
+    //     // 1. Infrastructure Decision
+    //     switch (form.getInfrastructureDecision().toLowerCase()) {
+    //         case "serverless":
+    //             Map<String, Object> functionApp = new HashMap<>();
+    //             functionApp.put("type", "Microsoft.Web/sites");
+    //             functionApp.put("kind", "functionapp");
+    //             functionApp.put("name", "myFunctionApp");
+    //             functionApp.put("location", location);
+    //             resources.add(functionApp);
+    //             break;
+    
+    //         case "iaas":
+    //             Map<String, Object> virtualMachine = new HashMap<>();
+    //             virtualMachine.put("type", "Microsoft.Compute/virtualMachines");
+    //             virtualMachine.put("name", "myAzureVM");
+    //             virtualMachine.put("location", location);
+    
+    //             Map<String, Object> hardwareProfile = new HashMap<>();
+    //             hardwareProfile.put("vmSize", "Standard_D2s_v3");
+    
+    //             Map<String, Object> osDisk = new HashMap<>();
+    //             osDisk.put("createOption", "FromImage");
+    
+    //             Map<String, Object> storageProfile = new HashMap<>();
+    //             storageProfile.put("osDisk", osDisk);
+    
+    //             Map<String, Object> networkInterface = new HashMap<>();
+    //             networkInterface.put("id", "[resourceId('Microsoft.Network/networkInterfaces', 'myNic')]");
+    
+    //             List<Map<String, Object>> networkInterfacesList = new ArrayList<>();
+    //             networkInterfacesList.add(networkInterface);
+    
+    //             Map<String, Object> networkProfile = new HashMap<>();
+    //             networkProfile.put("networkInterfaces", networkInterfacesList);
+    
+    //             Map<String, Object> vmProperties = new HashMap<>();
+    //             vmProperties.put("hardwareProfile", hardwareProfile);
+    //             vmProperties.put("storageProfile", storageProfile);
+    //             vmProperties.put("networkProfile", networkProfile);
+    
+    //             virtualMachine.put("properties", vmProperties);
+    //             resources.add(virtualMachine);
+    //             break;
+    
+    //         case "paas":
+    //             Map<String, Object> paasService = new HashMap<>();
+    //             paasService.put("type", "Microsoft.AppPlatform/Spring");
+    //             paasService.put("name", "mySpringApp");
+    //             paasService.put("location", location);
+    //             resources.add(paasService);
+    //             break;
+    
+    //         case "saas":
+    //             Map<String, Object> saasService = new HashMap<>();
+    //             saasService.put("type", "Microsoft.SaaS/application");
+    //             saasService.put("name", "mySaaSApp");
+    //             saasService.put("location", location);
+    //             resources.add(saasService);
+    //             break;
+    
+    //         default:
+    //             System.out.println("Unknown infrastructure decision, using default: IaaS");
+    //             virtualMachine = new HashMap<>();
+    //             virtualMachine.put("type", "Microsoft.Compute/virtualMachines");
+    //             virtualMachine.put("name", "defaultAzureVM");
+    //             virtualMachine.put("location", location);
+    //             resources.add(virtualMachine);
+    //             break;
+    //     }
+    
+    //     // 2. Resource Decision
+    //     switch (form.getResourceDecision().toLowerCase()) {
+    //         case "dedicated":
+    //             Map<String, Object> dedicatedResource = new HashMap<>();
+    //             dedicatedResource.put("type", "Dedicated/Resource");
+    //             dedicatedResource.put("name", "dedicatedResource");
+    //             dedicatedResource.put("location", location);
+    //             resources.add(dedicatedResource);
+    //             break;
+    
+    //         case "shared":
+    //             Map<String, Object> sharedResource = new HashMap<>();
+    //             sharedResource.put("type", "Shared/Resource");
+    //             sharedResource.put("name", "sharedResource");
+    //             sharedResource.put("location", location);
+    //             resources.add(sharedResource);
+    //             break;
+    
+    //         case "public_cloud":
+    //             Map<String, Object> publicCloudResource = new HashMap<>();
+    //             publicCloudResource.put("type", "Public/Cloud");
+    //             publicCloudResource.put("name", "publicCloudResource");
+    //             publicCloudResource.put("location", location);
+    //             resources.add(publicCloudResource);
+    //             break;
+    
+    //         case "memory_optimized":
+    //             Map<String, Object> memoryOptimizedResource = new HashMap<>();
+    //             memoryOptimizedResource.put("type", "Microsoft.Compute/memoryOptimized");
+    //             memoryOptimizedResource.put("name", "memoryOptimizedResource");
+    //             memoryOptimizedResource.put("location", location);
+    //             resources.add(memoryOptimizedResource);
+    //             break;
+    
+    //         case "compute_optimized":
+    //             Map<String, Object> computeOptimizedResource = new HashMap<>();
+    //             computeOptimizedResource.put("type", "Microsoft.Compute/computeOptimized");
+    //             computeOptimizedResource.put("name", "computeOptimizedResource");
+    //             computeOptimizedResource.put("location", location);
+    //             resources.add(computeOptimizedResource);
+    //             break;
+    
+    //         default:
+    //             System.out.println("Unknown resource decision, using default: Shared Resource");
+    //             sharedResource = new HashMap<>();
+    //             sharedResource.put("type", "Shared/Resource");
+    //             sharedResource.put("name", "defaultSharedResource");
+    //             sharedResource.put("location", location);
+    //             resources.add(sharedResource);
+    //             break;
+    //     }
+    
+    //     // 3. Scaling Decision
+    //     switch (form.getScalabilityAndPerformanceDecision().toLowerCase()) {
+    //         case "auto_scaling":
+    //             Map<String, Object> autoScalingSettings = new HashMap<>();
+    //             autoScalingSettings.put("type", "Microsoft.Insights/autoscaleSettings");
+    //             autoScalingSettings.put("name", "autoScalingSettings");
+    //             autoScalingSettings.put("location", location);
+    
+    //             Map<String, Object> profile = new HashMap<>();
+    //             profile.put("name", "AutoScaleProfile");
+    
+    //             Map<String, String> capacity = new HashMap<>();
+    //             capacity.put("default", "1");
+    //             capacity.put("minimum", "1");
+    //             capacity.put("maximum", "10");
+    
+    //             profile.put("capacity", capacity);
+    
+    //             List<Map<String, Object>> profilesList = new ArrayList<>();
+    //             profilesList.add(profile);
+    
+    //             Map<String, Object> properties = new HashMap<>();
+    //             properties.put("profiles", profilesList);
+    
+    //             autoScalingSettings.put("properties", properties);
+    //             resources.add(autoScalingSettings);
+    //             break;
+    
+    //         case "fixed_resources":
+    //             Map<String, Object> fixedScalingSettings = new HashMap<>();
+    //             fixedScalingSettings.put("type", "Scaling/Fixed");
+    //             fixedScalingSettings.put("name", "fixedScalingSettings");
+    //             fixedScalingSettings.put("location", location);
+    //             properties = new HashMap<>();
+    //             properties.put("capacity", "fixed_capacity");
+    //             fixedScalingSettings.put("properties", properties);
+    
+    //             resources.add(fixedScalingSettings);
+    //             break;
+    
+    //         default:
+    //             System.out.println("Unknown scaling decision, using default: Fixed Scaling");
+    //             fixedScalingSettings = new HashMap<>();
+    //             fixedScalingSettings.put("type", "Scaling/Fixed");
+    //             fixedScalingSettings.put("name", "defaultFixedScaling");
+    //             fixedScalingSettings.put("location", location);
+    //             properties = new HashMap<>();
+    //             properties.put("capacity", "fixed_capacity");
+    //             fixedScalingSettings.put("properties", properties);
+    //             resources.add(fixedScalingSettings);
+    //             break;
+    //     }
+    
+    //     // 4. Urgency Decision
+    //    // System.out.println(form.getUrgencyDecision());
+    //     switch (form.getUrgencyDecision().toLowerCase().trim()) {
+    //         case "high":
+    //             Map<String, Object> highUrgencyResource = new HashMap<>();
+    //             highUrgencyResource.put("type", "Urgency/High");
+    //             highUrgencyResource.put("name", "highUrgencyRequirement");
+    //             highUrgencyResource.put("location", location);
+    //             resources.add(highUrgencyResource);
+    //             break;
+    
+    //         case "normal":
+    //             Map<String, Object> normalUrgencyResource = new HashMap<>();
+    //             normalUrgencyResource.put("type", "Urgency/Normal");
+    //             normalUrgencyResource.put("name", "normalUrgencyRequirement");
+    //             normalUrgencyResource.put("location", location);
+    //             resources.add(normalUrgencyResource);
+    //             break;
+    
+    //         case "urgent":
+    //             Map<String, Object> urgentUrgencyResource = new HashMap<>();
+    //             urgentUrgencyResource.put("type", "Urgency/Urgent");
+    //             urgentUrgencyResource.put("name", "UrgentUrgencyRequirement");
+    //             urgentUrgencyResource.put("location", location);
+    //             resources.add(urgentUrgencyResource);
+    //             break;
+    
+    //         default:
+                
+    //             System.out.println("Unknown urgency decision, using default: Normal Urgency");
+    //             normalUrgencyResource = new HashMap<>();
+    //             normalUrgencyResource.put("type", "Urgency/Normal");
+    //             normalUrgencyResource.put("name", "defaultNormalUrgency");
+    //             normalUrgencyResource.put("location", location);
+    //             resources.add(normalUrgencyResource);
+                
+    //             break;
+                
+    //     }
+    //     switch (form.getLocationDecision().toLowerCase().trim()) {
+    //         case "onPremise":
+    //             yamlData.put("location", "local");
+    //             break;
+        
+    //         case "azure":
+    //             yamlData.put("location", "eastus");
+    //             break;
+        
+    //         default:
+    //             System.out.println("Unknown location decision, using default: azure");
+    //             yamlData.put("location", "eastus");
+    //             break;
+    //     }
+        
+    
+    //     // Προσθήκη των resources στο yamlData
+    //     yamlData.put("resources", resources);
+    
+    //     // Ρυθμίσεις YAML και αποθήκευση σε αρχείο
+    //     DumperOptions options = new DumperOptions();
+    //     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+    //     Yaml yaml = new Yaml(options);
+    
+    //     try (FileWriter writer = new FileWriter("azure_infrastructure.yaml")) {
+    //         yaml.dump(yamlData, writer);
+    //         // Αντιγραφή του αρχείου στο φάκελο static για λήψη
+    //         Files.copy(Paths.get("azure_infrastructure.yaml"), Paths.get("src/main/resources/static/azure_infrastructure.yaml"), StandardCopyOption.REPLACE_EXISTING);
+    //     }
+    // }
+    
+    
+    
+    
+
+@PostMapping("/containerizedOrNot")
+public String containerizedOrNot(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+
+         
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getContainerized())) {
+        return "redirect:determineAzureServiceWorkflow/migrate/liftAndShift/containerized";
+    } else {
+        // Handle other cases
+        return "redirect:determineAzureServiceWorkflow/migrate/liftAndShift/notContainerized";
+    }
+}
+
+@PostMapping("/cotsappOrNot")
+public String cotsappOrNot(@ModelAttribute("form") WorkflowForm form,
+        RedirectAttributes redirectAttributes) {
+
+         
+    if (form == null) {
+        return "redirect:/workflow/index";
+    }
+    
+    redirectAttributes.addFlashAttribute("form", form);
+    
+    if ("yes".equals(form.getCotsapp())) {
+         return "redirect:determineAzureServiceWorkflow/migrate/liftAndShift/notContainerized/cotsapp";
+       
+    } else {
+        // Handle other cases
+         return "redirect:determineAzureServiceWorkflow/migrate/liftAndShift/notContainerized/notCotsapp";
+        
+    }
+
+    
+}
+
+    //dokimastiko
+    // ...
+
+// @PostMapping("/process-decision")
+// public String processDecision(@ModelAttribute("form") WorkflowForm form, Model model) {
+//     // Assuming you have a method in GorgiasService to process the form asynchronously
+//     CompletableFuture<GorgiasQueryResult> gorgiasResponseFuture = gorgiasService.executeGorgiasQueryAsync(form);
+
+//     // Handle the completion of the CompletableFuture
+//     gorgiasResponseFuture.whenComplete((gorgiasResponse, exception) -> {
+//         if (exception != null) {
+//             // Handle the exception
+//             exception.printStackTrace();
+//         } else {
+//             // Handle the response from Gorgias Cloud
+//             if (gorgiasResponse != null && gorgiasResponse.isHasError()) {
+//                 System.out.println(gorgiasResponse.getErrorMsg());
+//             } else {
+//                 if (gorgiasResponse != null && gorgiasResponse.isHasResult()) {
+//                     List<QueryResult> results = gorgiasResponse.getResult();
+//                     for (QueryResult queryResult : results) {
+//                         System.out.println("ExplanationStr:" + queryResult.getExplanationStr());
+//                         System.out.println(queryResult.getHumanExplanation());
+//                     }
+//                 }
+//             }
+//         }
+//     });
+
+//     // Continue with other processing or redirect logic
+//     // ...
+
+//     // Redirect to a result page or return the same page with the result
+//     return "workflow/result-page"; // Replace with your actual result page
+// }
+
+}

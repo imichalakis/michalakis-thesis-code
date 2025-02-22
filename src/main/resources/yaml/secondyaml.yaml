@@ -1,0 +1,23 @@
+$schema: "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
+contentVersion: "1.0.0.0"
+resources:
+  - type: "Microsoft.Compute/virtualMachines"
+    apiVersion: "2023-07-01"
+    name: "fixed-highcompute-vm"
+    location: "eastus"
+    properties:
+      hardwareProfile:
+        vmSize: "Standard_D16s_v3"
+      osProfile:
+        computerName: "fixed-compute-vm"
+        adminUsername: "adminuser"
+        adminPassword: "YourSecurePassword123!"
+      storageProfile:
+        imageReference:
+          publisher: "Canonical"
+          offer: "UbuntuServer"
+          sku: "18.04-LTS"
+          version: "latest"
+      networkProfile:
+        networkInterfaces:
+          - id: "[resourceId('Microsoft.Network/networkInterfaces', 'HighComputeNIC')]"

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Parameters - Completion</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+</head>
+<body class="bg-light">
+   
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white text-center">
+                        <h4>Submission Complete</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="lead" th:if="${form != null}">Your project parameters are ready to be processed.</p>
+                        <div th:if="${form != null}">
+                            <!-- Display submitted parameters -->
+                            <strong>Urgency:</strong> <span th:text="${form.urgency}">Urgency</span><br>
+                            <strong>Agency Category:</strong> <span th:text="${form.agencyCategory}">Agency Category</span><br>
+                            <strong>Start Date:</strong> <span th:text="${form.startDate}">Start Date</span><br>
+                            <strong>Συνδεσιμότητα με ΑΑΔΕ:</strong> <span th:text="${form.connectivity}">Connectivity</span><br>
+                            <strong>Είδος Δεδομένων:</strong> <span th:text="${form.dataType}">Data Type</span><br>
+                            <strong>Deployment Location:</strong> <span th:text="${form.deploymentLocation}">Deployment Location</span><br>
+                        </div>
+                        <p th:unless="${form != null}">No project parameters found.</p>
+                        <!-- Form to submit data to the backend -->
+                        <form th:action="@{/workflow/process-decision}" th:object="${form}"  method="post">
+                        <!-- <form th:action="@{/process-decision}" th:object="${form}" method="post"> -->
+
+                            <input type="hidden" th:field="*{urgency}">
+                            <input type="hidden" th:field="*{agencyCategory}">
+                            <input type="hidden" th:field="*{startDate}">
+                            <input type="hidden" th:field="*{connectivity}">
+                            <input type="hidden" th:field="*{dataType}">
+                            <input type="hidden" th:field="*{deploymentLocation}">
+                            <button type="submit" class="btn btn-warning">Αποφάσισε</button>
+                        </form>
+                        <a href="/" class="btn btn-primary mt-3">Return to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

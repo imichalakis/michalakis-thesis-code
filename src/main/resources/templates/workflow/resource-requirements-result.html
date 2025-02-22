@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Requirements Result</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+</nav>
+
+<!-- Main Container -->
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h1 class="display-5">Resource Allocation Decision</h1>
+        <p class="lead">Review the selected parameters and the recommended resource configuration.</p>
+    </div>
+
+    <!-- Selected Parameters Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h4>Your Selected Parameters</h4>
+        </div>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <strong>Resource Priority:</strong> 
+                <span th:switch="${form.resourcePriority}">
+                    <span th:case="'compute'">Compute-Intensive (High CPU & RAM for fast processing)</span>
+                    <span th:case="'storage'">Storage-Intensive (Large storage capacity with lower CPU/RAM needs)</span>
+                    <span th:case="*">Unknown</span>
+                </span>
+            </li>
+
+            <li class="list-group-item">
+                <strong>Performance Requirement:</strong> 
+                <span th:switch="${form.performanceRequirement}">
+                    <span th:case="'low_latency'">Low Latency (Fast response time for real-time applications)</span>
+                    <span th:case="'high_throughput'">High Throughput (Batch processing, analytics, high-volume data)</span>
+                    <span th:case="*">Unknown</span>
+                </span>
+            </li>
+
+            <li class="list-group-item">
+                <strong>Scalability Requirement:</strong> 
+                <span th:switch="${form.scalabilityRequirement}">
+                    <span th:case="'auto_scaling'">Auto-Scaling (Dynamically adjusts resources based on demand)</span>
+                    <span th:case="'fixed_allocation'">Fixed Allocation (Predictable workload with static resources)</span>
+                    <span th:case="*">Unknown</span>
+                </span>
+            </li>
+
+            <li class="list-group-item">
+                <strong>Processing Optimization:</strong> 
+                <span th:switch="${form.processingOptimization}">
+                    <span th:case="'memory_optimized'">Memory-Optimized (Large memory for caching & in-memory computing)</span>
+                    <span th:case="'cpu_optimized'">CPU-Optimized (Computational-heavy workloads, AI/ML, real-time tasks)</span>
+                    <span th:case="*">Unknown</span>
+                </span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Recommended Resource Allocation -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h4>Recommended Resource Configuration</h4>
+        </div>
+
+        <style>
+            .recommendation-box {
+                background: #f8f9fa;
+                padding: 15px;
+                border-left: 5px solid #007bff;
+                margin-bottom: 15px;
+                border-radius: 5px;
+            }
+            .recommendation-title {
+                font-size: 20px;
+                font-weight: bold;
+                color: #333;
+            }
+            .reason-box {
+                background: #eef3f7;
+                padding: 10px;
+                border-radius: 5px;
+                margin-top: 10px;
+                font-style: italic;
+            }
+        </style>
+
+        <div class="card-body">
+            <h2>Recommended Resource Allocation</h2>
+            <p>Based on your requirements, here is the optimal resource configuration for your system:</p>
+
+            <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+                    <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                        <span th:text="${result['naturalLanguageMainResult']}"></span>
+                    </h3>
+
+                    <div class="reason-box">
+                        <strong>Why this choice?</strong>
+                        <ul>
+                            <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+                <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+        <a href="/workflow/scalability-performance" class="btn btn-primary ml-2">Proceed to Plan Scalability</a>
+    </div>
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

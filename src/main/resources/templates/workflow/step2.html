@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Define Deployment Location - Step 2</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white text-center">
+                <h4>Define Deployment Location - Step 2</h4>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/workflow/submit-to-gorgias}" th:object="${form}" method="post">
+                    <!-- Data Type -->
+                    <div class="form-group">
+                        <label for="dataType">Data Type:</label>
+                        <select th:field="*{dataType}" class="form-control">
+                            <option value="personal">Personal</option>
+                            <option value="nonpersonal">Non-Personal</option>
+                            <option value="medical">Medical</option>
+                            <option value="tax">Tax</option>
+                            <option value="critical">Critical</option>
+                            <!-- Add other options as needed -->
+                        </select>
+                    </div>
+                    <!-- Connectivity Requirements -->
+                    <div class="form-group">
+                        <input type="checkbox" th:field="*{connectivity}" id="connectivityCheckbox" value="true">
+                        <label for="connectivityCheckbox">Requires A.A.D.E Connection</label>
+                    </div>
+                    <!-- Preferred Deployment Location -->
+                    <div class="form-group">
+                        <label for="deploymentLocation">Preferred Deployment Location:</label>
+                        <select th:field="*{deploymentLocation}" class="form-control">
+                            <option value="azure">Azure (Public Cloud)</option>
+                            <option value="onPremise">On-Premise</option>
+                        </select>
+                    </div>
+                    <!-- Hidden Field for Step -->
+                    <input type="hidden" name="step" th:value="2" />
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-block">Next</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

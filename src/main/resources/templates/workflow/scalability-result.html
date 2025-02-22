@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scalability & Performance Recommendation</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-5">
+        <!-- Page Title -->
+        <div class="text-center mb-4">
+            <h1 class="display-5">Scalability & Performance Decision</h1>
+            <p class="lead">Review the selected parameters and the recommended scalability configurations.</p>
+        </div>
+
+        <!-- Provided Parameters Section -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4>Your Selected Parameters</h4>
+            </div>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <strong>Expected Load:</strong> 
+                    <span th:switch="${expectedLoad}">
+                        <span th:case="'high'">High (Handles a large number of users and heavy workloads)</span>
+                        <span th:case="'medium'">Medium (Requires moderate resource allocation for average usage)</span>
+                        <span th:case="'low'">Low (Handles minimal workloads)</span>
+                        <span th:case="*">Unknown</span>
+                    </span>
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Peak Times:</strong> 
+                    <span th:switch="${peakTimes}">
+                        <span th:case="'rarely'">Rarely (Minimal demand spikes, stable traffic)</span>
+                        <span th:case="'occasionally'">Occasionally (Some demand fluctuations)</span>
+                        <span th:case="'frequently'">Frequently (Regular spikes in demand)</span>
+                        <span th:case="'always'">Always (Consistently high demand, requires constant scalability)</span>
+                        <span th:case="*">Unknown</span>
+                    </span>
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Response Time SLA:</strong> 
+                    <span th:switch="${responseTime}">
+                        <span th:case="'high'">High SLA (Real-time performance required, minimal latency)</span>
+                        <span th:case="'medium'">Medium SLA (Balanced response time, trade-off between speed and cost)</span>
+                        <span th:case="'low'">Low SLA (Latency tolerance, cost-saving priority)</span>
+                        <span th:case="*">Unknown</span>
+                    </span>
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Cost Sensitivity:</strong> 
+                    <span th:switch="${costSensitivity}">
+                        <span th:case="'low'">Low (Cost is not a constraint, premium solutions preferred)</span>
+                        <span th:case="'medium'">Medium (Balanced budget and performance requirements)</span>
+                        <span th:case="'high'">High (Budget is constrained, cost-effective choices necessary)</span>
+                        <span th:case="*">Unknown</span>
+                    </span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Recommendations Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Recommended Scalability Strategies</h4>
+            </div>
+            <div class="card-body">
+                <h2>Scalability & Performance Results</h2>
+
+                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                            <span th:text="${result['naturalLanguageMainResult']}"></span>
+                        </h3>
+
+                        <div class="reason-box">
+                            <strong>Why this choice?</strong>
+                            <ul>
+                                <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+                    <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+            <a href="/workflow/combined-decision-result" class="btn btn-primary ml-2">View all decisions</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom Styling -->
+    <style>
+        .recommendation-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .recommendation-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .reason-box {
+            background: #eef3f7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+
+</body>
+</html>

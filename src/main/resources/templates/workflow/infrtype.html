@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure Type Selection</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-5">
+        <!-- Page Title -->
+        <div class="text-center mb-4">
+            <h2 class="display-5">Infrastructure Type Selection</h2>
+            <p class="lead">Select the parameters that describe your application needs to receive the optimal infrastructure type.</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form th:action="@{/workflow/process-infrastructure}" th:object="${form}" method="post">
+                    
+                    <!-- Scalability Requirements -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Scalability Requirements:</label>
+                        <div class="form-check">
+                            <input type="checkbox" th:field="*{highScalability}" class="form-check-input" id="highScalability">
+                            <label for="highScalability" class="form-check-label">
+                                High Scalability <span class="text-muted">(e.g., >4 instances for dynamic payload)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Performance Requirements -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Performance Requirements:</label>
+                        <div class="form-check">
+                            <input type="checkbox" th:field="*{highPerformance}" class="form-check-input" id="highPerformance">
+                            <label for="highPerformance" class="form-check-label">
+                                High Performance <span class="text-muted">(e.g., CPU-intensive tasks AI-ML, >16gb RAM, SSD storage)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- DevOps Requirements -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">DevOps Requirements:</label>
+                        <div class="form-check">
+                            <input type="checkbox" th:field="*{devopsFriendly}" class="form-check-input" id="devopsFriendly">
+                            <label for="devopsFriendly" class="form-check-label">
+                                DevOps Friendly <span class="text-muted">(e.g., CI/CD pipeline, monitoring)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Data Sensitivity -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Data Sensitivity:</label>
+                        <div class="form-check">
+                            <input type="checkbox" th:field="*{dataSensitivity}" class="form-check-input" id="dataSensitivity">
+                            <label for="dataSensitivity" class="form-check-label">
+                                Sensitive Data <span class="text-muted">(e.g., GDPR compliance)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Budget -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Budget:</label>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{highBudget}" value="false" class="form-check-input" id="lowBudget">
+                            <label for="lowBudget" class="form-check-label">
+                                Low Budget <span class="text-muted">(e.g., shared resources)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{highBudget}" value="true" class="form-check-input" id="highBudget">
+                            <label for="highBudget" class="form-check-label">
+                                High Budget <span class="text-muted">(e.g., dedicated resources)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Application Complexity -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Application Complexity:</label>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{complexApp}" value="false" class="form-check-input" id="simpleApp">
+                            <label for="simpleApp" class="form-check-label">
+                                Simple Application <span class="text-muted">(e.g., monolithic design)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{complexApp}" value="true" class="form-check-input" id="complexApp">
+                            <label for="complexApp" class="form-check-label">
+                                Complex Application <span class="text-muted">(e.g., microservices architecture)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                    </div>
+                    
+                    <!-- Back Link -->
+                    <div class="text-center mt-3">
+                        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

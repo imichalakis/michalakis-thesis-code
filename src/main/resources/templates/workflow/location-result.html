@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Selection Result</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-5">
+        <!-- Page Title -->
+        <div class="text-center mb-4">
+            <h1 class="display-5">Location Selection Result</h1>
+            <p class="lead">Review the location parameters and recommended deployment locations.</p>
+        </div>
+
+     <!-- Provided Parameters Section -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white">
+        <h4>Your Selected Parameters</h4>
+    </div>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <strong>Data Type:</strong> 
+            <span th:switch="${form.dataType}">
+                <span th:case="'personal'">Personal Data (e.g., user accounts, customer details)</span>
+                <span th:case="'nonpersonal'">Non-Personal Data (e.g., logs, public statistics)</span>
+                <span th:case="'medical'">Medical Data (e.g., patient records, clinical data)</span>
+                <span th:case="'tax'">Tax-Related Data (e.g., financial records, invoices)</span>
+                <span th:case="'critical'">Critical Data (e.g., government-sensitive or classified)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Connectivity Requirement:</strong> 
+            <span th:text="${form.connectivity == 'true' ? 'Requires A.A.D.E Connection' : 'No A.A.D.E Connection Required'}"></span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Budget Limitation:</strong> 
+            <span th:switch="${form.budgetLimitation}">
+                <span th:case="'low'">Low Budget (Optimize for cost efficiency, shared resources)</span>
+                <span th:case="'high'">High Budget (Dedicated infrastructure, high performance)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Latency Requirement:</strong> 
+            <span th:switch="${form.latencyRequirement}">
+                <span th:case="'strict'">Strict (Low Latency Required, real-time response)</span>
+                <span th:case="'flexible'">Flexible (Latency is not critical, batch processing allowed)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Scalability Requirement:</strong> 
+            <span th:switch="${form.scalabilityRequirement}">
+                <span th:case="'high'">High Scalability (Auto-scaling, handle unpredictable demand)</span>
+                <span th:case="'medium'">Medium Scalability (Some scaling capabilities, predictable workload)</span>
+                <span th:case="'low'">Low Scalability (Fixed resources, no dynamic scaling)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Compliance Requirement:</strong> 
+            <span th:switch="${form.complianceRequirement}">
+                <span th:case="'strict'">Strict Compliance (Regulated, GDPR, ISO 27001, etc.)</span>
+                <span th:case="'general'">General Compliance (Basic security and privacy policies)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Disaster Recovery Needs:</strong> 
+            <span th:switch="${form.disasterRecoveryNeeds}">
+                <span th:case="'high'">High (Multi-region redundancy, automatic failover)</span>
+                <span th:case="'medium'">Medium (Regular backups, quick recovery options)</span>
+                <span th:case="'low'">Low (Minimal backup, basic disaster recovery)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+
+        <li class="list-group-item">
+            <strong>Preferred Deployment Location:</strong> 
+            <span th:switch="${form.deploymentLocation}">
+                <span th:case="'azure'">Azure (Public Cloud - Scalable and Managed)</span>
+                <span th:case="'onPremise'">On-Premise (In-house data center or private cloud)</span>
+                <span th:case="*">Unknown</span>
+            </span>
+        </li>
+    </ul>
+</div>
+
+        <!-- Recommendation Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Recommended Deployment Location</h4>
+            </div>
+
+            <style>
+                .recommendation-box {
+                    background: #f8f9fa; /* Light gray background */
+                    padding: 15px;
+                    border-left: 5px solid #007bff; /* Blue side border for emphasis */
+                    margin-bottom: 15px;
+                    border-radius: 5px;
+                }
+                .recommendation-title {
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #333;
+                }
+                .reason-box {
+                    background: #eef3f7; /* Light blue background */
+                    padding: 10px;
+                    border-radius: 5px;
+                    margin-top: 10px;
+                    font-style: italic;
+                }
+            </style>
+
+<div class="card-body">
+    <h2>Recommended Deployment Locations</h2>
+    <p>Based on your requirements, here are the best deployment locations for your system:</p>
+
+    <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+        <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+            <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                <span th:text="${result['naturalLanguageMainResult']}"></span>
+            </h3>
+
+            <div class="reason-box">
+                <strong>Why this choice?</strong>
+                <ul>
+                    <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+        <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+    </div>
+</div>
+
+
+        <!-- Navigation Buttons -->
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+            <a href="/workflow/resource-requirements" class="btn btn-primary ml-2">Proceed to Resource Requirements</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

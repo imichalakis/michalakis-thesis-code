@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure Selection Result</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-5">
+        <!-- Page Title -->
+        <div class="text-center mb-4">
+            <h1 class="display-5">Infrastructure Selection Result</h1>
+            <p class="lead">Review the infrastructure parameters and recommended solutions for your deployment.</p>
+        </div>
+
+        <!-- Provided Parameters Section -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4>Your Selected Parameters</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Scalability Requirements: <strong><span th:text="${form.highScalability ? 'High Scalability' : 'None'}"></span></strong></li>
+                    <li class="list-group-item">Performance Requirements: <strong><span th:text="${form.highPerformance ? 'High Performance' : 'None'}"></span></strong></li>
+                    <li class="list-group-item">DevOps Requirements: <strong><span th:text="${form.devopsFriendly ? 'DevOps Friendly' : 'None'}"></span></strong></li>
+                    <li class="list-group-item">Data Sensitivity: <strong><span th:text="${form.dataSensitivity ? 'Sensitive Data' : 'Not Sensitive'}"></span></strong></li>
+                    <li class="list-group-item">Budget: <strong><span th:text="${form.highBudget ? 'High Budget' : 'Low Budget'}"></span></strong></li>
+                    <li class="list-group-item">Application Complexity: <strong><span th:text="${form.complexApp ? 'Complex Application' : 'Simple Application'}"></span></strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recommendation Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Recommended Infrastructure</h4>
+            </div>
+            <div class="card-body">
+                <!-- Display recommendation if available -->
+                <div th:if="${gorgiasResponseForInfrastructure != null && gorgiasResponseForInfrastructure.hasResult}">
+                    <ul class="list-group list-group-flush" th:each="result : ${gorgiasResponseForInfrastructure.result}">
+                        <li class="list-group-item">
+                            <h5>Explanation:</h5>
+                            <p class="mb-1" th:text="${infrastructureDecision}"></p>
+                            <h5>Human Explanation:</h5>
+                            <p th:text="${result.humanExplanation}"></p>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Display message if no results found -->
+                <div th:if="${gorgiasResponseForInfrastructure == null || !gorgiasResponseForInfrastructure.hasResult}">
+                    <p class="text-muted">No recommendation available based on the provided parameters.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="text-center mt-4">
+            <a href="/workflow/infrtype" class="btn btn-secondary">Back to Infrastructure Form</a>
+            <a href="/workflow/scalability-performance" class="btn btn-primary ml-2">Proceed to Scalability & Performance Requirements</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

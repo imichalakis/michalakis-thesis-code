@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Parameters - Completion</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+</head>
+<body>
+    <div th:if="${message != null}">
+        <p th:text="${message}"></p>
+    </div>
+
+    <!-- Display Gorgias results if present -->
+    <div class="card-body">
+        <form  th:object="${form}" method="post">
+            <div th:if="${gorgiasResponseForUrgency != null}">
+                <h2>Gorgias Results For Urgency:</h2>
+                <ul>
+                    <!-- Iterate over the list of QueryResult objects -->
+                    <li th:each="queryResult : ${gorgiasResponseForUrgency.result}">
+                        <p><strong>Explanation String:</strong> <span th:text="${queryResult.explanationStr}"></span></p>
+                        <p><strong>Human Explanation:</strong> <span th:text="${queryResult.humanExplanation}"></span></p>
+                    </li>
+                </ul>
+            </div>
+
+            <div th:if="${gorgiasResponseForLocation != null}">
+                <h2>Gorgias Results For Location:</h2>
+                <ul>
+                    <li th:each="queryResult : ${gorgiasResponseForLocation.result}">
+                        <p><strong>Explanation String:</strong> <span th:text="${queryResult.explanationStr}"></span></p>
+                        <p><strong>Human Explanation:</strong> <span th:text="${queryResult.humanExplanation}"></span></p>
+                    </li>
+                </ul>
+                <!-- Add button if 'azure' is contained in the first explanation string -->
+                <a th:if="${showContinueWithAzure}" 
+                   th:href="@{/workflow/step3}" class="btn btn-primary">Continue with Azure</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

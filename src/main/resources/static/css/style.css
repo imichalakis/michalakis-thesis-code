@@ -1,0 +1,148 @@
+/* Workflow Styling */
+.workflow-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 20px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+h2.display-5 {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+p.lead {
+    text-align: center;
+    color: #666;
+}
+
+/* Step Box Styling */
+.workflow-step {
+    position: relative;
+    width: 200px;
+    text-align: center;
+    background-color: #f8f9fa; /* Light gray for a modern look */
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    padding: 20px;
+    margin: 10px;
+    color: #333;
+}
+
+.workflow-step:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Unique Background Colors for Each Step */
+.workflow-step:nth-child(1) { background: #ffe6b3; } /* Urgency - Soft Yellow */
+.workflow-step:nth-child(2) { background: #dcd6f7; } /* Infrastructure - Soft Purple */
+.workflow-step:nth-child(3) { background: #ffe6b3; } /* Data Location - Soft Yellow */
+.workflow-step:nth-child(4) { background: #ebf5eb; } /* Resources - Soft Green */
+.workflow-step:nth-child(5) { background: #f2f2f2; } /* Scalability - Soft Gray */
+.workflow-step:nth-child(6) { background: #198754; color: white; } /* Final Decision */
+
+
+/* Final Decision Special Styling */
+.workflow-step:last-child {
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Step Titles */
+.workflow-step h5 {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+/* Step Icons */
+.workflow-step h5 i {
+    background: rgba(0, 123, 255, 0.1);
+    padding: 8px;
+    border-radius: 50%;
+}
+
+/* Button Styling */
+.btn-primary {
+    background: linear-gradient(to right, #007bff, #0056b3);
+    border: none;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+.btn-primary:hover {
+    background: linear-gradient(to right, #0056b3, #004099);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+.btn-light {
+    border: 2px solid white;
+    font-weight: bold;
+}
+
+/* Arrow Styling */
+.workflow-arrow {
+    font-size: 2rem;
+    color: #007bff;
+    margin: 0 10px;
+    animation: arrowBounce 1.5s infinite ease-in-out;
+}
+
+@keyframes arrowBounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+/* Status Badge Styling */
+.badge-warning {
+    background: #ffcc00;
+    color: #333;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .workflow-container {
+        flex-direction: column;
+    }
+
+    .workflow-arrow {
+        display: none; /* Hide arrows for mobile */
+    }
+}
+.reset-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+.reset-btn {
+    background: linear-gradient(to right, #dc3545, #b22222);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+}
+
+.reset-btn:hover {
+    background: linear-gradient(to right, #b22222, #8b0000);
+    transform: scale(1.05);
+}
+
+
+/* Footer Styling */
+footer {
+    background-color: #f8f9fa;
+    color: #333;  /* Ensures text is readable */
+    padding: 20px;
+    border-top: 1px solid #ddd; /* Optional: Adds a subtle border */
+}

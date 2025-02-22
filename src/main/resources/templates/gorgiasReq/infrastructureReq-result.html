@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure Selection Result</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-5">
+        <!-- Page Title -->
+        <div class="text-center mb-4">
+            <h1 class="display-5">Infrastructure Selection Result</h1>
+            <p class="lead">Review the infrastructure parameters and recommended solutions for your deployment.</p>
+        </div>
+
+            <!-- Provided Parameters Section -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4>Your Selected Parameters</h4>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <strong>Primary Goal:</strong> 
+                        <span th:if="${form.primaryGoal == 'runCustomApps'}">Run and customize applications (Deploy custom software and manage configurations)</span>
+                        <span th:if="${form.primaryGoal == 'consumeReadySoftware'}">Consume ready-made software (Use SaaS solutions with minimal setup)</span>
+                        <span th:if="${form.primaryGoal == 'eventDrivenFunctions'}">Automate tasks with event-driven architecture (Use serverless functions based on triggers)</span>
+                    </li>
+    
+                    <li class="list-group-item">
+                        <strong>Control Requirement:</strong> 
+                        <span th:if="${form.controlRequirement == 'noControl'}">No Control Needed (Fully managed services with no infrastructure management)</span>            
+                        <span th:if="${form.controlRequirement == 'limitedControl'}">Limited Control (Manage runtime and applications but not infrastructure)</span>            
+                        <span th:if="${form.controlRequirement == 'fullControl'}">Full Control (Self-managed infrastructure including VMs, storage, and networking)</span>            
+                    </li>
+    
+                    <li class="list-group-item">
+                        <strong>Scalability Requirements:</strong> 
+                        <span th:text="${form.highScalability ? 'Auto-scaling enabled for dynamic resource allocation' : 'Fixed resources with no auto-scaling'}"></span>
+                    </li>
+    
+                    <li class="list-group-item">
+                        <strong>Data Sensitivity:</strong> 
+                        <span th:text="${form.dataSensitivity ? 'Sensitive Data (Requires encryption and compliance measures)' : 'Not Sensitive (Standard security policies apply)'}"></span>
+                    </li>
+    
+                    <li class="list-group-item">
+                        <strong>Integration Needs:</strong> 
+                        <span th:if="${form.integrationRequirements != null and not #lists.isEmpty(form.integrationRequirements)}">Custom API Integrations (External system connectivity and API-level access)</span>
+                        <span th:if="${form.integrationRequirements == null or #lists.isEmpty(form.integrationRequirements)}">No external integrations required</span>
+                    </li>
+    
+                    <li class="list-group-item">
+                        <strong>Budget:</strong> 
+                        <span th:if="${form.budget == 'low_budget'}">Cost-Optimized (Pay-as-you-go with shared resources)</span> 
+                        <span th:if="${form.budget == 'high_budget'}">High Performance (Dedicated resources and reserved instances)</span> 
+                    </li>
+                </ul>
+            </div>
+    
+
+        <!-- Recommendation Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Recommendation</h4>
+            </div>
+
+            <style>
+                .recommendation-box {
+                    background: #f8f9fa; /* Light gray background */
+                    padding: 15px;
+                    border-left: 5px solid #007bff; /* Blue side border for emphasis */
+                    margin-bottom: 15px;
+                    border-radius: 5px;
+                }
+                .recommendation-title {
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #333;
+                }
+                .reason-box {
+                    background: #eef3f7; /* Light blue background */
+                    padding: 10px;
+                    border-radius: 5px;
+                    margin-top: 10px;
+                    font-style: italic;
+                }
+            </style>
+
+            <div class="card-body">
+                <h2>Recommended Infrastructure</h2>
+                <p>Based on your requirements, here are the best infrastructure choices for your needs:</p>
+
+                <div th:if="${resultsList != null}">
+                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                            <span th:text="${result.naturalLanguageMainResult}"></span>
+                        </h3>
+
+                        <div class="reason-box">
+                            <strong>Why this choice?</strong>
+                            <ul>
+                                <li th:each="fact : ${result.convertedFact}" th:text="${fact}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${error != null}">
+                    <p class="text-danger" th:text="${error}"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+            <a href="/workflow/location" class="btn btn-primary ml-2">Proceed to Location Requirements</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Footer -->
+<footer class="text-center py-4 mt-5 bg-light">
+    <p class="mb-0">
+        &copy; 2024 Technical University of Crete. <br>
+        Developed as part of a Thesis in Deployment Choice Automation.
+    </p>
+</footer>
+
+</body>
+</html>

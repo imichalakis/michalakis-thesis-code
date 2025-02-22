@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urgency & Agency Category</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-5">
+        <div class="text-center mb-4">
+            <h2 class="display-5">Define Urgency </h2>
+            <p class="lead">Specify the urgency level and agency details to determine the hosting timeline.</p>
+        </div>
+        
+        <!-- Form Card -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form th:action="@{/workflow/process-urgency}" th:object="${form}" method="post">
+
+                    <!-- Request Type -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Which organization is initiating this request</label>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{requestType}" id="opsRequest" value="ops" class="form-check-input">
+                            <label for="opsRequest" class="form-check-label">Ministry of Digital Governance</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{requestType}" id="otherRequest" value="other" class="form-check-input">
+                            <label for="otherRequest" class="form-check-label">Other Public Sector Entity</label>
+                        </div>
+                    </div>
+
+                    <!-- Contract with Contractor -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Has Contract with Contractor?</label>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{contractWithContractor}" id="contractYes" value="yes" class="form-check-input">
+                            <label for="contractYes" class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{contractWithContractor}" id="contractNo" value="no" class="form-check-input">
+                            <label for="contractNo" class="form-check-label">No</label>
+                        </div>
+                    </div>
+
+                    <!-- Urgency Level -->
+                    <!-- <div class="form-group">
+                        <label class="font-weight-bold">Urgency Level:</label>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{urgency}" id="urgent" value="Urgent" class="form-check-input">
+                            <label for="urgent" class="form-check-label">Urgent (Within 3 days)</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{urgency}" id="high" value="High" class="form-check-input">
+                            <label for="high" class="form-check-label">High (Within 10 days)</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" th:field="*{urgency}" id="normal" value="Normal" class="form-check-input">
+                            <label for="normal" class="form-check-label">Normal (Within 2 months)</label>
+                        </div>
+                    </div> -->
+
+                    <!-- Agency Category -->
+                    <div class="form-group">
+                        <label for="agencyCategory" class="font-weight-bold">Which category best describes your agency</label>
+                        <select th:field="*{agencyCategory}" id="agencyCategory" class="form-control">
+                            <option value="centralGovernment">Central Government</option>
+                            <option value="localGovernment">Local Government</option>
+                            <option value="independentAuthority">Independent Authority</option>
+                            <option value="supervisedEntity">Supervised Entity</option>
+                        </select>
+                    </div>
+
+                    <!-- Planned Start Date -->
+                    <div class="form-group">
+                        <label for="startDate" class="font-weight-bold">When is the planned start date for this project or initiative?</label>
+                        <input type="date" th:field="*{startDate}" id="startDate" class="form-control">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                    </div>
+                    <!-- Back Link -->
+                    <div class="text-center mt-3">
+                        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 bg-light">
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete. <br>
+            Developed as part of a Thesis in Deployment Choice Automation.
+        </p>
+    </footer>
+
+</body>
+</html>

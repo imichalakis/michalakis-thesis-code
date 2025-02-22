@@ -1,0 +1,14 @@
+resources:
+- name: DefaultDeployment
+  location: Azure
+  type: Generic/Deployment
+- name: HighPerformanceCompute
+  location: Azure
+  type: Compute/High
+- name: FixedScaling
+  location: Azure
+  type: Scaling/Fixed
+- name: DefaultDeployment
+  location: Azure
+  type: Urgency/Normal
+location: eastus

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parameters - Step 3</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+</head>
+<body class="bg-light">
+   
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>Είσοδοι που αφορούν την εγκατάσταση στο Microsoft Azure Public Cloud - Άξονας 3</h4>
+                    </div>
+                    <div class="card-body">
+                        <form  th:object="${form}" >
+                            <!-- Additional Parameters for Step 3 -->
+                            <!-- Here you can add fields specific to step 3 if necessary -->
+                            <div class="form-group">
+                               THE SERVICE IS Azure Functions
+                            </div>
+                            <!-- Hidden Fields for retaining past data from previous steps -->
+                            <input type="hidden" th:field="*{urgency}">
+                            <input type="hidden" th:field="*{agencyCategory}">
+                            <input type="hidden" th:field="*{dataType}">
+                            <input type="hidden" th:field="*{connectivity}">
+                            <input type="hidden" th:field="*{deploymentLocation}">
+                            <input type="hidden" th:field="*{startDate}">
+                            <input type="hidden" th:field="*{buildNewOrMigrate}">
+                            <input type="hidden" th:field="*{fullControl}">
+                            <input type="hidden" th:field="*{HPCWorkload}">
+                            <input type="hidden" th:field="*{SBapps}">
+                            <input type="hidden" th:field="*{eventDriven}">
+                            <!-- Hidden Field for Step -->
+                            <input type="hidden" name="step" th:value="9" />
+
+                            
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary btn-block">Τέλος</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
