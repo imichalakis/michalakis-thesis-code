@@ -4,152 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infrastructure Type Selection</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/infrastructure-form-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
     </nav>
 
-    <!-- Main Container -->
-    <div class="container mt-5">
-        <!-- Page Title -->
-        <div class="text-center mb-4">
-            <h2 class="display-5">Infrastructure Type Selection</h2>
-            <p class="lead">Choose the parameters that best match your application and business needs.</p>
-        </div>
+    <!-- Main Form Container -->
+    <div class="form-container">
+        <h2 class="form-title">Infrastructure Type Selection</h2>
+        <p class="form-subtitle">Specify your infrastructure requirements for an optimized deployment strategy.</p>
 
-        <!-- Form Card -->
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form th:action="@{/gorgiascloud/request-gorgias}" th:object="${form}" method="post">
-                    
-                    <!-- Primary Goal -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">What is your primary goal?</label>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{primaryGoal}" value="runCustomApps" class="form-check-input" id="runCustomApps">
-                            <label for="runCustomApps" class="form-check-label">
-                                Run and customize applications <span class="text-muted">(For teams needing full control over deployments, best for VMs or containerized workloads.)</span>
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{primaryGoal}" value="consumeReadySoftware" class="form-check-input" id="consumeReadySoftware">
-                            <label for="consumeReadySoftware" class="form-check-label">
-                                Use ready-made software with minimal setup <span class="text-muted">(For businesses preferring managed SaaS solutions with no infrastructure management.)</span>
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{primaryGoal}" value="eventDrivenFunctions" class="form-check-input" id="eventDrivenFunctions">
-                            <label for="eventDrivenFunctions" class="form-check-label">
-                                Automate tasks with event-driven architecture <span class="text-muted">(For applications triggered by specific events, best for serverless computing.)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Control Requirements -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">How much control do you need over the infrastructure?</label>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{controlRequirement}" value="fullControl" class="form-check-input" id="fullControl">
-                            <label for="fullControl" class="form-check-label">
-                                Full Control <span class="text-muted">(Manage servers, networks, and storage manually. Best for IaaS solutions.)</span>
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{controlRequirement}" value="limitedControl" class="form-check-input" id="limitedControl">
-                            <label for="limitedControl" class="form-check-label">
-                                Limited Control <span class="text-muted">(Use managed environments like Kubernetes without handling infrastructure directly.)</span>
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{controlRequirement}" value="noControl" class="form-check-input" id="noControl">
-                            <label for="noControl" class="form-check-label">
-                                No Control Needed <span class="text-muted">(Use fully managed cloud services with no infrastructure management.)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Scalability Requirements -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">Do you need automatic scaling?</label>
-                        <div class="form-check">
-                            <input type="checkbox" th:field="*{highScalability}" class="form-check-input" id="highScalability">
-                            <label for="highScalability" class="form-check-label">
-                                Enable Auto-Scaling <span class="text-muted">(Dynamically adjust resources based on demand, best for unpredictable workloads.)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Data Sensitivity -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">Will your application handle sensitive data?</label>
-                        <div class="form-check">
-                            <input type="checkbox" th:field="*{dataSensitivity}" class="form-check-input" id="dataSensitivity">
-                            <label for="dataSensitivity" class="form-check-label">
-                                Yes, enable security compliance <span class="text-muted">(Enables encryption, access control, and regulatory compliance settings.)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Integration Needs -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">Do you require external integrations?</label>
-                        <div class="form-check">
-                            <input type="checkbox" th:field="*{integrationRequirements}" class="form-check-input" id="customIntegrations">
-                            <label for="customIntegrations" class="form-check-label">
-                                Custom API Integrations <span class="text-muted">(Allows API-level access, service-to-service authentication, and external system connections.)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Budget -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">What is your budget preference?</label>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{budget}" value="low_budget" class="form-check-input" id="low_budget">
-                            <label for="low_budget" class="form-check-label">
-                                Cost-Optimized <span class="text-muted">(Prefers auto-scaling, pay-as-you-go, and shared resources.)</span>
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input type="radio" th:field="*{budget}" value="high_budget" class="form-check-input" id="high_budget">
-                            <label for="high_budget" class="form-check-label">
-                                High Performance <span class="text-muted">(Uses dedicated resources, reserved instances, and premium support.)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-                    </div>
-                    
-                    <!-- Back Link -->
-                    <div class="text-center mt-3">
-                        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-                    </div>
-                </form>
+        <!-- Form -->
+        <form th:action="@{/gorgiascloud/request-gorgias}" th:object="${form}" method="post">
+            
+            <!-- Primary Goal -->
+            <div class="form-group">
+                <label>What is your primary objective?</label>
+                <div class="form-check">
+                    <input type="radio" th:field="*{primaryGoal}" value="runCustomApps" class="form-check-input" id="runCustomApps">
+                    <label for="runCustomApps" class="form-check-label">
+                        Full Control & Customization <span class="text-muted">(Best for VMs and containerized workloads.)</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" th:field="*{primaryGoal}" value="consumeReadySoftware" class="form-check-input" id="consumeReadySoftware">
+                    <label for="consumeReadySoftware" class="form-check-label">
+                        Minimal Setup <span class="text-muted">(Ideal for SaaS solutions with no infrastructure management.)</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" th:field="*{primaryGoal}" value="eventDrivenFunctions" class="form-check-input" id="eventDrivenFunctions">
+                    <label for="eventDrivenFunctions" class="form-check-label">
+                        Event-Driven Computing <span class="text-muted">(Optimized for serverless architectures.)</span>
+                    </label>
+                </div>
             </div>
-        </div>
+
+            <!-- Infrastructure Control -->
+            <div class="form-group">
+                <label>What level of infrastructure control do you require?</label>
+                <div class="form-check">
+                    <input type="radio" th:field="*{controlRequirement}" value="fullControl" class="form-check-input" id="fullControl">
+                    <label for="fullControl" class="form-check-label">
+                        Full Management <span class="text-muted">(Best for IaaS solutions.)</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" th:field="*{controlRequirement}" value="limitedControl" class="form-check-input" id="limitedControl">
+                    <label for="limitedControl" class="form-check-label">
+                        Managed Services <span class="text-muted">(Kubernetes or similar platforms.)</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" th:field="*{controlRequirement}" value="noControl" class="form-check-input" id="noControl">
+                    <label for="noControl" class="form-check-label">
+                        Fully Managed Solution <span class="text-muted">(No infrastructure maintenance required.)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Auto Scaling -->
+<div class="form-group">
+    <label>Do you need automatic scaling?</label>
+    <div class="form-check">
+        <input type="checkbox" th:field="*{highScalability}" class="form-check-input" id="highScalability">
+        <label for="highScalability" class="form-check-label">
+            Enable Auto-Scaling <span class="text-muted">(Ideal for fluctuating workloads.)</span>
+        </label>
+    </div>
+</div>
+
+<!-- Security & Compliance -->
+<div class="form-group">
+    <label>Does your application require security compliance?</label>
+    <div class="form-check">
+        <input type="checkbox" th:field="*{dataSensitivity}" class="form-check-input" id="dataSensitivity">
+        <label for="dataSensitivity" class="form-check-label">
+            Enable Compliance <span class="text-muted">(Encryption, access control, and security settings.)</span>
+        </label>
+    </div>
+</div>
+
+<!-- External Integrations -->
+<div class="form-group">
+    <label>Do you require external integrations?</label>
+    <div class="form-check">
+        <input type="checkbox" th:field="*{integrationRequirements}" class="form-check-input" id="customIntegrations">
+        <label for="customIntegrations" class="form-check-label">
+            Custom API Integrations <span class="text-muted">(Service-to-service authentication, external system connections.)</span>
+        </label>
+    </div>
+</div>
+
+                      <!-- Budget -->
+            <div class="form-group">
+                <label class="font-weight-bold">What is your budget preference?</label>
+                <div class="form-check">
+                    <input type="radio" th:field="*{budget}" value="low_budget" class="form-check-input" id="low_budget">
+                    <label for="low_budget" class="form-check-label">
+                        Cost-Optimized <span class="text-muted">(Prefers auto-scaling, pay-as-you-go, and shared resources.)</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" th:field="*{budget}" value="high_budget" class="form-check-input" id="high_budget">
+                    <label for="high_budget" class="form-check-label">
+                        High Performance <span class="text-muted">(Uses dedicated resources, reserved instances, and premium support.)</span>
+                    </label>
+                </div>
+            </div>
+                      
+     <!-- Buttons -->
+     <div class="button-container">
+        <a href="/" class="btn btn-secondary-custom btn-custom">Main Menu</a>
+        <a href="/workflow/index" class="btn btn-warning-custom btn-custom">Go Back</a>
+        <button type="submit" class="btn btn-primary-custom btn-custom">Review & Continue</button>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</form>
+</div>
+
 <!-- Footer -->
-<footer class="text-center py-4 mt-5 bg-light">
-    <p class="mb-0">
-        &copy; 2024 Technical University of Crete. <br>
-        Developed as part of a Thesis in Deployment Choice Automation.
-    </p>
-</footer>
+<div class="footer">
+<p>&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Choice Automation.</p>
+</div>
 
 </body>
 </html>

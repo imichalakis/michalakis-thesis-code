@@ -4,143 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Define Deployment Location</title>
-    <!-- Bootstrap CSS -->
+
+    <!-- Bootstrap & Custom CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/infrastructure-form-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
     </nav>
 
     <!-- Main Container -->
-    <div class="container mt-5">
-        <!-- Page Title -->
-        <div class="text-center mb-4">
-            <h2 class="display-5">Define Deployment Configuration</h2>
-            <p class="lead">Please specify your deployment preferences. Your selections will guide the automated configuration.</p>
-        </div>
+    <div class="form-container">
+        <h2 class="form-title">Define Deployment Location</h2>
+        <p class="form-subtitle">Specify your deployment preferences to guide the automated configuration process.</p>
 
-        <!-- Form Card -->
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form th:action="@{/workflow/process-location}" th:object="${form}" method="post">
+        <!-- Form -->
+        <form th:action="@{/workflow/process-location}" th:object="${form}" method="post">
 
-                    <!-- Data Type -->
-                    <div class="form-group">
-                        <label for="dataType" class="font-weight-bold">What type of data will this system handle?</label>
-                        <select th:field="*{dataType}" id="dataType" class="form-control">
-                            <option value="personal">Personal Data (e.g., user accounts, customer details)</option>
-                            <option value="nonpersonal">Non-Personal Data (e.g., logs, public statistics)</option>
-                            <option value="medical">Medical Data (e.g., patient records, clinical data)</option>
-                            <option value="tax">Tax-Related Data (e.g., financial records, invoices)</option>
-                            <option value="critical">Critical Data (e.g., government-sensitive or classified)</option>
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">Selecting "Critical" may require additional security measures.</small>
-                    </div>
-
-                    <!-- Connectivity Requirements -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">Does this system need to connect to A.A.D.E. infrastructure?</label>
-                        <div class="form-check">
-                            <input type="checkbox" th:field="*{connectivity}" id="connectivityCheckbox" value="true">
-                            <label for="connectivityCheckbox" class="form-check-label">Yes, this system requires an A.A.D.E. connection</label>
-                        </div>
-                        <small class="form-text text-muted">A.A.D.E. infrastructure is used for tax and financial system integration.</small>
-                    </div>
-
-                    <!-- Budget -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">What is the budget allocation for this project?</label>
-                        <select th:field="*{budgetLimitation}" id="budgetLimitation" class="form-control">
-                            <option value="low">Low Budget (Optimize for cost efficiency, shared resources)</option>
-                            <option value="high">High Budget (Dedicated infrastructure, high performance)</option>
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">A low budget typically means pay-as-you-go cloud services, while a high budget supports dedicated environments.</small>
-                    </div>
-
-                    <!-- Latency Requirement -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">What is the expected latency performance for the system?</label>
-                        <select th:field="*{latencyRequirement}" id="latencyRequirement" class="form-control">
-                            <option value="strict">Strict (Low Latency Required, real-time response)</option>
-                            <option value="flexible">Flexible (Latency is not critical, batch processing allowed)</option>
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">Strict latency is required for real-time applications (e.g., video streaming, financial transactions).</small>
-                    </div>
-
-                    <!-- Scalability Requirement -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">How scalable does the system need to be?</label>
-                        <select th:field="*{scalabilityRequirement}" id="scalabilityRequirement" class="form-control">
-                            <option value="high">High Scalability (Auto-scaling, handle unpredictable demand)</option>
-                            <option value="medium">Medium Scalability (Some scaling capabilities, predictable workload)</option>
-                            <option value="low">Low Scalability (Fixed resources, no dynamic scaling)</option>
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">Auto-scaling enables dynamic resource allocation based on demand.</small>
-                    </div>
-
-                    <!-- Compliance Requirements -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">What level of compliance does this system need to meet?</label>
-                        <select th:field="*{complianceRequirement}" id="complianceRequirement" class="form-control">
-                            <option value="strict">Strict Compliance (Regulated, GDPR, ISO 27001, etc.)</option>
-                            <option value="general">General Compliance (Basic security and privacy policies)</option>
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">Strict compliance is required for healthcare, banking, and governmental systems.</small>
-                    </div>
-
-                    <!-- Disaster Recovery Needs -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">What level of disaster recovery support is required?</label>
-                        <select th:field="*{disasterRecoveryNeeds}" id="disasterRecoveryNeeds" class="form-control">
-                            <option value="high">High (Multi-region redundancy, automatic failover)</option>
-                            <option value="medium">Medium (Regular backups, quick recovery options)</option>
-                            <option value="low">Low (Minimal backup, basic disaster recovery)</option>
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">Multi-region redundancy ensures business continuity during failures.</small>
-                    </div>
-
-                    <!-- Preferred Deployment Location -->
-                    <div class="form-group">
-                        <label for="deploymentLocation" class="font-weight-bold">Where should this system be deployed?</label>
-                        <select th:field="*{deploymentLocation}" id="deploymentLocation" class="form-control">
-                            <option value="azure">Azure (Public Cloud - Scalable and Managed)</option>
-                            <option value="onPremise">On-Premise (In-house data center or private cloud)</option>
-                            <!-- <option value="hybrid">Hybrid (Combination of cloud and on-premise)</option> -->
-                            <option value="unknown">I am not sure</option>
-                        </select>
-                        <small class="form-text text-muted">Hybrid solutions offer flexibility between cloud scalability and on-premise control.</small>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">submit</button>
-                    </div>
-
-                    <!-- Back Link -->
-                    <div class="text-center mt-3">
-                        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-                    </div>
-                </form>
+            <!-- Data Type -->
+            <div class="form-group">
+                <label for="dataType">What type of data will this system handle?</label>
+                <select th:field="*{dataType}" id="dataType" class="form-control">
+                    <option value="personal">Personal Data (e.g., user accounts, customer details)</option>
+                    <option value="nonpersonal">Non-Personal Data (e.g., logs, public statistics)</option>
+                    <option value="medical">Medical Data (e.g., patient records, clinical data)</option>
+                    <option value="tax">Tax-Related Data (e.g., financial records, invoices)</option>
+                    <option value="critical">Critical Data (e.g., government-sensitive or classified)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+                <small class="form-text text-muted">Selecting "Critical" may require additional security measures.</small>
             </div>
-        </div>
+
+           <!-- Connectivity Requirements -->
+<div class="form-group">
+    <label>Does this system need to connect to A.A.D.E. infrastructure?</label>
+    <div class="form-check">
+        <input type="checkbox" th:field="*{connectivity}" value="true" class="form-check-input" id="connectivityCheckbox">
+        <label for="connectivityCheckbox" class="form-check-label">
+            Yes, this system requires an A.A.D.E. connection
+        </label>
+    </div>
+    <small class="form-text text-muted">A.A.D.E. infrastructure is used for tax and financial system integration.</small>
+</div>
+
+            <!-- Budget -->
+            <div class="form-group">
+                <label>What is the budget allocation for this project?</label>
+                <select th:field="*{budgetLimitation}" id="budgetLimitation" class="form-control">
+                    <option value="low">Low Budget (Cost efficiency, shared resources)</option>
+                    <option value="high">High Budget (Dedicated infrastructure, high performance)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+            </div>
+
+            <!-- Latency Requirement -->
+            <div class="form-group">
+                <label>Expected latency performance?</label>
+                <select th:field="*{latencyRequirement}" id="latencyRequirement" class="form-control">
+                    <option value="strict">Strict (Low Latency, real-time response)</option>
+                    <option value="flexible">Flexible (Latency is not critical)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+            </div>
+
+            <!-- Scalability Requirement -->
+            <div class="form-group">
+                <label>Scalability Requirements?</label>
+                <select th:field="*{scalabilityRequirement}" id="scalabilityRequirement" class="form-control">
+                    <option value="high">High Scalability (Auto-scaling, dynamic allocation)</option>
+                    <option value="medium">Medium Scalability (Some scaling capabilities)</option>
+                    <option value="low">Low Scalability (Fixed resources)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+            </div>
+
+            <!-- Compliance Requirements -->
+            <div class="form-group">
+                <label>Compliance Level?</label>
+                <select th:field="*{complianceRequirement}" id="complianceRequirement" class="form-control">
+                    <option value="strict">Strict (GDPR, ISO 27001, etc.)</option>
+                    <option value="general">General Compliance (Standard security policies)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+            </div>
+
+            <!-- Disaster Recovery Needs -->
+            <div class="form-group">
+                <label>Disaster Recovery Support?</label>
+                <select th:field="*{disasterRecoveryNeeds}" id="disasterRecoveryNeeds" class="form-control">
+                    <option value="high">High (Multi-region redundancy, failover)</option>
+                    <option value="medium">Medium (Backups, quick recovery)</option>
+                    <option value="low">Low (Basic recovery, minimal backup)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+            </div>
+
+            <!-- Preferred Deployment Location -->
+            <div class="form-group">
+                <label for="deploymentLocation">Preferred Deployment Location?</label>
+                <select th:field="*{deploymentLocation}" id="deploymentLocation" class="form-control">
+                    <option value="azure">Azure (Public Cloud - Scalable and Managed)</option>
+                    <option value="onPremise">On-Premise (Private data center)</option>
+                    <option value="unknown">I am not sure</option>
+                </select>
+            </div>
+               <!-- Navigation Buttons -->
+               <div class="button-container">
+                <a href="/" class="btn btn-secondary-custom btn-custom">Main Menu</a>
+                <a href="/workflow/infrbroadcat" class="btn btn-warning-custom btn-custom">Go Back</a>
+                <button type="submit" class="btn btn-primary-custom btn-custom">Review & Continue</button>
+            </div>
+
+        </form>
     </div>
 
     <!-- Footer -->
-    <footer class="text-center py-4 mt-5 bg-light">
-        <p class="mb-0">
-            &copy; 2024 Technical University of Crete. <br>
-            Developed as part of a Thesis in Deployment Choice Automation.
-        </p>
-    </footer>
+    <div class="footer">
+        <p>&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Strategy Automation.</p>
+    </div>
 
 </body>
 </html>

@@ -6,6 +6,9 @@
     <title>Infrastructure Selection Result</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+     <!-- Custom Styles -->
+     <link rel="stylesheet" th:href="@{/css/result-style.css}">
+     <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
@@ -18,7 +21,7 @@
     <div class="container mt-5">
         <!-- Page Title -->
         <div class="text-center mb-4">
-            <h1 class="display-5">Infrastructure Selection Result</h1>
+            <h1 class="display-5">Infrastructure Decision Review</h1>
             <p class="lead">Review the infrastructure parameters and recommended solutions for your deployment.</p>
         </div>
 
@@ -67,11 +70,7 @@
             </div>
     
 
-        <!-- Recommendation Section -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4>Recommendation</h4>
-            </div>
+      
 
             <style>
                 .recommendation-box {
@@ -95,37 +94,40 @@
                 }
             </style>
 
-            <div class="card-body">
-                <h2>Recommended Infrastructure</h2>
-                <p>Based on your requirements, here are the best infrastructure choices for your needs:</p>
+          <!-- Recommended Infrastructure -->
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">Infrastructure Recommendation</div>
+    <div class="card-body">
+        <h2 class="recommendation-title">Suggested Infrastructure Options</h2>
 
-                <div th:if="${resultsList != null}">
-                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
-                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
-                            <span th:text="${result.naturalLanguageMainResult}"></span>
-                        </h3>
+        <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+            <div th:each="result, iterStat : ${#sets.toSet(resultsList)}" class="recommendation-box">
+                <h3>Option <span th:text="${iterStat.count}"></span>: 
+                    <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
+                </h3>
 
-                        <div class="reason-box">
-                            <strong>Why this choice?</strong>
-                            <ul>
-                                <li th:each="fact : ${result.convertedFact}" th:text="${fact}"></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div th:if="${error != null}">
-                    <p class="text-danger" th:text="${error}"></p>
+                <div class="reason-box">
+                    <strong>Reasoning:</strong>
+                    <ul>
+                        <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="text-center mt-4">
-            <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-            <a href="/workflow/location" class="btn btn-primary ml-2">Proceed to Location Requirements</a>
+        <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+            <p class="text-danger">No infrastructure recommendations available. Please review your selections.</p>
         </div>
     </div>
+</div>
+
+     <!-- Navigation Buttons (Consistent with Global Button Styles) -->
+<div class="button-container">
+    <a href="/" class="btn btn-secondary-custom btn-custom">Return to Main Menu</a>
+    <a href="/workflow/infrbroadcat" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
+    <a href="/workflow/location" class="btn btn-primary-custom btn-custom">Proceed to Location Requirements</a>
+</div>
+
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

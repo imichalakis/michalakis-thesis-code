@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scalability & Performance Requirements</title>
-    <!-- Bootstrap CSS -->
+
+    <!-- Bootstrap & Custom CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/infrastructure-form-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
@@ -15,84 +18,69 @@
     </nav>
 
     <!-- Main Container -->
-    <div class="container mt-5">
-        <!-- Page Title -->
-        <div class="text-center mb-4">
-            <h2 class="display-5">Scalability & Performance Requirements</h2>
-            <p class="lead">Define the scalability and performance parameters for your application to ensure optimal resource allocation.</p>
-        </div>
+    <div class="form-container">
+        <h2 class="form-title">Scalability & Performance Requirements</h2>
+        <p class="form-subtitle">Define the scalability and performance parameters for your application to ensure optimal resource allocation.</p>
 
-        <!-- Form Card -->
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form th:action="@{/workflow/process-scalability}" th:object="${form}" method="post">
-                    
-                    <!-- Expected Load -->
-                    <div class="form-group">
-                        <label for="expectedLoad" class="font-weight-bold">What is the expected average workload or user traffic for your application?</label>
-                        <select th:field="*{expectedLoad}" id="expectedLoad" class="form-control">
-                            <option value="low">Low (Minimal traffic)</option>
-                            <option value="medium">Medium (Moderate traffic)</option>
-                            <option value="high">High (Heavy traffic)</option>
-                        </select>
-                    </div>
-
-                    <!-- Peak Times -->
-                    <div class="form-group">
-                        <label for="peakTimes" class="font-weight-bold">How frequently does your application experience spikes in workload or traffic?</label>
-                        <select th:field="*{peakTimes}" id="peakTimes" class="form-control">
-                            <option value="rarely">Rarely (Infrequent spikes)</option>
-                            <option value="occasionally">Occasionally (Periodic spikes)</option>
-                            <option value="frequently">Frequently (Regular spikes)</option>
-                            <option value="always">Always (Continuous high demand)</option>
-                        </select>
-                    </div>
-
-                    <!-- Response Time SLA -->
-                    <div class="form-group">
-                        <label for="responseTime" class="font-weight-bold">What is the required response time for your application to meet service-level agreements?</label>
-                        <select th:field="*{responseTime}" id="responseTime" class="form-control">
-                            <option value="low">Low (Relaxed response time)</option>
-                            <option value="medium">Medium (Standard response time)</option>
-                            <option value="high">High (Strict response time requirements)</option>
-                        </select>
-                    </div>
-
-                    <!-- Cost Sensitivity -->
-                    <div class="form-group">
-                        <label for="costSensitivity" class="font-weight-bold">How sensitive is your application to infrastructure or operational costs?</label>
-                        <select th:field="*{costSensitivity}" id="costSensitivity" class="form-control">
-                            <option value="low">Low (Cost is not a concern)</option>
-                            <option value="medium">Medium (Balanced cost and performance)</option>
-                            <option value="high">High (Cost optimization is critical)</option>
-                        </select>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-                    </div>
-
-                    <!-- Back Link -->
-                    <div class="text-center mt-3">
-                        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-                    </div>
-                </form>
+        <!-- Form -->
+        <form th:action="@{/workflow/process-scalability}" th:object="${form}" method="post">
+            
+            <!-- Expected Load -->
+            <div class="form-group">
+                <label>What is the expected average workload or user traffic for your application?</label>
+                <select th:field="*{expectedLoad}" class="form-control">
+                    <option value="low">Low (Minimal traffic)</option>
+                    <option value="medium">Medium (Moderate traffic)</option>
+                    <option value="high">High (Heavy traffic)</option>
+                </select>
             </div>
-        </div>
+
+            <!-- Peak Times -->
+            <div class="form-group">
+                <label>How frequently does your application experience spikes in workload or traffic?</label>
+                <select th:field="*{peakTimes}" class="form-control">
+                    <option value="rarely">Rarely (Infrequent spikes)</option>
+                    <option value="occasionally">Occasionally (Periodic spikes)</option>
+                    <option value="frequently">Frequently (Regular spikes)</option>
+                    <option value="always">Always (Continuous high demand)</option>
+                </select>
+            </div>
+
+            <!-- Response Time SLA -->
+            <div class="form-group">
+                <label>What is the required response time for your application to meet service-level agreements?</label>
+                <select th:field="*{responseTime}" class="form-control">
+                    <option value="low">Low (Relaxed response time)</option>
+                    <option value="medium">Medium (Standard response time)</option>
+                    <option value="high">High (Strict response time requirements)</option>
+                </select>
+            </div>
+
+            <!-- Cost Sensitivity -->
+            <div class="form-group">
+                <label>How sensitive is your application to infrastructure or operational costs?</label>
+                <select th:field="*{costSensitivity}" class="form-control">
+                    <option value="low">Low (Cost is not a concern)</option>
+                    <option value="medium">Medium (Balanced cost and performance)</option>
+                    <option value="high">High (Cost optimization is critical)</option>
+                </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-container">
+                
+                <a href="/" class="btn btn-secondary-custom btn-custom">Back to Main Menu</a>
+                <a href="/workflow/resource-requirements" class="btn btn-warning-custom btn-custom">Go Back</a>
+                <button type="submit" class="btn btn-primary-custom btn-custom">Review & Continue</button>
+            </div>
+
+        </form>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<!-- Footer -->
-<footer class="text-center py-4 mt-5 bg-light">
-    <p class="mb-0">
-        &copy; 2024 Technical University of Crete. <br>
-        Developed as part of a Thesis in Deployment Choice Automation.
-    </p>
-</footer>
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Choice Automation.</p>
+    </div>
 
 </body>
 </html>

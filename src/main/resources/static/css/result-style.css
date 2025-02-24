@@ -1,0 +1,82 @@
+        body {
+            background-color: #f4f7fc;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .navbar {
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 900px;
+        }
+
+        .card-header {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .recommendation-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .recommendation-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .reason-box {
+            background: #eef3f7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .btn-custom {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border: none;
+            color: white;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+        }
+
+        .btn-secondary-custom {
+            background: #6c757d;
+            color: white;
+            border: none;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #5a6268;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .button-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }

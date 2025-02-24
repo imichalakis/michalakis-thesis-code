@@ -23,6 +23,7 @@ import io.swagger.client.model.QueryResult;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -746,7 +747,7 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
         model.addAttribute("contractWithContractor", form.getContractWithContractor());
     
         // Execute Gorgias query
-        List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForUrgency(form);
+        List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForUrgency(form, session);
     
         if (parsedResults != null && !parsedResults.isEmpty()) {
             List<Map<String, Object>> resultsList = new ArrayList<>();
@@ -1511,43 +1512,44 @@ private String extractKeyword(String input) {
    
     }
     @GetMapping("/download-yaml")
-    public ResponseEntity<Resource> downloadYaml(HttpSession session) {
-        // Get the final YAML decision from session
-        String yamlDecision = (String) session.getAttribute("finalYamlDecision");
-    
-        if (yamlDecision == null || yamlDecision.isEmpty()) {
-            System.out.println("❌ ERROR: No YAML decision found in session.");
-            return ResponseEntity.badRequest().body(null);
-        }
-    
-        // Map decision to YAML file name
-        String yamlFileName = mapYamlDecisionToFile(yamlDecision);
-        System.out.println("🧐 Attempting to load file: " + yamlFileName);
-    
-        // ✅ Use ClassPathResource
-        Resource resource = new ClassPathResource("yaml/" + yamlFileName);
-    
-        try {
-            System.out.println("🔍 Checking resource existence: " + resource.exists());
-            System.out.println("🔍 Resource URL: " + resource.getURL());
-    
-            if (!resource.exists()) {
-                System.out.println("❌ ERROR: YAML file not found -> " + yamlFileName);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-        } catch (IOException e) {
-            System.out.println("❌ ERROR: Could not access file -> " + yamlFileName);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    
-        System.out.println("✅ YAML File Found: " + yamlFileName);
-    
-        // Return the file for download
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + yamlFileName + "\"")
-                .body(resource);
+public ResponseEntity<Resource> downloadYaml(HttpSession session) {
+    // Get the final YAML decision from session
+    String yamlDecision = (String) session.getAttribute("finalYamlDecision");
+
+    if (yamlDecision == null || yamlDecision.isEmpty()) {
+        System.out.println("❌ ERROR: No YAML decision found in session.");
+        return ResponseEntity.badRequest().body(null);
     }
-    
+
+    // Map decision to YAML file name
+    String yamlFileName = mapYamlDecisionToFile(yamlDecision);
+    System.out.println("🧐 Attempting to load file: " + yamlFileName);
+
+    // ✅ Load file from classpath (Works inside JAR and Docker)
+    ClassPathResource resource = new ClassPathResource("yaml/" + yamlFileName);
+
+    try {
+        if (!resource.exists()) {
+            System.out.println("❌ ERROR: YAML file not found -> " + yamlFileName);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        // ✅ Read as InputStream (Required for JAR & Docker)
+        InputStreamResource inputStreamResource = new InputStreamResource(resource.getInputStream());
+
+        System.out.println("✅ YAML File Found: " + yamlFileName);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM) // Ensure proper MIME type
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + yamlFileName + "\"")
+                .body(inputStreamResource);
+
+    } catch (IOException e) {
+        System.out.println("❌ ERROR: Could not read file -> " + yamlFileName);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
+
     
     
     

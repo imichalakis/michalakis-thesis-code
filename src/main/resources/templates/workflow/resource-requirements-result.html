@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Requirements Result</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Custom Styles -->
+      <link rel="stylesheet" th:href="@{/css/result-style.css}">
+      <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
@@ -117,12 +120,15 @@
         </div>
     </div>
 
-    <!-- Navigation Buttons -->
-    <div class="text-center mt-4">
-        <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-        <a href="/workflow/scalability-performance" class="btn btn-primary ml-2">Proceed to Plan Scalability</a>
+    <!-- Navigation Buttons (Consistent with Global Button Styles) -->
+    <div class="button-container">
+        <a href="/" class="btn btn-secondary-custom btn-custom">Return to Main Menu</a>
+        <a href="/workflow/resource-requirements" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
+        <a href="/workflow/scalability-performance" class="btn btn-primary-custom btn-custom">Proceed to Plan Scalability</a>
     </div>
-</div>
+
+
+  
 
 <!-- Bootstrap JS and dependencies -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

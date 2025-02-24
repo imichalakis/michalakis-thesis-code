@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpSession;
 
 import java.util.List;
 import java.util.Locale;
@@ -217,14 +218,20 @@ public class GorgiasService{
     //     return result;
     // }
 
-    public List<ParsedResult> executeGorgiasQueryForUrgency(WorkflowForm form) {
+    public List<ParsedResult> executeGorgiasQueryForUrgency(WorkflowForm form, HttpSession session) {
         GorgiasQuery gorgiasQuery = new GorgiasQuery();
         ArrayList<String> gorgiasFiles = new ArrayList<>();
         gorgiasFiles.add("november2024/urgencylev3.pl"); // Reference to urgency Prolog file
         gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-    
+        
+        if (session.getAttribute("form") == null) {
+            session.setAttribute("form", new WorkflowForm());
+        }
+        
         ArrayList<String> facts = new ArrayList<>();
         try {
+            //String urgencyBasedOnDate = determineUrgencyBasedOnStartDate(form);
+                
             if (form.getStartDate() != null && !form.getStartDate().trim().isEmpty()) {
                 facts.add("start_date(" + form.getStartDate() + ")");
             }
@@ -365,30 +372,33 @@ public class GorgiasService{
     
     
 
-    public void determineUrgencyBasedOnStartDate(WorkflowForm form) {
+    public String determineUrgencyBasedOnStartDate(WorkflowForm form) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         try {
             String formStartDate = form.getStartDate();
             if (formStartDate != null && !formStartDate.trim().isEmpty()) {
                 Date startDate = sdf.parse(formStartDate);
-                Date currentDate = new Date(); // Η σημερινή ημερομηνία
+                Date currentDate = new Date(); // Current date
                 long diffInMillies = startDate.getTime() - currentDate.getTime();
                 long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
     
-                // Υπολογισμός της κατάστασης επείγοντος βάσει της διαφοράς σε ημέρες
-                if (diffInDays < 3) {
-                    form.setUrgency("urgent");
-                } else if (diffInDays >= 3 && diffInDays < 10) {
-                    form.setUrgency("high");
+                // Determine urgency string based on days difference
+                if (diffInDays <= 3) {
+                    return "urgentBasedOnDate";
+                } else if (diffInDays > 3 && diffInDays <= 10) {
+                    return "highBasedOnDate";
                 } else {
-                    form.setUrgency("normal");
+                    return "normalBasedOnDate";
                 }
             }
         } catch (ParseException e) {
             e.printStackTrace();
             System.out.println("Error parsing start date.");
         }
+        
+        return "unknownBasedOnDate"; // Default case if the date is invalid or missing
     }
+    
     
         // public GorgiasQueryResult executeGorgiasQueryForLocation(WorkflowForm form) {
 

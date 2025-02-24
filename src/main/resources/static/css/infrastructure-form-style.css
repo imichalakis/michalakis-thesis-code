@@ -1,0 +1,71 @@
+/* Page Styling */
+body {
+    background-color: #f4f7fc;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Centered Form Container */
+.form-container {
+    max-width: 700px;
+    margin: 50px auto;
+    background: white;
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Title */
+.form-title {
+    font-weight: bold;
+    font-size: 26px;
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* Subtitle */
+.form-subtitle {
+    font-size: 16px;
+    color: #6c757d;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+/* Form Group */
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* Labels */
+.form-group label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Fixing Checkbox & Radio Button Alignment */
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.form-check-input {
+    transform: scale(1.2);
+    margin-top: 0;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 15px;
+    font-size: 14px;
+    background: white;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 40px;
+}

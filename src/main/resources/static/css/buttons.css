@@ -1,0 +1,82 @@
+/* 🎯 Button Container - Centers buttons neatly */
+.button-container {
+    display: flex;
+    justify-content: center; /* Centers buttons horizontally */
+    align-items: center; /* Aligns buttons evenly */
+    gap: 8px; /* Minimal spacing between buttons */
+    flex-wrap: wrap; /* Stack buttons on small screens */
+    margin-top: 12px; /* Adjust margin for consistency */
+}
+
+/* 🎯 General Button Styling */
+.btn-custom {
+    padding: 6px 14px;  /* Compact padding for a sleek look */
+    font-size: 13px;  /* Smaller font size for a modern look */
+    font-weight: 500;  /* Medium weight for better readability */
+    border-radius: 4px;  /* Soft rounded edges */
+    text-align: center;
+    border: none;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    text-decoration: none; /* No underlines */
+    min-width: 140px; /* Ensures a uniform width */
+    height: 36px; /* Set a fixed height for consistency */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 🎨 Primary Button - Blue (Continue) */
+.btn-primary-custom {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: 1px solid #0056b3;
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, #0056b3, #003f7f);
+}
+
+/* 🏷 Secondary Button - Gray (Back to Main) */
+.btn-secondary-custom {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #545b62;
+}
+
+.btn-secondary-custom:hover {
+    background: #545b62;
+}
+
+/* ⚠️ Warning Button - Yellow (Go Back) */
+.btn-warning-custom {
+    background: #ffc107;
+    color: black;
+    border: 1px solid #e0a800;
+}
+
+.btn-warning-custom:hover {
+    background: #e0a800;
+}
+
+/* 🔍 Fix Button Size Issue (Remove Forced Height/Width) */
+button,
+a.btn-custom {
+    width: auto; /* Allows buttons to fit content naturally */
+    max-width: 180px; /* Prevents oversized buttons */
+    height: 36px; /* Fixes excessive height */
+}
+
+/* 🖥️ Responsive Fix (For Small Screens) */
+@media (max-width: 768px) {
+    .button-container {
+        flex-direction: column; /* Stack buttons on mobile */
+        gap: 6px; /* Adjust spacing for mobile */
+    }
+
+    .btn-custom {
+        width: auto;  /* No forced width */
+        height: auto;  /* Allow height to adjust */
+        padding: 8px 12px; /* Slightly larger padding for touch */
+    }
+}

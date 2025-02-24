@@ -58,6 +58,7 @@ p.lead {
 }
 
 
+
 /* Step Titles */
 .workflow-step h5 {
     font-size: 1.1rem;
@@ -106,7 +107,21 @@ p.lead {
     border-radius: 8px;
     padding: 4px 10px;
     font-weight: bold;
+    display: flex;
+    align-items: center; /* Align icon & text */
+    justify-content: center;
+    font-weight: bold;
+    background: #fff3cd;
+    padding: 4px 8px;
+    border-radius: 5px;
+
 }
+.btn-action {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -146,3 +161,4 @@ footer {
     padding: 20px;
     border-top: 1px solid #ddd; /* Optional: Adds a subtle border */
 }
+

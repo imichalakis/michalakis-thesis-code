@@ -3,66 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Urgency Decision Result</title>
+    <title>Urgency Decision Review</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" th:href="@{/css/result-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
     </nav>
 
     <div class="container mt-5">
         <!-- Page Title -->
         <div class="text-center mb-4">
-            <h2 class="display-5">Urgency Decision Result</h2>
-            <p class="lead">Review the urgency decision based on your input parameters.</p>
+            <h2 class="display-5">Urgency Decision Review</h2>
+            <p class="lead">Analyze the urgency level based on your selected parameters.</p>
         </div>
 
         <!-- Selected Parameters -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h4>Your Selected Parameters</h4>
-            </div>
+            <div class="card-header bg-info text-white">Your Selection</div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Type of Request:</strong> 
-                        <span th:text="${form.requestType == 'ops' ? 'OPS (Ministry of Digital Governance)' : 'Other Public Sector Entity'}"></span>
+                    <li class="list-group-item"><strong>Request Type:</strong> 
+                        <span th:text="${form.requestType == 'ops' ? 'Ministry of Digital Governance' : 'Other Public Sector Entity'}"></span>
                     </li>
-                    <li class="list-group-item"><strong>Has Contract with Contractor:</strong> 
+                    <li class="list-group-item"><strong>Cloud Provider Contract:</strong> 
                         <span th:text="${form.contractWithContractor == 'yes' ? 'Yes' : 'No'}"></span>
                     </li>
-                    <li class="list-group-item"><strong>Agency Category:</strong> 
-                        <span th:text="${form.agencyCategory}"></span>
+                    <li class="list-group-item"><strong>Agency Classification:</strong> 
+                        <span th:if="${form.agencyCategory == 'centralGovernment'}">This request originates from a **Central Government agency**.</span>
+                        <span th:if="${form.agencyCategory == 'localGovernment'}">This request is associated with a **Local Government body**.</span>
+                        <span th:if="${form.agencyCategory == 'independentAuthority'}">The request comes from an **Independent Authority**.</span>
+                        <span th:if="${form.agencyCategory == 'supervisedEntity'}">This agency is a **Supervised Entity** under government oversight.</span>
                     </li>
-                    <li class="list-group-item"><strong>Planned Start Date:</strong> 
+                    <li class="list-group-item"><strong>Planned Deployment Date:</strong> 
                         <span th:text="${form.startDate}"></span>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <!-- Urgency Decision -->
-      
-
         <!-- Recommended Urgency Levels -->
         <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4>Recommended Urgency Levels</h4>
-            </div>
+            <div class="card-header bg-success text-white">Urgency Recommendation</div>
             <div class="card-body">
-                <h2>Urgency Level Results</h2>
+                <h2 class="recommendation-title">Suggested Urgency Level</h2>
 
                 <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
                     <div th:each="result, iterStat : ${#sets.toSet(resultsList)}" class="recommendation-box">
-                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                        <h3>Option <span th:text="${iterStat.count}"></span>: 
                             <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
                         </h3>
 
                         <div class="reason-box">
-                            <strong>Why this choice?</strong>
+                            <strong>Reasoning:</strong>
                             <ul>
                                 <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
                             </ul>
@@ -71,50 +72,27 @@
                 </div>
 
                 <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
-                    <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+                    <p class="text-danger">No recommendations available. Please review your selections.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="text-center mt-4">
-            <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-            <a href="/workflow/infrbroadcat" class="btn btn-primary ml-2">Proceed to Infrastructure Requirements</a>
-            
-        </div>
+       <!-- Navigation Buttons (Now Consistent & Centered) -->
+<!-- Navigation Buttons (Now Consistent & Centered) -->
+<div class="button-container">
+    <a href="/" class="btn btn-secondary-custom btn-custom">Return to Main Menu</a>
+    <a href="/workflow/index" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
+    <a href="/workflow/infrbroadcat" class="btn btn-primary-custom btn-custom">Continue to Infrastructure Selection</a>
+</div>
 
-    </div>
 
-        
+
     </div>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-    <!-- Custom Styling -->
-    <style>
-        .recommendation-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-left: 5px solid #007bff;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-        .recommendation-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        .reason-box {
-            background: #eef3f7;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-style: italic;
-        }
-    </style>
 
 </body>
 </html>

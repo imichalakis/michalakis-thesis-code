@@ -36,19 +36,26 @@
                     <form id="decision-form" action="/save-selections" method="post">
                         <ul class="list-group">
                     
-                            <!-- Infrastructure Decision -->
-                            <li class="list-group-item">
-                                <strong><i class="fas fa-server"></i> Infrastructure:</strong>
-                                <div th:if="${infrastructureDecision != null}">
-                                    <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(infrastructureDecision, ','))}" class="decision-box">
-                                        <input type="radio" name="infrastructure" th:value="${decision.trim()}">
-                                        <label th:text="${decision.trim()}"></label>
-                                    </div>
-                                </div>
-                                <div th:if="${infrastructureDecision == null}" class="not-provided">
-                                    <span class="text-muted"><i>Not Provided</i></span>
-                                </div>
-                            </li>
+                          <!-- Infrastructure Decision -->
+<li class="list-group-item">
+    <strong><i class="fas fa-server"></i> Infrastructure:</strong>
+    <div th:if="${infrastructureDecision != null}">
+        <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(infrastructureDecision, ','))}" class="decision-box">
+            <input type="radio" name="infrastructure" th:value="${decision.trim()}">
+            
+            <!-- Convert raw values to descriptive text -->
+            <label th:text="${decision.trim() == 'iaas' ? 'Infrastructure As A Service' 
+                            : (decision.trim() == 'paas' ? 'Platform As A Service' 
+                            : (decision.trim() == 'saas' ? 'Software As A Service' 
+                            : (decision.trim() == 'serverless' ? 'Serverless (AWS Lambda, etc.)' 
+                            : decision.trim())))}"></label>
+        </div>
+    </div>
+    <div th:if="${infrastructureDecision == null}" class="not-provided">
+        <span class="text-muted"><i>Not Provided</i></span>
+    </div>
+</li>
+
                     
                             <!-- Scalability Decision -->
                             <li class="list-group-item">

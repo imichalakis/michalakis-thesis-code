@@ -6,6 +6,8 @@
     <title>Location Selection Result</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/result-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
@@ -132,7 +134,7 @@
             </style>
 
 <div class="card-body">
-    <h2>Recommended Deployment Locations</h2>
+    <h2>Suggested Location Options</h2>
     <p>Based on your requirements, here are the best deployment locations for your system:</p>
 
     <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
@@ -159,6 +161,7 @@
         <!-- Navigation Buttons -->
         <div class="text-center mt-4">
             <a href="/" class="btn btn-secondary">Back to Main Menu</a>
+            <a href="/workflow/location" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
             <a href="/workflow/resource-requirements" class="btn btn-primary ml-2">Proceed to Resource Requirements</a>
         </div>
     </div>

@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Requirements</title>
+
+    <!-- Bootstrap & Custom CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/infrastructure-form-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
@@ -14,76 +18,63 @@
 </nav>
 
 <!-- Main Container -->
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <h2 class="display-5">Resource Requirements</h2>
-        <p class="lead">Specify the resource priorities for your application to ensure optimal performance.</p>
-    </div>
+<div class="form-container">
+    <h2 class="form-title">Resource Requirements</h2>
+    <p class="form-subtitle">Specify the resource priorities for your application to ensure optimal performance.</p>
 
-    <!-- Form Card -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form th:action="@{/workflow/process-resource-requirements}" th:object="${form}" method="post">
+    <!-- Form -->
+    <form th:action="@{/workflow/process-resource-requirements}" th:object="${form}" method="post">
 
-
-                <!-- Compute vs Storage -->
-                <div class="form-group">
-                    <label class="font-weight-bold">What does your application prioritize?</label>
-                    <select th:field="*{resourcePriority}" class="form-control">
-                        <option value="compute">⚡ Compute-Intensive (High CPU & RAM for fast processing)</option>
-                        <option value="storage">💾 Storage-Intensive (Large storage capacity with lower CPU/RAM requirements)</option>
-                    </select>
-                </div>
-
-                <!-- Latency vs Throughput -->
-                <div class="form-group">
-                    <label class="font-weight-bold">What is the performance requirement for data access?</label>
-                    <select th:field="*{performanceRequirement}" class="form-control">
-                        <option value="low_latency">⏳ Low Latency (Fast response time for real-time applications)</option>
-                        <option value="high_throughput">🚀 High Throughput (Batch processing, analytics, and high-volume data transfer)</option>
-                    </select>
-                </div>
-
-                <!-- Scalability vs Fixed Resources -->
-                <div class="form-group">
-                    <label class="font-weight-bold">Does your application need to scale dynamically?</label>
-                    <select th:field="*{scalabilityRequirement}" class="form-control">
-                        <option value="auto_scaling">📈 Auto-Scaling (Dynamically allocates resources based on demand)</option>
-                        <option value="fixed_allocation">📌 Fixed Allocation (Predictable workload with static resource limits)</option>
-                    </select>
-                </div>
-
-                <!-- Memory vs CPU Priority -->
-                <div class="form-group">
-                    <label class="font-weight-bold">What type of processing does your application require?</label>
-                    <select th:field="*{processingOptimization}" class="form-control">
-                        <option value="memory_optimized">🧠 Memory-Optimized (Large memory allocation for caching and in-memory computing)</option>
-                        <option value="cpu_optimized">🔥 CPU-Optimized (Heavy computational tasks, AI/ML workloads, or real-time processing)</option>
-                    </select>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-                </div>
-
-                <!-- Back Link -->
-                <div class="text-center mt-3">
-                    <a href="/" class="btn btn-secondary">Back to Main Menu</a>
-                </div>
-
-            </form>
+        <!-- Compute vs Storage -->
+        <div class="form-group">
+            <label>What does your application prioritize?</label>
+            <select th:field="*{resourcePriority}" class="form-control">
+                <option value="compute">⚡ Compute-Intensive (High CPU & RAM for fast processing)</option>
+                <option value="storage">💾 Storage-Intensive (Large storage capacity with lower CPU/RAM requirements)</option>
+            </select>
         </div>
-    </div>
+
+        <!-- Latency vs Throughput -->
+        <div class="form-group">
+            <label>What is the performance requirement for data access?</label>
+            <select th:field="*{performanceRequirement}" class="form-control">
+                <option value="low_latency">⏳ Low Latency (Fast response time for real-time applications)</option>
+                <option value="high_throughput">🚀 High Throughput (Batch processing, analytics, and high-volume data transfer)</option>
+            </select>
+        </div>
+
+        <!-- Scalability vs Fixed Resources -->
+        <div class="form-group">
+            <label>Does your application need to scale dynamically?</label>
+            <select th:field="*{scalabilityRequirement}" class="form-control">
+                <option value="auto_scaling">📈 Auto-Scaling (Dynamically allocates resources based on demand)</option>
+                <option value="fixed_allocation">📌 Fixed Allocation (Predictable workload with static resource limits)</option>
+            </select>
+        </div>
+
+        <!-- Memory vs CPU Priority -->
+        <div class="form-group">
+            <label>What type of processing does your application require?</label>
+            <select th:field="*{processingOptimization}" class="form-control">
+                <option value="memory_optimized">🧠 Memory-Optimized (Large memory allocation for caching and in-memory computing)</option>
+                <option value="cpu_optimized">🔥 CPU-Optimized (Heavy computational tasks, AI/ML workloads, or real-time processing)</option>
+            </select>
+        </div>
+
+          <!-- Navigation Buttons -->
+          <div class="button-container">
+            <a href="/" class="btn btn-secondary-custom btn-custom">Main Menu</a>
+            <a href="/workflow/location" class="btn btn-warning-custom btn-custom">Go Back</a>
+            <button type="submit" class="btn btn-primary-custom btn-custom">Review & Continue</button>
+        </div>
+
+    </form>
 </div>
 
 <!-- Footer -->
-<footer class="text-center py-4 mt-5 bg-light">
-    <p class="mb-0">
-        &copy; 2024 Technical University of Crete. <br>
-        Developed as part of a Thesis in Deployment Choice Automation.
-    </p>
-</footer>
+<div class="footer">
+    <p>&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Choice Automation.</p>
+</div>
 
 </body>
 </html>
