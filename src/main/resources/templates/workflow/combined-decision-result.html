@@ -36,27 +36,76 @@
                     <form id="decision-form" action="/save-selections" method="post">
                         <ul class="list-group">
                     
-                          <!-- Infrastructure Decision -->
+         <!-- Infrastructure Decision - Ultra Simple Solution -->
 <li class="list-group-item">
     <strong><i class="fas fa-server"></i> Infrastructure:</strong>
     <div th:if="${infrastructureDecision != null}">
-        <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(infrastructureDecision, ','))}" class="decision-box">
-            <input type="radio" name="infrastructure" th:value="${decision.trim()}">
-            
-            <!-- Convert raw values to descriptive text -->
-            <label th:text="${decision.trim() == 'iaas' ? 'Infrastructure As A Service' 
-                            : (decision.trim() == 'paas' ? 'Platform As A Service' 
-                            : (decision.trim() == 'saas' ? 'Software As A Service' 
-                            : (decision.trim() == 'serverless' ? 'Serverless (AWS Lambda, etc.)' 
-                            : decision.trim())))}"></label>
+        <!-- Step 1: Create a JavaScript array to track processed values -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            var processedValues = [];
+            /*]]>*/
+        </script>
+        
+        <!-- Step 2: First pass - create hidden elements with all values -->
+        <div th:each="item : ${#strings.arraySplit(infrastructureDecision, ',')}" 
+             th:with="trimmedItem=${#strings.trim(item)}"
+             style="display:none;">
+            <span th:text="${trimmedItem}" class="infra-value"></span>
         </div>
+        
+        <!-- Step 3: Use JavaScript to deduplicate and create the actual form elements -->
+        <div id="infrastructure-options"></div>
+        
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get all infrastructure values
+                var values = document.querySelectorAll('.infra-value');
+                var uniqueValues = [];
+                
+                // Deduplicate values
+                values.forEach(function(element) {
+                    var value = element.textContent;
+                    if (uniqueValues.indexOf(value) === -1) {
+                        uniqueValues.push(value);
+                    }
+                });
+                
+                // Create form elements for unique values
+                var container = document.getElementById('infrastructure-options');
+                uniqueValues.forEach(function(value, index) {
+                    var displayValue = value;
+                    if (value === 'iaas') displayValue = ' Infrastructure As A Service';
+                    else if (value === 'paas') displayValue = ' Platform As A Service';
+                    else if (value === 'saas') displayValue = ' Software As A Service';
+                    else if (value === 'serverless') displayValue = ' Serverless (AWS Lambda, etc.)';
+                    
+                    var div = document.createElement('div');
+                    div.className = 'decision-box';
+                    
+                    var input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = 'infrastructure';
+                    input.id = 'infra-' + index;
+                    input.value = value;
+                    
+                    var label = document.createElement('label');
+                    label.htmlFor = 'infra-' + index;
+                    label.textContent = displayValue;
+                    
+                    div.appendChild(input);
+                    div.appendChild(label);
+                    container.appendChild(div);
+                });
+            });
+            /*]]>*/
+        </script>
     </div>
     <div th:if="${infrastructureDecision == null}" class="not-provided">
         <span class="text-muted"><i>Not Provided</i></span>
     </div>
 </li>
-
-                    
                             <!-- Scalability Decision -->
                             <li class="list-group-item">
                                 <strong><i class="fas fa-chart-line"></i> Scalability & Performance:</strong>
@@ -85,7 +134,7 @@
                                 </div>
                             </li>
                     
-                            <!-- Computing Resources -->
+                            <!-- Computing Resources
                             <li class="list-group-item">
                                 <strong><i class="fas fa-memory"></i> Computing Resources:</strong>
                                 <div th:if="${resourceDecision != null}">
@@ -97,7 +146,25 @@
                                 <div th:if="${resourceDecision == null}" class="not-provided">
                                     <span class="text-muted"><i>Not Provided</i></span>
                                 </div>
-                            </li>
+                            </li> -->
+
+
+                            <!-- Computing Resources - Updated for Pipe Delimiter -->
+<li class="list-group-item">
+    <strong><i class="fas fa-memory"></i> Computing Resources:</strong>
+    <div th:if="${resourceDecision != null}">
+        <!-- Use pipe character as delimiter instead of comma -->
+        <div th:each="decision, iterStat : ${#strings.arraySplit(resourceDecision, '|')}" class="decision-box">
+            <input type="checkbox" name="resources" 
+                   th:id="${'res-' + iterStat.index}" 
+                   th:value="${decision.trim()}">
+            <label th:for="${'res-' + iterStat.index}" th:text="${decision.trim()}"></label>
+        </div>
+    </div>
+    <div th:if="${resourceDecision == null}" class="not-provided">
+        <span class="text-muted"><i>Not Provided</i></span>
+    </div>
+</li>
                     
                             <!-- Location Decision -->
                             <li class="list-group-item">

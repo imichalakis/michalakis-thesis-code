@@ -34,15 +34,15 @@
                     <li class="list-group-item"><strong>Request Type:</strong> 
                         <span th:text="${form.requestType == 'ops' ? 'Ministry of Digital Governance' : 'Other Public Sector Entity'}"></span>
                     </li>
-                    <li class="list-group-item"><strong>Cloud Provider Contract:</strong> 
+                    <li class="list-group-item"><strong>Existing Contract:</strong> 
                         <span th:text="${form.contractWithContractor == 'yes' ? 'Yes' : 'No'}"></span>
                     </li>
-                    <li class="list-group-item"><strong>Agency Classification:</strong> 
+                    <!-- <li class="list-group-item"><strong>Agency Classification:</strong> 
                         <span th:if="${form.agencyCategory == 'centralGovernment'}">This request originates from a **Central Government agency**.</span>
                         <span th:if="${form.agencyCategory == 'localGovernment'}">This request is associated with a **Local Government body**.</span>
                         <span th:if="${form.agencyCategory == 'independentAuthority'}">The request comes from an **Independent Authority**.</span>
                         <span th:if="${form.agencyCategory == 'supervisedEntity'}">This agency is a **Supervised Entity** under government oversight.</span>
-                    </li>
+                    </li> -->
                     <li class="list-group-item"><strong>Planned Deployment Date:</strong> 
                         <span th:text="${form.startDate}"></span>
                     </li>
@@ -50,27 +50,75 @@
             </div>
         </div>
 
-        <!-- Recommended Urgency Levels -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">Urgency Recommendation</div>
-            <div class="card-body">
-                <h2 class="recommendation-title">Suggested Urgency Level</h2>
+      <!-- Recommended Urgency Levels -->
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">Urgency Recommendation</div>
+    <div class="card-body">
+        <h2 class="recommendation-title">Suggested Urgency Level</h2>
 
-                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
-                    <div th:each="result, iterStat : ${#sets.toSet(resultsList)}" class="recommendation-box">
-                        <h3>Option <span th:text="${iterStat.count}"></span>: 
-                            <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
-                        </h3>
+        <!-- Add this script at the top of your card body -->
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                // Store seen combinations of title + reasoning
+                const seen = {};
+                // Get all recommendation boxes
+                const boxes = document.querySelectorAll('.recommendation-box');
+                
+                boxes.forEach(function(box) {
+                    // Get the title (includes "Option X: ")
+                    const title = box.querySelector('h3 span:nth-child(2)').textContent.trim();
+                    
+                    // Get all reasoning items as a single string
+                    const reasoningItems = Array.from(box.querySelectorAll('.reason-box li span:first-child'))
+                        .map(span => span.textContent.trim())
+                        .join('|');
+                    
+                    // Create a unique key
+                    const key = title + '::' + reasoningItems;
+                    
+                    // If we've seen this exact combination before, hide this box
+                    if (seen[key]) {
+                        box.style.display = 'none';
+                    } else {
+                        // Mark as seen
+                        seen[key] = true;
+                    }
+                });
+                
+                // Renumber the visible options
+                let visibleCount = 1;
+                boxes.forEach(function(box) {
+                    if (box.style.display !== 'none') {
+                        const countElement = box.querySelector('h3 span:first-child');
+                        if (countElement) {
+                            countElement.textContent = visibleCount++;
+                        }
+                    }
+                });
+            });
+        </script>
 
-                        <div class="reason-box">
-                            <strong>Reasoning:</strong>
-                            <ul>
-                                <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
-                            </ul>
-                        </div>
-                    </div>
+        <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+            <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+                <h3>Option <span th:text="${iterStat.count}"></span>: 
+                    <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
+                </h3>
+            
+                <div class="reason-box">
+                    <strong>Reasoning:</strong>
+                    <ul>
+                        <li th:each="fact : ${result['convertedFact']}">
+                            <!-- Clean any remaining bullet points in the template -->
+                            <span th:if="${fact != null and fact != ''}" 
+                                  th:text="${fact.startsWith('•') ? fact.substring(1).trim() : fact}"></span>
+                            <span th:if="${fact == null or fact == ''}" class="text-muted">(Fact not mapped properly)</span>
+                        </li>
+                    </ul>
                 </div>
-
+            </div>
+        </div>
+    </div>
+</div>
                 <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
                     <p class="text-danger">No recommendations available. Please review your selections.</p>
                 </div>

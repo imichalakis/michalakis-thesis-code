@@ -1,6 +1,9 @@
 package com.myproj.firstproj.service;
 
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +14,8 @@ import com.myproj.firstproj.model.ParsedResult;
 import com.myproj.firstproj.model.ParsedResult;
 import com.myproj.firstproj.model.WorkflowForm;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 @Service
@@ -79,195 +85,77 @@ public class GorgiasService{
         return Arrays.asList(projectsArray); // Convert the array to a list and return
     }
 
-    // methods to interact with the Gorgias API 
-
-        // methods to interact with the Gorgias API 
-    
-// 04-12-2023 modification
-    // public GorgiasQueryResult executeGorgiasQuery(WorkflowForm form) {
-    //     long startTime = System.currentTimeMillis();
-
-    //     ExecuteGorgiasQueryControllerApi apiInstance = new ExecuteGorgiasQueryControllerApi();
-    //     apiInstance.getApiClient().setUsername("imichalakis");
-    //     apiInstance.getApiClient().setPassword("528528gm@@");
-    //     apiInstance.getApiClient().setBasePath("http://aiasvm1.amcl.tuc.gr:8085");
-    //     GorgiasQuery gorgiasQuery = new GorgiasQuery(); // GorgiasQuery | gorgiasQuery
-    //     //example of using the prolog API to consult your file
-    //     ArrayList<String> gorgiasFiles=new ArrayList<String>();
-    //     gorgiasFiles.add("Theory1/urgencylev.pl");
-    //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
 
 
-    //     //example of using the prolog API to assert a fact
-    //     ArrayList<String> facts=new ArrayList<String>();
-
-    //     facts.add("startdate(10)");
-    //     gorgiasQuery.setFacts(facts);
-
-    //     //example of using the prolog API to prove a policy option
-    //     //String myQuery = "challenge(Agent, Resource)";
-    //     String myQuery = "urgency(X)";
-
-    //     gorgiasQuery.setResultSize(1);
-    //     gorgiasQuery.setQuery(myQuery);
-    //     System.out.println("Query: " + gorgiasQuery.getQuery());
-    //     try{
-    //     GorgiasQueryResult result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-    //     long endTime = System.currentTimeMillis();
-    //     long executionTime = endTime - startTime;
-    //     System.out.println("Gorgias query executed in " + executionTime + " ms");
-        
-
-    //     System.out.println(result);
-    //     System.out.println(form.getStartDate());
-    //     return result;
-    //     }
-    //     catch (ApiException e) {
-    //         System.out.println("to result einai null");
-
-    //         e.printStackTrace();
-    //         return null;
-    //     }
-
-    // public GorgiasQueryResult executeGorgiasQueryForUrgency(WorkflowForm form) {
-    //     long startTime = System.currentTimeMillis();
-
-    //     // ExecuteGorgiasQueryControllerApi apiInstance = new ExecuteGorgiasQueryControllerApi();
-    //     // apiInstance.getApiClient().setUsername("imichalakis");
-    //     // apiInstance.getApiClient().setPassword("528528gm@@");
-    //     // apiInstance.getApiClient().setBasePath("http://aiasvm1.amcl.tuc.gr:8085");
-    //     GorgiasQuery gorgiasQuery = new GorgiasQuery();
-    //     ArrayList<String> gorgiasFiles = new ArrayList<String>();
-    //    // gorgiasFiles.add("Theory1/urgencylev4.pl");
-    //    gorgiasFiles.add("november2024/urgencylev3.pl");
-    //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-
-    //     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    //     ArrayList<String> facts = new ArrayList<>();
-    //     try {
-    //         String formStartDate = form.getStartDate();
-    //         if (formStartDate != null && !formStartDate.trim().isEmpty()) {
-    //             Date startDate = sdf.parse(formStartDate);
-    //             Date currentDate = new Date(); // Gets the current date
-    //             long diffInMillies = startDate.getTime() - currentDate.getTime();
-    //             long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-    //             if (diffInDays < 0) {
-    //                 System.out.println("The start date must be a future date.");
-    //                 return null;
-    //             }
-    //             facts.add("startdate(" + diffInDays + ")");
-    //         }
-
-    //         String agencyCategory = form.getAgencyCategory();
-    //         if (agencyCategory != null && !agencyCategory.trim().isEmpty()) {
-    //             facts.add("agency_category(" + agencyCategory + ")");
-    //         }
-
-    //         //determineUrgencyBasedOnStartDate(form);
-    //         // String urgency = form.getUrgency();
-    //         // if (urgency != null && !urgency.trim().isEmpty()) {
-    //         //     urgency = urgency.toLowerCase(Locale.ROOT);
-    //         //     facts.add("urgency(" + urgency + ")");
-    //         // }
-
-    //         // New Parameters: Request Type and Contract with Contractor
-    //         String requestType = form.getRequestType();
-    //         if (requestType != null && !requestType.trim().isEmpty()) {
-    //             requestType = requestType.toLowerCase(Locale.ROOT);
-    //             facts.add("request_type(" + requestType + ")");
-    //         }
-
-    //         String contractWithContractor = form.getContractWithContractor();
-    //         if (contractWithContractor != null && !contractWithContractor.trim().isEmpty()) {
-    //             contractWithContractor = contractWithContractor.toLowerCase(Locale.ROOT);
-    //             facts.add("contract_with_contractor(" + contractWithContractor + ")");
-    //         }
-
-    //         if (facts.isEmpty()) {
-    //             System.out.println("At least one of start date, agency category, urgency, request type, or contract with contractor must be provided.");
-    //             return null;
-    //         }
-            
-    //         gorgiasQuery.setFacts(facts);
-    //     } catch (Exception e) {
-    //         e.printStackTrace();
-    //         System.out.println("Error with input data.");
-    //         return null;
-    //     }
-
-    //     String myQuery = "urgency(X)";
-    //     gorgiasQuery.setResultSize(1);
-    //     gorgiasQuery.setQuery(myQuery);
-    //     System.out.println("Query: " + gorgiasQuery.getQuery());
-    //     GorgiasQueryResult result = null;
-    //     try {
-    //         result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-    //         long endTime = System.currentTimeMillis();
-    //         long executionTime = endTime - startTime;
-        
-    //         System.out.println("Gorgias query executed in " + executionTime + " ms");
-    //         System.out.println(result);
-    //     } catch (ApiException e) {
-    //         System.out.println("Result is null due to an exception.");
-    //         e.printStackTrace();
-    //     }
-
-    //     // System.out.println("Start date as input: " + form.getStartDate());
-    //     // System.out.println("Agency category as input: " + form.getAgencyCategory());
-    //     // System.out.println("Urgency as input: " + form.getUrgency());
-    //     return result;
-    // }
 
     public List<ParsedResult> executeGorgiasQueryForUrgency(WorkflowForm form, HttpSession session) {
         GorgiasQuery gorgiasQuery = new GorgiasQuery();
-        ArrayList<String> gorgiasFiles = new ArrayList<>();
-        gorgiasFiles.add("november2024/urgencylev3.pl"); // Reference to urgency Prolog file
-        gorgiasQuery.setGorgiasFiles(gorgiasFiles);
+        setupGorgiasFiles(gorgiasQuery);
         
-        if (session.getAttribute("form") == null) {
-            session.setAttribute("form", new WorkflowForm());
-        }
-        
-        ArrayList<String> facts = new ArrayList<>();
-        try {
-            //String urgencyBasedOnDate = determineUrgencyBasedOnStartDate(form);
-                
-            if (form.getStartDate() != null && !form.getStartDate().trim().isEmpty()) {
-                facts.add("start_date(" + form.getStartDate() + ")");
-            }
-            if (form.getAgencyCategory() != null && !form.getAgencyCategory().trim().isEmpty()) {
-                facts.add("agency_category(" + form.getAgencyCategory() + ")");
-            }
-            if (form.getRequestType() != null && !form.getRequestType().trim().isEmpty()) {
-                facts.add("request_type(" + form.getRequestType() + ")");
-            }
-            if (form.getContractWithContractor() != null && !form.getContractWithContractor().trim().isEmpty()) {
-                facts.add("contract_with_contractor(" + form.getContractWithContractor() + ")");
-            }
-    
-            System.out.println("Urgency Facts: " + facts);
-            gorgiasQuery.setFacts(facts);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error processing urgency data.");
+        List<String> facts = collectFacts(form);
+        if (facts.isEmpty()) {
+            System.out.println("No valid data to process for urgency.");
             return Collections.emptyList();
         }
     
-        gorgiasQuery.setResultSize(5); // Allow multiple results
+        gorgiasQuery.setFacts(facts);
+        gorgiasQuery.setResultSize(5);
         gorgiasQuery.setQuery("urgency(X)");
         System.out.println("Executing Query: " + gorgiasQuery.getQuery());
     
-        GorgiasQueryResult result = null;
-        try {
-            result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-            System.out.println("Query Result: " + result);
-        } catch (ApiException e) {
-            System.out.println("Result is null due to an exception.");
-            e.printStackTrace();
+        return performQuery(gorgiasQuery);
+    }
+    
+    private void setupGorgiasFiles(GorgiasQuery gorgiasQuery) {
+        List<String> gorgiasFiles = new ArrayList<>();
+        gorgiasFiles.add("2025/urgencylevel.pl");
+        gorgiasQuery.setGorgiasFiles(gorgiasFiles);
+    }
+
+    private List<String> collectFacts(WorkflowForm form) {
+        List<String> facts = new ArrayList<>();
+    
+        // ✅ Get urgency based on date and add it **without** a prefix
+        String urgencyDateFact = determineUrgencyBasedOnStartDate(form);
+        if (urgencyDateFact != null && !urgencyDateFact.trim().isEmpty()) {
+            facts.add(urgencyDateFact); // Directly add the value
+            System.out.println("✅ Added Fact (without prefix): " + urgencyDateFact);
+        } else {
+            System.out.println("⚠️ Skipped Urgency Date Fact (null or empty)");
         }
     
-        return parseGorgiasQueryResult(result);
+        // ✅ Add other facts normally with prefixes
+        addFactIfValid(facts, form.getAgencyCategory(), "agency_category");
+        addFactIfValid(facts, form.getRequestType(), "request_type");
+        addFactIfValid(facts, form.getContractWithContractor(), "contract_with_contractor");
+    
+        // ✅ Debugging: Show collected facts before sending
+        System.out.println("📌 Facts Collected: " + facts);
+    
+        return facts;
     }
+    
+    
+    private void addFactIfValid(List<String> facts, String value, String prefix) {
+        if (value != null && !value.trim().isEmpty()) {
+            facts.add(prefix + "(" + value + ")");
+        }
+    }
+    
+    private List<ParsedResult> performQuery(GorgiasQuery gorgiasQuery) {
+        try {
+            System.out.println("📤 Sending Facts to Gorgias: " + gorgiasQuery.getFacts());
+
+            GorgiasQueryResult result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
+            System.out.println("Query Result: " + result);
+            return parseGorgiasQueryResult(result);
+        } catch (ApiException e) {
+            System.out.println("API call failed: " + e.getMessage());
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+    
     
     public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form) {
         GorgiasQuery gorgiasQuery = new GorgiasQuery();
@@ -369,53 +257,43 @@ public class GorgiasService{
         return facts;
     }
     
-    
-    
-
     public String determineUrgencyBasedOnStartDate(WorkflowForm form) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            String formStartDate = form.getStartDate();
-            if (formStartDate != null && !formStartDate.trim().isEmpty()) {
-                Date startDate = sdf.parse(formStartDate);
-                Date currentDate = new Date(); // Current date
-                long diffInMillies = startDate.getTime() - currentDate.getTime();
-                long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-    
-                // Determine urgency string based on days difference
-                if (diffInDays <= 3) {
-                    return "urgentBasedOnDate";
-                } else if (diffInDays > 3 && diffInDays <= 10) {
-                    return "highBasedOnDate";
-                } else {
-                    return "normalBasedOnDate";
-                }
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-            System.out.println("Error parsing start date.");
+        String formStartDate = form.getStartDate();
+        if (formStartDate == null || formStartDate.trim().isEmpty()) {
+            System.out.println("Start date is null or empty.");
+            return "unknownBasedOnDate";
         }
-        
-        return "unknownBasedOnDate"; // Default case if the date is invalid or missing
+        try {
+            Date startDate = sdf.parse(formStartDate);
+            return calculateUrgencyBasedOnDateDiff(startDate, new Date());
+        } catch (ParseException e) {
+            System.out.println("Error parsing start date: " + formStartDate);
+            return "unknownBasedOnDate";
+        }
+    }
+    
+    private String calculateUrgencyBasedOnDateDiff(Date startDate, Date currentDate) {
+        long diffInMillies = startDate.getTime() - currentDate.getTime();
+        long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+        if (diffInDays <= 3) {
+            return "urgentbasedondate";
+        } else if (diffInDays <= 10) {
+            return "highbasedondate";
+        } else {
+            return "normalbasedondate";
+        }
     }
     
     
-        // public GorgiasQueryResult executeGorgiasQueryForLocation(WorkflowForm form) {
 
-        // String deploymentLocation = form.getDeploymentLocation();
-        
-        // GorgiasQuery gorgiasQuery = new GorgiasQuery();
-        // ArrayList<String> gorgiasFiles = new ArrayList<String>();
-        // gorgiasFiles.add("Theory1/urgencylev4.pl");
-        // gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-        //     GorgiasQueryResult result = null;
-        //     return result;
-        // }
+   
         public List<ParsedResult> executeGorgiasQueryForLocation(WorkflowForm form) {
             GorgiasQuery gorgiasQuery = new GorgiasQuery();
             ArrayList<String> gorgiasFiles = new ArrayList<>();
-            gorgiasFiles.add("november2024/location.pl");  // Prolog file for location
-            gorgiasQuery.setGorgiasFiles(gorgiasFiles);
+           // gorgiasFiles.add("november2024/location.pl");  // Prolog file for location
+           gorgiasFiles.add("2025/location2.pl");
+           gorgiasQuery.setGorgiasFiles(gorgiasFiles);
         
             ArrayList<String> facts = new ArrayList<>();
             try {
@@ -494,102 +372,16 @@ public class GorgiasService{
         
         
         
-        
-        public GorgiasQueryResult executeGorgiasQueryForInfrastructure(WorkflowForm form) {
-            long startTime = System.currentTimeMillis();
-            
-            GorgiasQuery gorgiasQuery = new GorgiasQuery();
-            ArrayList<String> gorgiasFiles = new ArrayList<>();
-            gorgiasFiles.add("november2024/infrastructure4.pl"); // Αναφέρεται στο αρχείο υποδομής στο Gorgias
-            gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-        
-            ArrayList<String> facts = new ArrayList<>();
-            try {
-                // Προσθήκη των παραμέτρων υποδομής ως facts
-                if (form.isHighScalability()) {
-                    facts.add("high_scalability");
-                }
-                if (form.isHighPerformance()) {
-                    facts.add("high_performance");
-                }
-                if (form.isDevopsFriendly()) {
-                    facts.add("devops_friendly");
-                }
-                if (form.isHighBudget()) {
-                    facts.add("high_budget");
-                }
-                if (!form.isHighBudget()) {
-                    facts.add("low_budget"); // or "not_high_budget"
-                }
-                if (form.isComplexApp()) {
-                    facts.add("complex_app");
-                }
-                if (form.isDataSensitivity()) {
-                    facts.add("data_sensitivity");
-                }
-
-                
-                
-                gorgiasQuery.setFacts(facts);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Error processing infrastructure data.");
-                return null;
-            }
-        
-            gorgiasQuery.setResultSize(0);
-            gorgiasQuery.setQuery("propose_infrastructure(X)");
-            System.out.println("Query: " + gorgiasQuery.getQuery());
-            GorgiasQueryResult result = null;
-        
-            try {
-                result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-                long endTime = System.currentTimeMillis();
-                long executionTime = endTime - startTime;
-                System.out.println("Gorgias query executed in " + executionTime + " ms");
-                System.out.println(result);
-                // Εκτύπωση των αποτελεσμάτων
-        if (result != null && result.isHasResult()) {
-            System.out.println("Results from Gorgias:");
-            List<QueryResult> results = result.getResult();
-            for (QueryResult queryResult : results) {
-                System.out.println("Type: " + queryResult.getExplanationStr());
-                System.out.println("Human Explanation: " + queryResult.getHumanExplanation());
-            }
-        } else {
-            System.out.println("No results found or an error occurred.");
-        }
-            } catch (ApiException e) {
-                System.out.println("Result is null due to an exception.");
-                e.printStackTrace();
-            }
-        
-            return result;
-        }
         public List<ParsedResult> executeGorgiasQueryForInfr(WorkflowForm form) {
             GorgiasQuery gorgiasQuery = new GorgiasQuery();
             ArrayList<String> gorgiasFiles = new ArrayList<>();
-            gorgiasFiles.add("2025/infrastructure4.pl"); // Αναφέρεται στο αρχείο υποδομής στο Gorgias
+            //gorgiasFiles.add("2025/infrastructure4.pl"); // Αναφέρεται στο αρχείο υποδομής στο Gorgias
+            gorgiasFiles.add("2025/infrastructurelatest2.pl");
             gorgiasQuery.setGorgiasFiles(gorgiasFiles);
         
             ArrayList<String> facts = new ArrayList<>();
             try {
-                // Προσθήκη των παραμέτρων υποδομής ως facts
-                // if (form.isHighScalability()) {
-                //     facts.add("high_scalability");
-                // }
-             
-                
-                // if (form.isHighBudget()) {
-                //     facts.add("high_budget");
-                // }
-                // if (!form.isHighBudget()) {
-                //     facts.add("low_budget"); // or "not_high_budget"
-                // }
-              
-                // if (form.isDataSensitivity()) {
-                //     facts.add("data_sensitivity");
-                // }
+               
                 String primaryGoal = form.getPrimaryGoal();
                 if (primaryGoal != null) {
                     // Assuming the primaryGoal string exactly matches the Prolog facts
@@ -647,109 +439,31 @@ public class GorgiasService{
             return parseGorgiasQueryResult(result);
         }
 
-        // public GorgiasQueryResult executeGorgiasQueryForInfr(WorkflowForm form) {
-        //     GorgiasQuery gorgiasQuery = new GorgiasQuery();
-        //     ArrayList<String> gorgiasFiles = new ArrayList<>();
-        //     gorgiasFiles.add("2025/infrastructure3.pl"); // Αναφέρεται στο αρχείο υποδομής στο Gorgias
-        //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-        
-        //     ArrayList<String> facts = new ArrayList<>();
-        //     try {
-        //         // Προσθήκη των παραμέτρων υποδομής ως facts
-        //         // if (form.isHighScalability()) {
-        //         //     facts.add("high_scalability");
-        //         // }
-             
-                
-        //         // if (form.isHighBudget()) {
-        //         //     facts.add("high_budget");
-        //         // }
-        //         // if (!form.isHighBudget()) {
-        //         //     facts.add("low_budget"); // or "not_high_budget"
-        //         // }
-              
-        //         // if (form.isDataSensitivity()) {
-        //         //     facts.add("data_sensitivity");
-        //         // }
-        //         String primaryGoal = form.getPrimaryGoal();
-        //         if (primaryGoal != null) {
-        //             // Assuming the primaryGoal string exactly matches the Prolog facts
-        //             facts.add(primaryGoal);
-        //         }                
-        //         if (form.isHighScalability()) {
-        //             facts.add("high_scalability");
-        //         }
-        //         if (form.isDataSensitivity()) {
-        //             facts.add("data_sensitivity");
-        //         }
-        //         String controlRequirement = form.getControlRequirement();
-               
-        //         if (controlRequirement != null) {
-        //             facts.add(controlRequirement);
-        //         }
-        //         String budget = form.getBudget();
-        //         if (budget != null) {
-        //             facts.add(budget);
-        //         }
-                
-        //         if (form.isIntegrationRequirements()) {
-        //             facts.add("custom_integrations");
-        //         }
-        //         System.out.println(facts);
-        //         gorgiasQuery.setFacts(facts);
-        //     } catch (Exception e) {
-        //         e.printStackTrace();
-        //         System.out.println("Error processing infrastructure data.");
-        //         return null;
-        //     }
-            
-        //     gorgiasQuery.setResultSize(0);
-        //     gorgiasQuery.setQuery("propose_infrastructure(X)");
-        //     System.out.println("Query: " + gorgiasQuery.getQuery());
-        //     GorgiasQueryResult result = null;
-        //     try {
-        //         result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-        //         System.out.println(result);
-        //         // Εκτύπωση των αποτελεσμάτων
-        // if (result != null && result.isHasResult()) {
-        //     System.out.println("Results from Gorgias:");
-        //     List<QueryResult> results = result.getResult();
-        //     for (QueryResult queryResult : results) {
-        //         System.out.println("Type: " + queryResult.getExplanationStr());
-        //         System.out.println("Human Explanation: " + queryResult.getHumanExplanation());
-        //     }
-        // } else {
-        //     System.out.println("No results found or an error occurred.");
-        // }
-        //     } catch (ApiException e) {
-        //         System.out.println("Result is null due to an exception.");
-        //         e.printStackTrace();
-        //     }
-        //     return result;
-        // }
+     
 
-        public List<ParsedResult> parseGorgiasQueryResult(GorgiasQueryResult gorgiasQueryResult) {
-            List<ParsedResult> parsedResults = new ArrayList<>();
-        
-            if (gorgiasQueryResult != null && gorgiasQueryResult.getResult() != null) {
-                for (QueryResult queryResult : gorgiasQueryResult.getResult()) {
-                    String humanExplanation = queryResult.getHumanExplanation();
-                    if (humanExplanation != null && !humanExplanation.isEmpty()) {
-                        // Extract the main result
-                        String mainResult = extractMainResult(humanExplanation);
-        
-                        // Extract the supporting facts
-                        List<String> supportingFacts = extractSupportingFacts(humanExplanation);
-        
-                        // Add parsed result
-                        parsedResults.add(new ParsedResult(mainResult, supportingFacts));
-                    }
-                }
+       // Existing method where you handle the processing
+public List<ParsedResult> parseGorgiasQueryResult(GorgiasQueryResult gorgiasQueryResult) {
+    List<ParsedResult> parsedResults = new ArrayList<>();
+    if (gorgiasQueryResult != null && gorgiasQueryResult.getResult() != null) {
+        for (QueryResult queryResult : gorgiasQueryResult.getResult()) {
+            String humanExplanation = queryResult.getHumanExplanation();
+            // Simplify logical expressions in the explanation
+            String simplifiedExplanation = simplifyLogicalComparison(humanExplanation);
+            if (simplifiedExplanation != null && !simplifiedExplanation.isEmpty()) {
+                // Extract the main result
+                String mainResult = extractMainResult(simplifiedExplanation);
+                // Extract supporting facts
+                List<String> supportingFacts = extractSupportingFacts(simplifiedExplanation);
+                // Convert and add parsed result
+                parsedResults.add(new ParsedResult(mainResult, supportingFacts));
             }
-        
-            return parsedResults;
         }
+    }
+    return parsedResults;
+}
+
         
+
         // Helper method to extract the main result
         private String extractMainResult(String humanExplanation) {
             String keyword = "The statement \"";
@@ -762,103 +476,234 @@ public class GorgiasService{
         }
         
         // Helper method to extract supporting facts
-        private List<String> extractSupportingFacts(String humanExplanation) {
-            List<String> facts = new ArrayList<>();
-            if (humanExplanation != null && !humanExplanation.isEmpty()) {
-                // Find the portion of the explanation starting with the list of facts
-                String keyword = "- ";
-                int start = humanExplanation.indexOf(keyword);
-                if (start != -1) {
-                    String factsSection = humanExplanation.substring(start + keyword.length());
-        
-                    // Split facts using " and " as the delimiter
-                    String[] splitFacts = factsSection.split(" and ");
-                    for (String fact : splitFacts) {
-                        // Clean up the fact by removing extra spaces and quotes
-                        fact = fact.trim();
-                        if (fact.startsWith("\"") && fact.endsWith("\"")) {
-                            fact = fact.substring(1, fact.length() - 1);
-                        }
-                        if (!fact.isEmpty()) {
-                            facts.add(fact);
-                        }
+      /**
+ * Enhanced method to extract supporting facts including compound facts with 'and' conjunctions
+ */
+private List<String> extractSupportingFacts(String humanExplanation) {
+    List<String> facts = new ArrayList<>();
+    if (humanExplanation == null || humanExplanation.isEmpty()) {
+        return facts;
+    }
+
+    // First, extract the section that contains the supporting facts
+    int factsStart = humanExplanation.indexOf("is supported by:");
+    if (factsStart == -1) {
+        return facts;
+    }
+
+    // Get the text after "is supported by:"
+    String factsSection = humanExplanation.substring(factsStart + "is supported by:".length()).trim();
+    
+    // Pattern to match bullet points with their content, including compound facts with "and"
+    Pattern pattern = Pattern.compile("- \"([^\"]+?)\"");
+    Matcher matcher = pattern.matcher(factsSection);
+    
+    while (matcher.find()) {
+        String fact = matcher.group(1).trim();
+        if (!fact.isEmpty()) {
+            // Add the complete fact, which may include "and" conjunctions
+            facts.add(fact);
+            
+            // If this is a compound fact with "and", also add the individual components
+            if (fact.contains(" and ")) {
+                String[] individualFacts = fact.split(" and ");
+                for (String individualFact : individualFacts) {
+                    String trimmedFact = individualFact.trim();
+                    // Avoid duplicates by checking if we already have this fact
+                    if (!trimmedFact.isEmpty() && !facts.contains(trimmedFact)) {
+                        facts.add(trimmedFact);
                     }
                 }
             }
-            return facts;
+        }
+    }
+    
+    return facts;
+}
+        
+        
+   
+        /**
+ * Enhanced method to convert facts to natural language
+ * This handles both individual facts and compound fact strings
+ */
+public String convertFactToNaturalLanguage(String factInput) {
+    if (factInput == null || factInput.trim().isEmpty()) {
+        return "Unknown fact";
+    }
+    
+    // Normalize and clean the input
+    String normalizedFact = factInput.trim()
+            .replaceAll("\\s+", " ")  // Replace multiple spaces with single space
+            .replaceAll("•\\s*", ""); // Remove bullet points
+    
+    // Process as a compound fact to handle deduplication
+    if (normalizedFact.contains(" and ") || normalizedFact.contains("•")) {
+        return handleCompoundFact(normalizedFact);
+    }
+    
+    // Load fact mappings
+    Map<String, String> factMappings = new HashMap<>();
+    populateMappings(factMappings);
+    
+    // Normalize to lowercase for case-insensitive lookup
+    String lookupKey = normalizedFact.toLowerCase();
+    
+    // Try a direct mapping first
+    String result = factMappings.getOrDefault(lookupKey, factInput);
+    
+    // If no direct mapping found, try partial matching
+    if (result.equals(factInput)) {
+        for (Map.Entry<String, String> entry : factMappings.entrySet()) {
+            if (lookupKey.contains(entry.getKey())) {
+                result = entry.getValue();
+                break;
+            }
+        }
+    }
+    
+    // If still no mapping found, check for complex reasoning
+    if (result.equals(factInput)) {
+        result = handleComplexReasoning(factInput);
+    }
+    
+    System.out.println("✅ Mapped Fact: " + result);
+    return simplifyLogicalComparison(result);
+}
+
+/**
+ * Handle a compound fact string containing multiple facts joined by 'and'
+ */
+private List<String> parseAndDeduplicateReasoning(String reasoning) {
+    // Split by bullet points
+    String[] points = reasoning.split("•");
+    
+    // Use a Set to automatically remove duplicates
+    Set<String> uniquePoints = new LinkedHashSet<>();
+    
+    for (String point : points) {
+        String cleanPoint = point.trim();
+        if (!cleanPoint.isEmpty()) {
+            uniquePoints.add(cleanPoint);
+        }
+    }
+    
+    return new ArrayList<>(uniquePoints);
+}
+public List<ParsedResult> deduplicateAndCleanResults(List<ParsedResult> parsedResults) {
+    // Use LinkedHashMap to maintain order while deduplicating
+    Map<String, ParsedResult> uniqueResults = new LinkedHashMap<>();
+    
+    for (ParsedResult result : parsedResults) {
+        // Extract the main conclusion (e.g., "urgency(high)")
+        String mainResult = result.getMainResult();
+        
+        // Clean supporting facts
+        List<String> cleanedFacts = new ArrayList<>();
+        for (String fact : result.getSupportingFacts()) {
+            // Remove leading bullets and clean up the text
+            String cleaned = fact.replaceAll("^\\s*•+\\s*", "").trim();
+            if (!cleaned.isEmpty()) {
+                cleanedFacts.add(cleaned);
+            }
         }
         
-    //     public String convertFactToNaturalLanguage(String fact) {
-    //         if (fact == null || fact.trim().isEmpty()) {
-    //             return "Unknown fact";
-    //         }
+        // Create a unique key for deduplication
+        String resultKey = mainResult;
         
-    //         // Normalize the fact: trim whitespace and convert to lowercase
-    //         fact = fact.trim().toLowerCase();
-        
-    //         // Mapping for Prolog facts to natural language
-    //         Map<String, String> factMappings = new HashMap<>();
-    //         factMappings.put("response_time_sla(high)", "Response Time SLA - High");
-    //         factMappings.put("response_time_sla(medium)", "Response Time SLA - Medium");
-    //         factMappings.put("response_time_sla(low)", "Response Time SLA - Low");
-    //         factMappings.put("expected_load(high)", "Expected Load - High");
-    //         factMappings.put("expected_load(medium)", "Expected Load - Medium");
-    //         factMappings.put("expected_load(low)", "Expected Load - Low");
-    //         factMappings.put("peak_times(rarely)", "Peak Times - Rarely");
-    //         factMappings.put("peak_times(occasionally)", "Peak Times - Occasionally");
-    //         factMappings.put("peak_times(frequently)", "Peak Times - Frequently");
-    //         factMappings.put("peak_times(always)", "Peak Times - Always");
-    //         factMappings.put("cost_sensitivity(low)", "Cost Sensitivity - Low");
-    //         factMappings.put("cost_sensitivity(medium)", "Cost Sensitivity - Medium");
-    //         factMappings.put("cost_sensitivity(high)", "Cost Sensitivity - High");
-    //         factMappings.put("cost_sensitivity(high)", "Cost Sensitivity - High");
-    //         factMappings.put("cpu_requirements(high)", "CPU Requirements - High");
-    //         factMappings.put("memory_requirements(high)", "Memory Requirements - High");
-    //         factMappings.put("storage_requirements(high)", "Storage Requirements - High");
-    //         factMappings.put("storage_requirements(low)", "Storage Requirements - Low");
-    //         factMappings.put("memory_requirements(low)", "Memory Requirements - Low");
-    //         factMappings.put("memory_requirements(medium)", "Memory Requirements - Medium");
-    //         factMappings.put("cpu_requirements(medium)", "CPU Requirements - Medium");
-    //         factMappings.put("storage_requirements(medium)", "Storage Requirements - Medium");
-    //         factMappings.put("cpu_requirements(low)", "CPU Requirements - Low");
-    //         factMappings.put("agency_category(centralgovernment)", "Agency Category - Central Government");
-    //         factMappings.put("agency_category(localgovernment)", "Agency Category - Local Government");
-    //        factMappings.put("agency_category(independentauthority)", "Agency Category - Independent Authority");
-    //         factMappings.put("request_type(ops)", "Ministry of Digital Governance");
-    //         factMappings.put("request_type(other)", "Other Ministry");
-    //         factMappings.put("contract_with_contractor(yes)", "There is contract");
-    //         factMappings.put("contract_with_contractor(no)", "There is not any contract");
-
-    //         // Add mappings for the new facts
-    // factMappings.put("high_scalability", "High Scalability is required for the infrastructure.");
-    // factMappings.put("data_sensitivity", "The infrastructure needs to handle sensitive data.");
-    // factMappings.put("custom_integrations", "Custom integrations are required for the application.");
-    // factMappings.put("fullControl", "Full control over the infrastructure is needed (e.g., VM, storage, and network configuration).");
-    // factMappings.put("limitedControl", "Limited control over the infrastructure is sufficient (e.g., manage runtime without worrying about servers).");
-    // factMappings.put("nocontrol", "No control over the infrastructure is required (e.g., ready-made tools).");
-    // factMappings.put("high_budget", "The budget is high for this project.");
-    // factMappings.put("low_budget", "Low budget is a supporting fact for this goal.");
-
-    // // Add mappings for primaryGoal
-    // factMappings.put("runCustomApps", "The primary goal is to run and customize applications (e.g., deployment of custom software).");
-    // factMappings.put("consumeReadySoftware", "The primary goal is to consume ready-made software with minimal configuration (e.g., SaaS tools).");
-    // factMappings.put("eventdrivenfunctions", "The primary goal is to automate tasks with event-driven architecture (e.g., serverless functions).");
-
-    //         // Return the natural language equivalent or the original fact if no mapping exists
-    //         return factMappings.getOrDefault(fact, fact);
-    //     }
-    public String convertFactToNaturalLanguage(String fact) {
-        if (fact == null || fact.trim().isEmpty()) {
-            return "Unknown fact";
+        // Only add if we haven't seen this conclusion before
+        if (!uniqueResults.containsKey(resultKey)) {
+            uniqueResults.put(resultKey, new ParsedResult(mainResult, cleanedFacts));
         }
+    }
     
-        // Normalize the fact: trim whitespace and convert to lowercase
-        fact = fact.trim().toLowerCase();
+    return new ArrayList<>(uniqueResults.values());
+}
+/**
+ * Modified handleCompoundFact method
+ */
+private String handleCompoundFact(String compoundFact) {
+    System.out.println("🔄 Processing Compound Fact: " + compoundFact);
     
-        // Mapping for Prolog facts to natural language
-        Map<String, String> factMappings = new HashMap<>();
+    // First deduplicate the reasoning points
+    List<String> uniquePoints = parseAndDeduplicateReasoning(compoundFact);
+    
+    // Convert each unique point
+    List<String> convertedFacts = new ArrayList<>();
+    for (String point : uniquePoints) {
+        String convertedFact = convertSingleFactToNaturalLanguage(point);
+        if (!convertedFact.trim().isEmpty()) {
+            convertedFacts.add(convertedFact);
+        }
+    }
+    
+    // Join unique points with bullet points
+    return convertedFacts.stream()
+            .distinct() // Additional deduplication
+            .collect(Collectors.joining("\n• ", "• ", ""));
+}
+
+
+/**
+ * Convert a single fact to natural language without recursion
+ */
+private String convertSingleFactToNaturalLanguage(String fact) {
+    // Load fact mappings
+    Map<String, String> factMappings = new HashMap<>();
+    populateMappings(factMappings);
+    
+    // Normalize to lowercase for lookup
+    String lookupKey = fact.toLowerCase();
+    
+    // Try direct mapping
+    if (factMappings.containsKey(lookupKey)) {
+        return factMappings.get(lookupKey);
+    }
+    
+    // Try partial matching
+    for (Map.Entry<String, String> entry : factMappings.entrySet()) {
+        if (lookupKey.contains(entry.getKey())) {
+            return entry.getValue();
+        }
+    }
+    
+    // Add special case mappings for facts 
+    Map<String, String> specialCaseMappings = new HashMap<>();
+    specialCaseMappings.put("expected_load(low)", "expected load is low");
+    specialCaseMappings.put("peak_times(rarely)", "peak times occur rarely");
+    specialCaseMappings.put("response_time_sla(low)", "response time SLA is low");
+    specialCaseMappings.put("cost_sensitivity(low)", "cost sensitivity is low");
+    specialCaseMappings.put("high_scalability", "high scalability is required");
+    specialCaseMappings.put("custom_integrations", "custom integrations are necessary");
+    specialCaseMappings.put("high_budget", "the project has a high budget");
+    
+    // Check special case mappings
+    for (Map.Entry<String, String> entry : specialCaseMappings.entrySet()) {
+        if (lookupKey.contains(entry.getKey())) {
+            return entry.getValue();
+        }
+    }
+    
+    // Return the original fact if no mapping found
+    return fact;
+}
         
-        // Response Time SLA
+        
+        
+
+private void populateMappings(Map<String, String> factMappings) {
+    // Here populate the map with all simple mappings from your current method
+    factMappings.put("agency_category(centralgovernment)", "This request comes from a Central Government agency.");
+    factMappings.put("agency_category(localgovernment)", "This request originates from a Local Government body.");
+    factMappings.put("agency_category(independentauthority)", "This request is from an Independent Authority.");
+
+    factMappings.put("request_type(ops)", "The request is related to the Ministry of Digital Governance.");
+    factMappings.put("request_type(other)", "The request is from another ministry or organization.");
+    factMappings.put("contract_with_contractor(yes)", "An active contract exists with an external contractor.");
+    factMappings.put("contract_with_contractor(no)", "There is no current contract with any external contractor.");
+    factMappings.put("auto_scaling", "Auto Scaling: Dynamically adjusts resources based on demand.");
+factMappings.put("fixed_allocation", "Fixed Allocation: Suitable for predictable workloads with static resource limits.");
+    // Response Time SLA
         factMappings.put("response_time_sla(high)", "A high Service Level Agreement (SLA) for response time is required, ensuring quick system performance.");
         factMappings.put("response_time_sla(medium)", "A balanced response time SLA is needed, optimizing both speed and cost.");
         factMappings.put("response_time_sla(low)", "A low response time SLA is acceptable, prioritizing cost-efficiency over performance.");
@@ -878,7 +723,33 @@ public class GorgiasService{
         factMappings.put("cost_sensitivity(low)", "Cost is not a major constraint, allowing for more premium infrastructure solutions.");
         factMappings.put("cost_sensitivity(medium)", "A balance between cost and performance is preferred.");
         factMappings.put("cost_sensitivity(high)", "Budget constraints require cost-effective infrastructure choices.");
-        
+        factMappings.put("eventdrivenfunctions", "The system is designed for event-driven automation, enabling responsive and serverless computing.");
+        // Software Consumption Model
+factMappings.put("consumereadysoftware", "The primary goal is to use pre-configured software solutions with minimal customization (e.g., SaaS).");
+
+// Integration Requirements
+factMappings.put("custom_integrations", "Custom integrations are necessary to align with existing systems and workflows.");
+
+// Data Security Considerations
+factMappings.put("data_sensitivity", "The system will handle sensitive data, requiring strong security measures.");
+
+// Application Architecture
+
+// Infrastructure Control Requirements
+factMappings.put("limitedcontrol", "Limited control over infrastructure is sufficient, allowing some flexibility while managing workloads.");
+factMappings.put("nocontrol", "No direct control over infrastructure is required, relying entirely on managed solutions.");
+
+// Budget Considerations
+factMappings.put("high_budget", "The project has a high budget, allowing for advanced infrastructure solutions.");
+factMappings.put("low_budget", "The project is budget-constrained, requiring cost-effective infrastructure choices.");
+
+// Scalability Requirements
+factMappings.put("high_scalability", "The system must be highly scalable to accommodate future growth and demand.");
+
+// Application Development Model
+factMappings.put("runcustomapps", "The main objective is to deploy and manage custom applications tailored to specific needs.");
+        // Ensure fullControl is properly mapped
+        factMappings.put("fullcontrol", "Full infrastructure control is needed, including servers, storage, and network configuration.");
         // Resource Requirements
         factMappings.put("cpu_requirements(high)", "The system requires high processing power for computation-heavy tasks.");
         factMappings.put("cpu_requirements(medium)", "A moderate CPU configuration is required for standard operations.");
@@ -890,10 +761,7 @@ public class GorgiasService{
         factMappings.put("storage_requirements(medium)", "A moderate storage allocation is required for infrastructure needs.");
         factMappings.put("storage_requirements(low)", "Minimal storage capacity is sufficient for operations.");
         
-        // Agency Category
-        factMappings.put("agency_category(centralgovernment)", "This request comes from a Central Government agency.");
-        factMappings.put("agency_category(localgovernment)", "This request originates from a Local Government body.");
-        factMappings.put("agency_category(independentauthority)", "This request is from an Independent Authority.");
+       
          // ** Compute vs Storage Prioritization**
     factMappings.put("resource_priority(compute)", "The system prioritizes compute-intensive workloads requiring high CPU and RAM.");
     factMappings.put("resource_priority(storage)", "The system requires significant storage capacity over processing power.");
@@ -910,13 +778,8 @@ public class GorgiasService{
     factMappings.put("processing_optimization(memory_optimized)", "High memory allocation is required for caching, in-memory processing, and large datasets.");
     factMappings.put("processing_optimization(cpu_optimized)", "The system is optimized for high CPU usage, making it suitable for AI, ML, and scientific computations.");
 
-        // Request Type
-        factMappings.put("request_type(ops)", "The request is related to the Ministry of Digital Governance.");
-        factMappings.put("request_type(other)", "The request is from another ministry or organization.");
+      
         
-        // Contract Information
-        factMappings.put("contract_with_contractor(yes)", "An active contract exists with an external contractor.");
-        factMappings.put("contract_with_contractor(no)", "There is no current contract with any external contractor.");
         
         // Scalability & Control
         factMappings.put("high_scalability", "The system must be highly scalable to accommodate future growth and demand.");
@@ -969,24 +832,107 @@ public class GorgiasService{
     // Connectivity Requirements
     factMappings.put("connectivity(true)", "The system requires a direct connection to A.A.D.E. infrastructure for tax or government services.");
     factMappings.put("connectivity(false)", "The system operates independently without direct connectivity to A.A.D.E.");
+    factMappings.put("urgentbasedondate", "Based on the date there is immidiate-urgent request for deployment ");
+    factMappings.put("normalbasedondate", "Based on the date there is a normal-urgency request for deployment ");
+   // factMappings.put("request_type(other)", "It's a request type from Other Public Sectors - Not from Ministry Of Digital Governance");
+   // factMappings.put("request_type(ops)", "It's a request type from Ministry Of Digital Governance");
 
-        // Return the mapped natural language description or the original fact if no mapping exists
-        return factMappings.getOrDefault(fact, fact);
+    factMappings.put("highbasedondate", "Based on the date there is high request for deployment");
+}
+
+private String handleComplexReasoning(String fact) {
+    System.out.println("🔍 Handling Complex Reasoning: " + fact);
+
+    // Handle the specific format found in Option 3
+    if (fact.contains("This reason is :") && fact.contains("Stronger than the reason of")) {
+        // For the specific pattern in Option 3
+        try {
+            // Extract the request type
+            String requestType = "request from another ministry or organization";
+            
+            // Create a more natural language explanation
+            String result = "This " + requestType + " requires high urgency. This takes precedence over normal urgency considerations, even though there is an active contract with an external contractor.";
+            
+            System.out.println("✅ Mapped Complex Reasoning: " + result);
+            return result;
+        } catch (Exception e) {
+            System.out.println("⚠️ Error parsing complex reasoning: " + e.getMessage());
+        }
     }
+    
+    // Original logic for other patterns
+    if (fact.toLowerCase().contains("stronger than the reason of")) {
+        // Make the search case-insensitive
+        int mainStart = fact.indexOf("request_type(");
+        if (mainStart >= 0) {
+            int mainEnd = fact.indexOf(") ", mainStart);
+            String mainFact = fact.substring(mainStart, mainEnd + 1).trim();
+
+            // Extract supporting fact - use case-insensitive search
+            int reasonStart = fact.toLowerCase().indexOf("stronger than the reason of") + "stronger than the reason of".length();
+            int reasonEnd = fact.indexOf(" supporting");
+            if (reasonEnd > reasonStart) {
+                String supportingFact = fact.substring(reasonStart, reasonEnd).trim();
+
+                // Convert to natural language
+                String readableMainFact = convertSimpleFactToNaturalLanguage(mainFact);
+                String readableSupportingFact = convertSimpleFactToNaturalLanguage(supportingFact);
+
+                String result = readableMainFact + " is considered more urgent than " + readableSupportingFact + ".";
+                System.out.println("✅ Mapped Complex Reasoning: " + result);
+                return result;
+            }
+        }
+    }
+
+    // Fallback: If no complex pattern is detected, process it as a simple fact
+    return convertSimpleFactToNaturalLanguage(fact);
+}
+
+
+
+// Helper method to convert simple facts to natural language
+private String convertSimpleFactToNaturalLanguage(String fact) {
+    Map<String, String> simpleMappings = new HashMap<>();
+    simpleMappings.put("request_type(other)", "the request is from another ministry or organization");
+    simpleMappings.put("contract_with_contractor(yes)", "there is an active contract with an external contractor");
+    simpleMappings.put("agency_category(independentAuthority)", "this request is from an Independent Authority");
+    simpleMappings.put("urgentbasedondate", "based on the date there is immediate request for deployment (less than 3 days)");
+    // Add any other facts that might appear in your complex reasoning
+
+    // Check if the fact is in the mapping
+    for (Map.Entry<String, String> entry : simpleMappings.entrySet()) {
+        if (fact.contains(entry.getKey())) {
+            return entry.getValue();
+        }
+    }
+    
+    // Return the fact itself if no mapping found
+    return fact;
+}
+
+    public String simplifyLogicalComparison(String reasoning) {
+        reasoning = reasoning.replace("this reason is :", "This is because");
+        reasoning = reasoning.replace("stronger than the reason of", "which takes precedence over");
+        reasoning = reasoning.replace("supporting urgency(normal)", "which suggests normal urgency");
+        reasoning = reasoning.replace("when", "even though");
+        return reasoning;
+    }
+    
     
     public String mapMainResultToNaturalLanguage(String mainResult, WorkflowForm form) { 
         switch (mainResult) {
             // Urgency decisions
             case "urgent":
               
-                return "Urgent: Critical response required immediately.";
+                return "URGENT PRIORITY: Critical deployment required within 72 hours. Immediate resource allocation necessary. All standard procedures may be expedited to meet this critical timeline.";
             case "normal":
                
-                return "Normal Urgency: Minimal immediate attention required.";
+                return "NORMAL PRIORITY: Regular deployment timeline of up to 60 days. Standard resource allocation appropriate. All normal procedures and quality checks to be followed without modification.";
             case "high":
                
-                return "High Urgency: Requires immediate action.";
-    
+                return "HIGH PRIORITY: Accelerated deployment required within 10 days. Prompt resource allocation recommended. Standard procedures should be followed with expedited processing.";
+            
             // Scalability decisions
             case "fixed_allocation":
                 
@@ -1072,20 +1018,210 @@ public class GorgiasService{
             case "urgency(urgent)":
                 form.setUrgencyForFinal("urgent");
                 return "Urgent: Indicates a critical situation that demands rapid response and resource scaling.";
-    
+                case "real_time_compute_optimized":
+                return "Real-Time Compute Optimized: High-performance computing resources configured for low-latency, responsive applications.";
+            
+            case "data_processing_optimized":
+                return "Data Processing Optimized: Storage-focused resources designed for high-throughput batch processing of large datasets.";
+            
+            case "elastic_compute_optimized":
+                return "Elastic Compute Optimized: Auto-scaling compute resources that dynamically adjust to workload demands.";
+            
+            case "in_memory_processing_optimized":
+                return "In-Memory Processing Optimized: Memory-intensive configuration for real-time data processing with minimal latency.";
+            
+            case "compute_cluster_optimized":
+                return "Compute Cluster Optimized: CPU-intensive configuration for high-throughput batch processing workloads.";
+            
+            case "dedicated_storage_optimized":
+                return "Dedicated Storage Optimized: Fixed-allocation storage resources for predictable data-intensive workloads.";
+            
+            case "elastic_cache_optimized":
+                return "Elastic Cache Optimized: Auto-scaling memory resources for dynamic caching and in-memory data processing.";
+            
+            case "elastic_compute_cluster":
+                return "Elastic Compute Cluster: Auto-scaling CPU resources for dynamic computational workloads.";
+            
+            case "real_time_elastic_compute":
+                return "Real-Time Elastic Compute: Low-latency compute resources with auto-scaling capabilities for varying demand.";
+            
+            case "high_performance_compute":
+                return "High-Performance Compute: CPU-optimized resources configured for real-time, compute-intensive workloads.";
+            
+            case "in_memory_real_time_compute":
+                return "In-Memory Real-Time Compute: Memory-optimized resources for real-time applications requiring fast data access.";
+            
+            case "data_warehouse_optimized":
+                return "Data Warehouse Optimized: Fixed storage resources designed for batch processing of structured data.";
+            
+            case "data_lake_optimized":
+                return "Data Lake Optimized: Elastic storage resources for scalable processing of diverse data types.";
+            
+            case "in_memory_analytics_optimized":
+                return "In-Memory Analytics Optimized: Memory-focused resources for high-throughput data analysis.";
+            
+            case "distributed_processing_optimized":
+                return "Distributed Processing Optimized: CPU-focused resources for parallel processing of large datasets.";
+            
+            case "high_performance_elastic_compute":
+                return "High-Performance Elastic Compute: CPU-optimized auto-scaling resources for real-time applications with varying load.";
+            
+            case "elastic_in_memory_real_time":
+                return "Elastic In-Memory Real-Time: Memory-optimized auto-scaling resources for real-time applications with varying load.";
+            
+            case "dedicated_high_performance_compute":
+                return "Dedicated High-Performance Compute: Fixed CPU-optimized resources for consistent real-time computing needs.";
+            
+            case "dedicated_in_memory_real_time":
+                return "Dedicated In-Memory Real-Time: Fixed memory-optimized resources for consistent real-time data processing.";
+            
+            case "elastic_distributed_processing":
+                return "Elastic Distributed Processing: Auto-scaling CPU-optimized resources for batch processing with varying workloads.";
+            
+            case "elastic_in_memory_analytics":
+                return "Elastic In-Memory Analytics: Auto-scaling memory-optimized resources for data analytics with varying workloads.";
+            
+            case "dedicated_distributed_processing":
+                return "Dedicated Distributed Processing: Fixed CPU-optimized resources for consistent batch processing workloads.";
+            
+            case "dedicated_in_memory_analytics":
+                return "Dedicated In-Memory Analytics: Fixed memory-optimized resources for consistent data analytics workloads.";
+               
+            case "scalability_decision(auto_scaling)":
+                return "Auto Scaling: Dynamically adjusts resources based on demand.";
+            case "scalability_decision(fixed_allocation)":
+                return "Fixed Allocation: Suitable for predictable workloads with static resource limits.";
             default:
                 return "Unknown Strategy";
         }
     }
     
+    public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
+        long startTime = System.currentTimeMillis();
+    
+        GorgiasQuery gorgiasQuery = new GorgiasQuery();
+        ArrayList<String> gorgiasFiles = new ArrayList<>();
+        gorgiasFiles.add("2025/scalability2025.pl");
+        gorgiasQuery.setGorgiasFiles(gorgiasFiles);
+    
+        ArrayList<String> facts = new ArrayList<>();
+        try {
+            // Add expected_load fact
+            String expectedLoad = form.getExpectedLoad();
+            if (expectedLoad != null && !expectedLoad.isEmpty()) {
+                facts.add("expected_load(" + expectedLoad.toLowerCase() + ")");
+            }
+    
+            // Add peak_times fact
+            String peakTimes = form.getPeakTimes();
+            if (peakTimes != null && !peakTimes.isEmpty()) {
+                facts.add("peak_times(" + peakTimes.toLowerCase() + ")");
+            }
+    
+            // Add response_time_sla fact
+            String responseTime = form.getResponseTime();
+            if (responseTime != null && !responseTime.isEmpty()) {
+                facts.add("response_time_sla(" + responseTime.toLowerCase().replace("-", "_") + ")");
+            }
+    
+            // Add cost_sensitivity fact
+            String costSensitivity = form.getCostSensitivity();
+            if (costSensitivity != null && !costSensitivity.isEmpty()) {
+                facts.add("cost_sensitivity(" + costSensitivity.toLowerCase().replace("-", "_") + ")");
+            }
+    
+            gorgiasQuery.setFacts(facts);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error processing scalability data.");
+            return new ArrayList<>(); // Return empty list in case of an error
+        }
+    
+        // KEY FIX 1: Use a specific query instead of "X"
+        gorgiasQuery.setResultSize(5);
+        gorgiasQuery.setQuery("X"); // Set query
+        System.out.println("Query: " + gorgiasQuery.getQuery());
+    
+        GorgiasQueryResult result = null;
+    
+        try {
+            result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
+            long endTime = System.currentTimeMillis();
+            long executionTime = endTime - startTime;
+            System.out.println("Gorgias query executed in " + executionTime + " ms");
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.out.println("Result is null due to an exception.");
+            e.printStackTrace();
+            return new ArrayList<>(); // Return empty list in case of an API exception
+        }
+    
+        // KEY FIX 2: Deduplicate results before returning
+        List<ParsedResult> parsedResults = parseGorgiasQueryResult(result);
+        return deduplicateScalabilityResults(parsedResults);
+    }
+    
+    /**
+     * Deduplicate scalability results based on the main decision (auto_scaling or fixed_allocation)
+     */
+    private List<ParsedResult> deduplicateScalabilityResults(List<ParsedResult> results) {
+        Map<String, ParsedResult> uniqueResults = new LinkedHashMap<>();
         
+        for (ParsedResult result : results) {
+            // Extract the base decision (auto_scaling or fixed_allocation)
+            String mainResult = result.getMainResult();
+            String baseDecision = mainResult;
+            
+            // Extract from scalability_decision(X) if needed
+            if (mainResult.contains("(") && mainResult.contains(")")) {
+                baseDecision = mainResult.substring(mainResult.indexOf('(') + 1, mainResult.indexOf(')'));
+            }
+            
+            // Only keep the first result for each base decision type
+            if (!uniqueResults.containsKey(baseDecision)) {
+                // Find the most specific supporting fact for this decision
+                List<String> bestFacts = findBestSupportingFacts(result.getSupportingFacts(), baseDecision);
+                uniqueResults.put(baseDecision, new ParsedResult(mainResult, bestFacts));
+            }
+        }
         
-//         public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
+        return new ArrayList<>(uniqueResults.values());
+    }
+    
+    /**
+     * Find the most specific supporting facts for a scalability decision
+     */
+    private List<String> findBestSupportingFacts(List<String> facts, String decision) {
+        // Prioritize facts based on relevance to the decision
+        List<String> bestFacts = new ArrayList<>();
+        
+        // Look for facts specifically about the chosen strategy
+        for (String fact : facts) {
+            if (decision.equals("auto_scaling") && 
+                (fact.contains("frequent") || fact.contains("spike") || fact.contains("high"))) {
+                bestFacts.add(fact);
+            } else if (decision.equals("fixed_allocation") && 
+                      (fact.contains("predictable") || fact.contains("balanced") || fact.contains("low"))) {
+                bestFacts.add(fact);
+            }
+        }
+        
+        // If no specific facts found, use any available facts
+        if (bestFacts.isEmpty() && !facts.isEmpty()) {
+            bestFacts.add(facts.get(0));
+        }
+        
+        return bestFacts;
+    }
+        
+
+// public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
 //     long startTime = System.currentTimeMillis();
 
 //     GorgiasQuery gorgiasQuery = new GorgiasQuery();
 //     ArrayList<String> gorgiasFiles = new ArrayList<>();
-//     gorgiasFiles.add("november2024/scalability2025.pl");
+//     //gorgiasFiles.add("november2024/scalability2025.pl");
+//     gorgiasFiles.add("2025/scalability2025.pl");
 //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
 
 //     ArrayList<String> facts = new ArrayList<>();
@@ -1094,14 +1230,12 @@ public class GorgiasService{
 //         String expectedLoad = form.getExpectedLoad();
 //         if (expectedLoad != null && !expectedLoad.isEmpty()) {
 //             facts.add("expected_load(" + expectedLoad.toLowerCase() + ")");
-//             System.out.println("Added facts: " + facts);
 //         }
 
 //         // Add peak_times fact
 //         String peakTimes = form.getPeakTimes();
 //         if (peakTimes != null && !peakTimes.isEmpty()) {
 //             facts.add("peak_times(" + peakTimes.toLowerCase() + ")");
-//             System.out.println("peakTimes: " + peakTimes);
 //         }
 
 //         // Add response_time_sla fact
@@ -1123,7 +1257,7 @@ public class GorgiasService{
 //         return new ArrayList<>(); // Return empty list in case of an error
 //     }
 
-//     gorgiasQuery.setResultSize(1);
+//     gorgiasQuery.setResultSize(5);
 //     gorgiasQuery.setQuery("X"); // Set query
 //     System.out.println("Query: " + gorgiasQuery.getQuery());
 
@@ -1144,139 +1278,14 @@ public class GorgiasService{
 //     // Parse the result into ParsedResult objects
 //     return parseGorgiasQueryResult(result);
 // }
-public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
-    long startTime = System.currentTimeMillis();
 
-    GorgiasQuery gorgiasQuery = new GorgiasQuery();
-    ArrayList<String> gorgiasFiles = new ArrayList<>();
-    gorgiasFiles.add("november2024/scalability2025.pl");
-    gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-
-    ArrayList<String> facts = new ArrayList<>();
-    try {
-        // Add expected_load fact
-        String expectedLoad = form.getExpectedLoad();
-        if (expectedLoad != null && !expectedLoad.isEmpty()) {
-            facts.add("expected_load(" + expectedLoad.toLowerCase() + ")");
-        }
-
-        // Add peak_times fact
-        String peakTimes = form.getPeakTimes();
-        if (peakTimes != null && !peakTimes.isEmpty()) {
-            facts.add("peak_times(" + peakTimes.toLowerCase() + ")");
-        }
-
-        // Add response_time_sla fact
-        String responseTime = form.getResponseTime();
-        if (responseTime != null && !responseTime.isEmpty()) {
-            facts.add("response_time_sla(" + responseTime.toLowerCase().replace("-", "_") + ")");
-        }
-
-        // Add cost_sensitivity fact
-        String costSensitivity = form.getCostSensitivity();
-        if (costSensitivity != null && !costSensitivity.isEmpty()) {
-            facts.add("cost_sensitivity(" + costSensitivity.toLowerCase().replace("-", "_") + ")");
-        }
-
-        gorgiasQuery.setFacts(facts);
-    } catch (Exception e) {
-        e.printStackTrace();
-        System.out.println("Error processing scalability data.");
-        return new ArrayList<>(); // Return empty list in case of an error
-    }
-
-    gorgiasQuery.setResultSize(5);
-    gorgiasQuery.setQuery("X"); // Set query
-    System.out.println("Query: " + gorgiasQuery.getQuery());
-
-    GorgiasQueryResult result = null;
-
-    try {
-        result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-        long endTime = System.currentTimeMillis();
-        long executionTime = endTime - startTime;
-        System.out.println("Gorgias query executed in " + executionTime + " ms");
-        System.out.println(result);
-    } catch (ApiException e) {
-        System.out.println("Result is null due to an exception.");
-        e.printStackTrace();
-        return new ArrayList<>(); // Return empty list in case of an API exception
-    }
-
-    // Parse the result into ParsedResult objects
-    return parseGorgiasQueryResult(result);
-}
-
-        // public GorgiasQueryResult executeGorgiasQueryForScalability(WorkflowForm form) {
-        //     long startTime = System.currentTimeMillis();
-        
-        //     GorgiasQuery gorgiasQuery = new GorgiasQuery();
-        //     ArrayList<String> gorgiasFiles = new ArrayList<>();
-        //     gorgiasFiles.add("november2024/scalability2025.pl");
-        //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-        
-        //     ArrayList<String> facts = new ArrayList<>();
-        //     try {
-        //         // Προσθήκη του expected_load
-        //         String expectedLoad = form.getExpectedLoad();
-        //         if (expectedLoad != null && !expectedLoad.isEmpty()) {
-        //             facts.add("expected_load(" + expectedLoad.toLowerCase() + ")");
-        //           //  System.out.println("expectedLoad: " + expectedLoad);
-        //           System.out.println("Added facts: " + facts);  // Εκτύπωση του fact
-
-        //         }
-        
-        //         String peakTimes = form.getPeakTimes();
-        //         if (peakTimes != null && !peakTimes.isEmpty()) {
-        //             facts.add("peak_times(" + peakTimes.toLowerCase() + ")");
-        //             System.out.println("peakTimes: " + peakTimes);
-        //         }
-                
-        
-        //         // Προσθήκη του response_time_sla ως fact χωρίς συγκεκριμένη τιμή
-        //         String responseTime = form.getResponseTime();
-        //         if (responseTime != null && !responseTime.isEmpty()) {
-        //             facts.add("response_time_sla(" + responseTime.toLowerCase().replace("-", "_") + ")");
-        //             //System.out.println("scalabilityNeeds: " + scalabilityNeeds);
-        //         }
-                
-        //         String costSensitivity = form.getCostSensitivity();
-        //         if (costSensitivity != null && !costSensitivity.isEmpty()) {
-        //             facts.add("cost_sensitivity(" + costSensitivity.toLowerCase().replace("-", "_") + ")");
-        //             //System.out.println("scalabilityNeeds: " + scalabilityNeeds);
-        //         }
-
-        //         gorgiasQuery.setFacts(facts);
-        //     } catch (Exception e) {
-        //         e.printStackTrace();
-        //         System.out.println("Error processing scalability data.");
-        //         return null;
-        //     }
-        
-        //     gorgiasQuery.setResultSize(1);
-        //    // gorgiasQuery.setQuery("propose_scaling_strategy(X)");
-        //    gorgiasQuery.setQuery("X");
-        //     System.out.println("Query: " + gorgiasQuery.getQuery());
-        //     GorgiasQueryResult result = null;
-        
-        //     try {
-        //         result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-        //         long endTime = System.currentTimeMillis();
-        //         long executionTime = endTime - startTime;
-        //         System.out.println("Gorgias query executed in " + executionTime + " ms");
-        //         System.out.println(result);
-        //     } catch (ApiException e) {
-        //         System.out.println("Result is null due to an exception.");
-        //         e.printStackTrace();
-        //     }
-        
-        //     return result;
-        // }
+    
         public List<ParsedResult> executeGorgiasQueryForResources(WorkflowForm form) {
             GorgiasQuery gorgiasQuery = new GorgiasQuery();
             ArrayList<String> gorgiasFiles = new ArrayList<>();
           //  gorgiasFiles.add("2025/resource2025.pl");  // Prolog file for resource decisions
-          gorgiasFiles.add("2025/resource2025.pl"); 
+         // gorgiasFiles.add("2025/resource2025.pl"); 
+         gorgiasFiles.add("2025/resource2025latest.pl"); 
           gorgiasQuery.setGorgiasFiles(gorgiasFiles);
         
             ArrayList<String> facts = new ArrayList<>();
@@ -1337,72 +1346,7 @@ public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
         
         
         
-        // public Map<String, GorgiasQueryResult> evaluateResourceRequirements(WorkflowForm form) {
-        //     Map<String, GorgiasQueryResult> combinedResults = new HashMap<String, GorgiasQueryResult>();
-        
-        //     // Ερώτημα 1: propose_resource(X)
-        //     GorgiasQuery gorgiasQuery1 = new GorgiasQuery();
-        //     ArrayList<String> gorgiasFiles = new ArrayList<>();
-        //     gorgiasFiles.add("november2024/resource3.pl"); // Προσάρμοσε το μονοπάτι του αρχείου Prolog
-        //     gorgiasQuery1.setGorgiasFiles(gorgiasFiles);
-        
-        //     ArrayList<String> facts = new ArrayList<>();
-        //     if (form.getCpuRequirements() != null) {
-        //         facts.add("cpu_requirements(" + form.getCpuRequirements().toLowerCase() + ")");
-        //     }
-        //     if (form.getMemoryRequirements() != null) {
-        //         facts.add("memory_requirements(" + form.getMemoryRequirements().toLowerCase() + ")");
-        //     }
-        //     if (form.getStorageNeeds() != null) {
-        //         facts.add("storage_needs(" + form.getStorageNeeds().toLowerCase() + ")");
-        //     }
-        //     if (form.getScalingStrategy() != null) {
-        //         facts.add("scaling_strategy(" + form.getScalingStrategy().toLowerCase() + ")");
-        //     }
-        
-        //     // Έλεγχος αν υπάρχουν facts πριν εκτελέσεις το query
-        //     if (!facts.isEmpty()) {
-        //         gorgiasQuery1.setFacts(facts);
-        //         gorgiasQuery1.setResultSize(1);
-        //         gorgiasQuery1.setQuery("propose_resource(X)");
-        
-        //         try {
-        //             GorgiasQueryResult result1 = apiInstance.executeQueryUsingPOST(gorgiasQuery1);
-        //             // Έλεγχος αν το αποτέλεσμα δεν είναι null και περιέχει αποτέλεσμα
-        //             if (result1 != null && result1.getResult() != null && !result1.getResult().isEmpty()) {
-        //                 combinedResults.put("resource", result1);
-        //             } else {
-        //                 System.out.println("No valid resource result returned from Gorgias.");
-        //             }
-        //         } catch (ApiException e) {
-        //             e.printStackTrace();
-        //         }
-        
-        //         // Ερώτημα 2: propose_scaling(Y)
-        //         GorgiasQuery gorgiasQuery2 = new GorgiasQuery();
-        //         gorgiasQuery2.setGorgiasFiles(gorgiasFiles);
-        //         gorgiasQuery2.setFacts(facts);
-        //         gorgiasQuery2.setResultSize(1);
-        //         gorgiasQuery2.setQuery("propose_scaling(Y)");
-        
-        //         try {
-        //             GorgiasQueryResult result2 = apiInstance.executeQueryUsingPOST(gorgiasQuery2);
-        //             // Έλεγχος αν το αποτέλεσμα δεν είναι null και περιέχει αποτέλεσμα
-        //             if (result2 != null && result2.getResult() != null && !result2.getResult().isEmpty()) {
-        //                 combinedResults.put("scaling", result2);
-        //             } else {
-        //                 System.out.println("No valid scaling result returned from Gorgias.");
-        //             }
-        //         } catch (ApiException e) {
-        //             e.printStackTrace();
-        //         }
-        //     } else {
-        //         System.out.println("No valid facts provided for resource requirements evaluation.");
-        //     }
-        
-        //     return combinedResults;
-        // }
-        
+       
         
 
     public GorgiasQueryResult executeGorgiasQueryForFinalDecision(WorkflowForm form) {
@@ -1451,160 +1395,4 @@ public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
         }
     }
     
-//commented 7-12-2023 the below code
-
-// public GorgiasQueryResult executeGorgiasQuery(WorkflowForm form) {
-//         long startTime = System.currentTimeMillis();
-
-//         ExecuteGorgiasQueryControllerApi apiInstance = new ExecuteGorgiasQueryControllerApi();
-//         apiInstance.getApiClient().setUsername("imichalakis");
-//         apiInstance.getApiClient().setPassword("528528gm@@");
-//         apiInstance.getApiClient().setBasePath("http://aiasvm1.amcl.tuc.gr:8085");
-//         GorgiasQuery gorgiasQuery = new GorgiasQuery(); // GorgiasQuery | gorgiasQuery
-//         ArrayList<String> gorgiasFiles = new ArrayList<String>();
-//         gorgiasFiles.add("Theory1/urgencylev4.pl");
-//         gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-
-//         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-//         try {
-//             Date startDate = sdf.parse(form.getStartDate());
-//             Date currentDate = new Date(); // Gets the current date
-            
-//             // Calculate the difference in days between the current date and start date
-//             long diffInMillies = startDate.getTime() - currentDate.getTime();
-//             long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-            
-//             // Guard against negative values if the start date is in the past
-//             if (diffInDays < 0) {
-//                 System.out.println("The start date must be a future date.");
-//                 return null;
-//             }
-
-//             // Add the calculated startdate fact
-//             ArrayList<String> facts = new ArrayList<String>();
-//             facts.add("startdate(" + diffInDays + ")");
-
-            
-//             // Handle agency category fact, if available
-//             String agencyCategory = form.getAgencyCategory();
-//             if (agencyCategory != null && !agencyCategory.isEmpty()) {
-//                 facts.add("agency_category(" + agencyCategory + ")");
-//             }
-
-//             // Handle urgency fact, convert to lowercase
-//             String urgency = form.getUrgency();
-//             if (urgency != null && !urgency.isEmpty()) {
-//                 urgency = urgency.toLowerCase(Locale.ROOT); // Convert to lowercase
-//                 facts.add("urgency(" + urgency + ")");
-//             }
-
-//             gorgiasQuery.setFacts(facts);
-//         } catch (Exception e) {
-//             e.printStackTrace();
-//             System.out.println("Error parsing date from form");
-//             return null;
-//         }
-
-//         String myQuery = "urgency(X)";
-//         gorgiasQuery.setResultSize(1);
-//         gorgiasQuery.setQuery(myQuery);
-//         System.out.println("Query: " + gorgiasQuery.getQuery());
-//         GorgiasQueryResult result = null;
-//         try {
-//             result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-//             long endTime = System.currentTimeMillis();
-//             long executionTime = endTime - startTime;
-//             System.out.println("Gorgias query executed in " + executionTime + " ms");
-//             System.out.println(result);
-//         } catch (ApiException e) {
-//             System.out.println("Result is null due to an exception.");
-//             e.printStackTrace();
-//         }
-
-//         System.out.println("Start date as input: " + form.getStartDate());
-//         return result;
-    
-
-
-// }
-
-
-        // Create a GorgiasQuery object from the form data
-    //     GorgiasQuery gorgiasQuery = new GorgiasQuery();
-    //     List<String> gorgiasFiles = Arrays.asList("your_gorgias_file.pl");
-    //     // Set the Gorgias files
-    //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);        
-    //     // Set facts from the form
-    //     ArrayList<String> facts = new ArrayList<>();
-    //     facts.add("urgency(" + form.getUrgency() + ")");
-    //     facts.add("startDate(" + form.getStartDate() + ")");
-    //     gorgiasQuery.setFacts(facts);
-
-    //     // Set the query you want to execute
-    //     gorgiasQuery.setQuery("your_query_here");
-    //     gorgiasQuery.setResultSize(1); // Or any other result size you want
-
-    //     try {
-    //         // Execute the query and get the result
-    //         return apiInstance.executeQueryUsingPOST(gorgiasQuery);
-    //     } catch (ApiException e) {
-    //         // Log the exception or handle it as needed
-    //         e.printStackTrace();
-          //  return null;
-    //     }
-      
-     
-
-
-
-
-
-
-
-
-
-
-
-
-     ///dokimastiko
-
-    //  public CompletableFuture<GorgiasQueryResult> executeGorgiasQueryAsync(WorkflowForm form) {
-    //     // Wrap the execution in CompletableFuture.supplyAsync
-    //     return CompletableFuture.supplyAsync(() -> {
-    //         long startTime = System.currentTimeMillis();
-
-    //         ExecuteGorgiasQueryControllerApi apiInstance = new ExecuteGorgiasQueryControllerApi();
-    //         apiInstance.getApiClient().setUsername("imichalakis");
-    //         apiInstance.getApiClient().setPassword("528528gm@@");
-    //         apiInstance.getApiClient().setBasePath("http://aiasvm1.amcl.tuc.gr:8085");
-    //         GorgiasQuery gorgiasQuery = new GorgiasQuery();
-    //         ArrayList<String> gorgiasFiles = new ArrayList<>();
-    //         gorgiasFiles.add("urgencylev.pl");
-    //         gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-
-    //         ArrayList<String> facts = new ArrayList<>();
-    //         facts.add("request(localgov,startdate(5))");
-    //         gorgiasQuery.setFacts(facts);
-
-    //         String myQuery = "urgency(X)";
-    //         gorgiasQuery.setResultSize(1);
-    //         gorgiasQuery.setQuery(myQuery);
-    //         System.out.println("Query: " + gorgiasQuery.getQuery());
-
-    //         try {
-    //             GorgiasQueryResult result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
-    //             long endTime = System.currentTimeMillis();
-    //             long executionTime = endTime - startTime;
-    //             System.out.println("Gorgias query executed in " + executionTime + " ms");
-
-    //             System.out.println(result);
-    //             return result;
-    //         } catch (ApiException e) {
-    //             System.out.println("to result einai null");
-    //             e.printStackTrace();
-    //             return null;
-    //         }
-    //     });
-    // }
-
 }

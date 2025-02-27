@@ -8,11 +8,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 //import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "com.myproj.firstproj.repository")
+
 public class FirstprojApplication {
 
     public static void main(String... args) {

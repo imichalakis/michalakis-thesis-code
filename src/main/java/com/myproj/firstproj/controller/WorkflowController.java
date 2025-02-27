@@ -57,6 +57,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
@@ -735,95 +736,213 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
         }
     }
 
-
     @PostMapping("/process-urgency")
     public String processUrgency(@ModelAttribute("form") WorkflowForm form, HttpSession session, Model model) {
-        System.out.println("Executing Gorgias Query for Urgency...");
+        System.out.println("🚀 Executing Gorgias Query for Urgency...");
     
         // Store input values in model
-        model.addAttribute("startDate", form.getStartDate());
-        model.addAttribute("agencyCategory", form.getAgencyCategory());
-        model.addAttribute("requestType", form.getRequestType());
-        model.addAttribute("contractWithContractor", form.getContractWithContractor());
+        prepareModelWithFormData(model, form);
     
         // Execute Gorgias query
         List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForUrgency(form, session);
-    
+        
         if (parsedResults != null && !parsedResults.isEmpty()) {
-            List<Map<String, Object>> resultsList = new ArrayList<>();
-            Set<String> uniqueUrgencyDecisions = new LinkedHashSet<>(); // To remove duplicates
-    
-            for (ParsedResult result : parsedResults) {
-                Map<String, Object> resultMap = new HashMap<>();
-    
-                // Extract raw result
-                String rawResult = result.getMainResult();
-                System.out.println("Raw Urgency Result: " + rawResult);
-    
-                String extractedUrgency = rawResult.contains("(") && rawResult.contains(")")
-                        ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
-                        : rawResult;
-    
-                System.out.println("Extracted Urgency Decision: " + extractedUrgency);
-    
-                // Convert to human-readable text
-                String humanReadableUrgency = gorgiasService.mapMainResultToNaturalLanguage(extractedUrgency, form).trim();
-                if (!humanReadableUrgency.isEmpty()) {
-                    uniqueUrgencyDecisions.add(humanReadableUrgency);
-                }
-    
-                // Convert supporting facts
-                List<String> supportingFacts = result.getSupportingFacts();
-                List<String> naturalLanguageFacts = new ArrayList<>();
-                for (String fact : supportingFacts) {
-                    String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", ""));
-                    naturalLanguageFacts.add(convertedFact);
-                }
-    
-                // Store data
-                resultMap.put("naturalLanguageMainResult", humanReadableUrgency);
-                resultMap.put("convertedFact", naturalLanguageFacts);
-                resultsList.add(resultMap);
-            }
-    
-            // Store final decision
-            String finalUrgencyDecision = String.join("; ", uniqueUrgencyDecisions);
-            form.setUrgencyDecision(finalUrgencyDecision);
-            System.out.println("DEBUG: Urgency Decision = " + finalUrgencyDecision);
-    
-            // ✅ Store in session & update Welcome Page
-            model.addAttribute("urgencyDecision", finalUrgencyDecision);
-            session.setAttribute("urgencyDecision", finalUrgencyDecision);
-    
-            session.setAttribute("urgencyStatus", "✅ Completed"); // ✅ Mark as Completed
-            System.out.println("Session after processing: urgencyStatus=" + 
-                session.getAttribute("urgencyStatus") + 
-                ", urgencyDecision=" + session.getAttribute("urgencyDecision"));
-    
-            // ✅ Add to model
-               System.out.println("Session Attributes Before Rendering Home Page:");
-     Enumeration<String> attributeNames = session.getAttributeNames();
-     while (attributeNames.hasMoreElements()) {
-         String name = attributeNames.nextElement();
-         System.out.println(name + " = " + session.getAttribute(name));
-     }
-            model.addAttribute("resultsList", resultsList);
-            model.addAttribute("urgencyDecision","✅ Completed");
-            model.addAttribute("form", form);
-            System.out.println("Session Attributes Before Rendering Home Page:");
-             attributeNames = session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                String name = attributeNames.nextElement();
-                System.out.println(name + " = " + session.getAttribute(name));
-            }
+            // Deduplicate results before processing
+            List<ParsedResult> deduplicatedResults = deduplicateResults(parsedResults);
+            processAndStoreResults(deduplicatedResults, session, model, form);
         } else {
-            // If no results were found, set status as "No Decision"
-            session.setAttribute("urgencyStatus", "❌ No Decision");
-            model.addAttribute("error", "No results found or an error occurred.");
+            handleNoResultsFound(session, model);
         }
     
         return "workflow/urgency-result";
     }
+    /**
+ * Deduplicate parsed results based on both main result and supporting facts
+ */
+public List<ParsedResult> deduplicateResults(List<ParsedResult> parsedResults) {
+    Map<String, ParsedResult> uniqueResults = new LinkedHashMap<>();
+    
+    for (ParsedResult result : parsedResults) {
+        // Create a unique key combining the main result and supporting facts
+        String mainResult = result.getMainResult();
+        
+        // Get a string representation of the supporting facts
+        String factString = result.getSupportingFacts().stream()
+                .map(fact -> fact.replaceAll("^\\s*•+\\s*", "").trim())
+                .collect(Collectors.joining("|"));
+        
+        // Create a composite key for deduplication
+        String compositeKey = mainResult + ":" + factString;
+        
+        // Only add if we haven't seen this exact combination before
+        if (!uniqueResults.containsKey(compositeKey)) {
+            // Clean supporting facts
+            List<String> cleanedFacts = result.getSupportingFacts().stream()
+                    .map(fact -> fact.replaceAll("^\\s*•+\\s*", "").trim())
+                    .filter(fact -> !fact.isEmpty())
+                    .collect(Collectors.toList());
+            
+            uniqueResults.put(compositeKey, new ParsedResult(mainResult, cleanedFacts));
+        }
+    }
+    
+    return new ArrayList<>(uniqueResults.values());
+}
+
+private void prepareModelWithFormData(Model model, WorkflowForm form) {
+    model.addAttribute("startDate", form.getStartDate());
+    model.addAttribute("agencyCategory", form.getAgencyCategory());
+    model.addAttribute("requestType", form.getRequestType());
+    model.addAttribute("contractWithContractor", form.getContractWithContractor());
+}
+
+private void processAndStoreResults(List<ParsedResult> parsedResults, HttpSession session, Model model, WorkflowForm form) {
+    List<Map<String, Object>> resultsList = new ArrayList<>();
+    Set<String> uniqueUrgencyDecisions = new LinkedHashSet<>();
+
+    for (ParsedResult result : parsedResults) {
+        Map<String, Object> resultMap = new HashMap<>();
+        processParsedResult(result, resultMap, form);  // Passing form here
+        resultsList.add(resultMap);
+        uniqueUrgencyDecisions.add(resultMap.get("naturalLanguageMainResult").toString());
+    }
+
+    String finalUrgencyDecision = String.join("; ", uniqueUrgencyDecisions);
+    updateSessionAndModelWithResults(session, model, finalUrgencyDecision, resultsList, form);
+}
+
+private void processParsedResult(ParsedResult result, Map<String, Object> resultMap, WorkflowForm form) {
+    String rawResult = result.getMainResult();
+    System.out.println("Raw Urgency Result: " + rawResult);
+
+    String extractedUrgency = extractUrgencyFromResult(rawResult);
+    String humanReadableUrgency = gorgiasService.mapMainResultToNaturalLanguage(extractedUrgency, form).trim();
+
+    resultMap.put("naturalLanguageMainResult", humanReadableUrgency);
+    resultMap.put("convertedFact", convertFactsToNaturalLanguage(result.getSupportingFacts()));
+}
+
+
+private String extractUrgencyFromResult(String rawResult) {
+    if (rawResult.contains("(") && rawResult.contains(")")) {
+        return rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'));
+    }
+    return rawResult;
+}
+
+private List<String> convertFactsToNaturalLanguage(List<String> supportingFacts) {
+    return supportingFacts.stream()
+        .map(fact -> gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", "")))
+        .collect(Collectors.toList());
+}
+
+private void updateSessionAndModelWithResults(HttpSession session, Model model, String urgencyDecision, List<Map<String, Object>> resultsList, WorkflowForm form) {
+    form.setUrgencyDecision(urgencyDecision);
+    model.addAttribute("urgencyDecision", urgencyDecision);
+    session.setAttribute("urgencyDecision", urgencyDecision);
+    session.setAttribute("urgencyStatus", "✅ Completed");
+    model.addAttribute("resultsList", resultsList);
+}
+
+private void handleNoResultsFound(HttpSession session, Model model) {
+    session.setAttribute("urgencyStatus", "❌ No Decision");
+    model.addAttribute("error", "No results found or an error occurred.");
+}
+
+
+
+
+
+
+
+    // @PostMapping("/process-urgency")
+    // public String processUrgency(@ModelAttribute("form") WorkflowForm form, HttpSession session, Model model) {
+    //     System.out.println("Executing Gorgias Query for Urgency...");
+    
+    //     // Store input values in model
+    //     model.addAttribute("startDate", form.getStartDate());
+    //     model.addAttribute("agencyCategory", form.getAgencyCategory());
+    //     model.addAttribute("requestType", form.getRequestType());
+    //     model.addAttribute("contractWithContractor", form.getContractWithContractor());
+    
+    //     // Execute Gorgias query
+    //     List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForUrgency(form, session);
+    
+    //     if (parsedResults != null && !parsedResults.isEmpty()) {
+    //         List<Map<String, Object>> resultsList = new ArrayList<>();
+    //         Set<String> uniqueUrgencyDecisions = new LinkedHashSet<>(); // To remove duplicates
+    
+    //         for (ParsedResult result : parsedResults) {
+    //             Map<String, Object> resultMap = new HashMap<>();
+    
+    //             // Extract raw result
+    //             String rawResult = result.getMainResult();
+    //             System.out.println("Raw Urgency Result: " + rawResult);
+    
+    //             String extractedUrgency = rawResult.contains("(") && rawResult.contains(")")
+    //                     ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+    //                     : rawResult;
+    
+    //             System.out.println("Extracted Urgency Decision: " + extractedUrgency);
+    
+    //             // Convert to human-readable text
+    //             String humanReadableUrgency = gorgiasService.mapMainResultToNaturalLanguage(extractedUrgency, form).trim();
+    //             if (!humanReadableUrgency.isEmpty()) {
+    //                 uniqueUrgencyDecisions.add(humanReadableUrgency);
+    //             }
+    
+    //             // Convert supporting facts
+    //             List<String> supportingFacts = result.getSupportingFacts();
+    //             List<String> naturalLanguageFacts = new ArrayList<>();
+    //             for (String fact : supportingFacts) {
+    //                 String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", ""));
+    //                 naturalLanguageFacts.add(convertedFact);
+    //             }
+    
+    //             // Store data
+    //             resultMap.put("naturalLanguageMainResult", humanReadableUrgency);
+    //             resultMap.put("convertedFact", naturalLanguageFacts);
+    //             resultsList.add(resultMap);
+    //         }
+    
+    //         // Store final decision
+    //         String finalUrgencyDecision = String.join("; ", uniqueUrgencyDecisions);
+    //         form.setUrgencyDecision(finalUrgencyDecision);
+    //         System.out.println("DEBUG: Urgency Decision = " + finalUrgencyDecision);
+    
+    //         // ✅ Store in session & update Welcome Page
+    //         model.addAttribute("urgencyDecision", finalUrgencyDecision);
+    //         session.setAttribute("urgencyDecision", finalUrgencyDecision);
+    
+    //         session.setAttribute("urgencyStatus", "✅ Completed"); // ✅ Mark as Completed
+    //         System.out.println("Session after processing: urgencyStatus=" + 
+    //             session.getAttribute("urgencyStatus") + 
+    //             ", urgencyDecision=" + session.getAttribute("urgencyDecision"));
+    
+    //         // ✅ Add to model
+    //            System.out.println("Session Attributes Before Rendering Home Page:");
+    //  Enumeration<String> attributeNames = session.getAttributeNames();
+    //  while (attributeNames.hasMoreElements()) {
+    //      String name = attributeNames.nextElement();
+    //      System.out.println(name + " = " + session.getAttribute(name));
+    //  }
+    //         model.addAttribute("resultsList", resultsList);
+    //         model.addAttribute("urgencyDecision","✅ Completed");
+    //         model.addAttribute("form", form);
+    //         System.out.println("Session Attributes Before Rendering Home Page:");
+    //          attributeNames = session.getAttributeNames();
+    //         while (attributeNames.hasMoreElements()) {
+    //             String name = attributeNames.nextElement();
+    //             System.out.println(name + " = " + session.getAttribute(name));
+    //         }
+    //     } else {
+    //         // If no results were found, set status as "No Decision"
+    //         session.setAttribute("urgencyStatus", "❌ No Decision");
+    //         model.addAttribute("error", "No results found or an error occurred.");
+    //     }
+    
+    //     return "workflow/urgency-result";
+    // }
     
     
 
@@ -937,50 +1056,50 @@ public String processLocation(@ModelAttribute("form") WorkflowForm form, Model m
 
 
 
-@PostMapping("/process-infrastructure")
-public String processInfrastructure(@ModelAttribute("form") WorkflowForm form, Model model) {
-    // Εκτέλεση του Gorgias Query για το Infrastructure
-    GorgiasQueryResult gorgiasResponseForInfrastructure = gorgiasService.executeGorgiasQueryForInfrastructure(form);
+// @PostMapping("/process-infrastructure")
+// public String processInfrastructure(@ModelAttribute("form") WorkflowForm form, Model model) {
+//     // Εκτέλεση του Gorgias Query για το Infrastructure
+//     GorgiasQueryResult gorgiasResponseForInfrastructure = gorgiasService.executeGorgiasQueryForInfrastructure(form);
     
-    // Έλεγχος αν υπάρχει σφάλμα στο αποτέλεσμα
-    if (gorgiasResponseForInfrastructure.isHasError()) {
-        System.out.println(gorgiasResponseForInfrastructure.getErrorMsg());
-    } else {
-        // Αν δεν υπάρχει σφάλμα, ελέγχουμε αν υπάρχουν αποτελέσματα
-        if (gorgiasResponseForInfrastructure.isHasResult()) {
-            List<QueryResult> results = gorgiasResponseForInfrastructure.getResult();
-            for (QueryResult queryResult : results) {
-                // Εκτύπωση αποτελεσμάτων και επεξήγηση
-                System.out.println("ExplanationStr: " + queryResult.getExplanationStr());
-                System.out.println(queryResult.getHumanExplanation());
-                //pairno to apotelesma pou me endiaferei
-                // Εκτύπωση του κειμένου εντός παρενθέσεων
-                //System.out.println(form.getInfrastructureDecision());
-                }
+//     // Έλεγχος αν υπάρχει σφάλμα στο αποτέλεσμα
+//     if (gorgiasResponseForInfrastructure.isHasError()) {
+//         System.out.println(gorgiasResponseForInfrastructure.getErrorMsg());
+//     } else {
+//         // Αν δεν υπάρχει σφάλμα, ελέγχουμε αν υπάρχουν αποτελέσματα
+//         if (gorgiasResponseForInfrastructure.isHasResult()) {
+//             List<QueryResult> results = gorgiasResponseForInfrastructure.getResult();
+//             for (QueryResult queryResult : results) {
+//                 // Εκτύπωση αποτελεσμάτων και επεξήγηση
+//                 System.out.println("ExplanationStr: " + queryResult.getExplanationStr());
+//                 System.out.println(queryResult.getHumanExplanation());
+//                 //pairno to apotelesma pou me endiaferei
+//                 // Εκτύπωση του κειμένου εντός παρενθέσεων
+//                 //System.out.println(form.getInfrastructureDecision());
+//                 }
 
-             //   String decision = results.get(0).getExplanationStr();
+//              //   String decision = results.get(0).getExplanationStr();
                 
-                String decision = results.get(0).getVariables().get("X");
-                form.setInfrastructureDecision(decision);
-                System.out.println(decision);
-            //     int start = decision.indexOf('(') + 1; // Βρίσκουμε τη θέση μετά το ανοιχτό παρένθεση
-            //     int end = decision.indexOf(')'); // Βρίσκουμε τη θέση του κλειστού παρένθεση
+//                 String decision = results.get(0).getVariables().get("X");
+//                 form.setInfrastructureDecision(decision);
+//                 System.out.println(decision);
+//             //     int start = decision.indexOf('(') + 1; // Βρίσκουμε τη θέση μετά το ανοιχτό παρένθεση
+//             //     int end = decision.indexOf(')'); // Βρίσκουμε τη θέση του κλειστού παρένθεση
         
-            //     if (start != 0 && end != -1) { // Έλεγχος αν υπάρχουν παρενθέσεις
-            //          form.setInfrastructureDecision(decision.substring(start, end));
-            //         //System.out.println(form.getInfrastructureDecision());
-            // }
-        }
-    }
-    boolean suggestScalabilityForm = form.isHighScalability() || form.isHighPerformance();
-    // Προσθήκη του αποτελέσματος στο μοντέλο για προβολή στη σελίδα
-    model.addAttribute("suggestScalabilityForm", suggestScalabilityForm);
+//             //     if (start != 0 && end != -1) { // Έλεγχος αν υπάρχουν παρενθέσεις
+//             //          form.setInfrastructureDecision(decision.substring(start, end));
+//             //         //System.out.println(form.getInfrastructureDecision());
+//             // }
+//         }
+//     }
+//     boolean suggestScalabilityForm = form.isHighScalability() || form.isHighPerformance();
+//     // Προσθήκη του αποτελέσματος στο μοντέλο για προβολή στη σελίδα
+//     model.addAttribute("suggestScalabilityForm", suggestScalabilityForm);
 
-    model.addAttribute("gorgiasResponseForInfrastructure", gorgiasResponseForInfrastructure);
-    model.addAttribute("infrastructureDecision", form.getInfrastructureDecision());
-    // Κατεύθυνση στη σελίδα αποτελεσμάτων
-    return "workflow/infrastructure-result-page";
-}
+//     model.addAttribute("gorgiasResponseForInfrastructure", gorgiasResponseForInfrastructure);
+//     model.addAttribute("infrastructureDecision", form.getInfrastructureDecision());
+//     // Κατεύθυνση στη σελίδα αποτελεσμάτων
+//     return "workflow/infrastructure-result-page";
+// }
 
 
 @PostMapping("/process-infrastructure2")
@@ -1118,8 +1237,7 @@ public String processScalability(@ModelAttribute("form") WorkflowForm form, Mode
 @PostMapping("/process-resource-requirements")
 public String processResourceRequirements(@ModelAttribute("form") WorkflowForm form, Model model, HttpSession session) {
     System.out.println("Executing Gorgias Query for Resource Requirements...");
-    // Debug: Print received form values
-   
+    
     // Execute the query
     List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForResources(form);
     
@@ -1133,11 +1251,12 @@ public String processResourceRequirements(@ModelAttribute("form") WorkflowForm f
 
     List<Map<String, Object>> resultsList = new ArrayList<>();
     List<String> resourceDecisions = new ArrayList<>();
+    
+    // Map to track complete resource descriptions to avoid splitting issues
+    Map<String, Boolean> completeResourceMap = new HashMap<>();
 
+    // First pass: Process all results and identify complete resource descriptions
     for (ParsedResult result : parsedResults) {
-        Map<String, Object> resultMap = new HashMap<>();
-        
-        // Extract only X from resource_decision(X)
         String rawResult = result.getMainResult();
         System.out.println("Raw Result: " + rawResult);
         
@@ -1149,8 +1268,19 @@ public String processResourceRequirements(@ModelAttribute("form") WorkflowForm f
 
         // Convert main result into a human-readable format
         String humanReadableResource = gorgiasService.mapMainResultToNaturalLanguage(extractedResource, form);
+        
+        // Special handling for known resource descriptions that should be kept together
+        if (humanReadableResource.contains("Real-Time Compute Optimized:")) {
+            completeResourceMap.put("Real-Time Compute Optimized: High-performance computing resources configured for low-latency, responsive applications", true);
+        } 
+        else if (humanReadableResource.contains("Elastic Compute Optimized:")) {
+            completeResourceMap.put("Elastic Compute Optimized: Auto-scaling compute resources that dynamically adjust to workload demands", true);
+        }
+        else {
+            completeResourceMap.put(humanReadableResource, true);
+        }
 
-        // Process supporting facts (convert to natural language)
+        // Process supporting facts
         List<String> supportingFacts = result.getSupportingFacts();
         List<String> naturalLanguageFacts = new ArrayList<>();
         for (String fact : supportingFacts) {
@@ -1159,26 +1289,26 @@ public String processResourceRequirements(@ModelAttribute("form") WorkflowForm f
         }
 
         // Store processed data
+        Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("naturalLanguageMainResult", humanReadableResource);
         resultMap.put("convertedFact", naturalLanguageFacts);
         resultsList.add(resultMap);
-
-        System.out.println("Converted Facts: " + naturalLanguageFacts);
-
-        // Add extracted resource decision
-        resourceDecisions.add(humanReadableResource);
     }
 
-    form.setResourceDecision(String.join(", ", resourceDecisions));
-    session.setAttribute("resourceDecision", form.getResourceDecision());
+    // Convert the complete resource map keys to a list
+    List<String> completeResourceList = new ArrayList<>(completeResourceMap.keySet());
     
-            session.setAttribute("resourceStatus", "✅ Completed"); 
+    // KEY FIX: Use a delimiter that won't appear in the descriptions
+    // Use pipe character (|) as a delimiter instead of comma
+    form.setResourceDecision(String.join("|", completeResourceList));
+    session.setAttribute("resourceDecision", form.getResourceDecision());
+    session.setAttribute("resourceStatus", "✅ Completed"); 
+    
     model.addAttribute("resultsList", resultsList);
     model.addAttribute("form", form);
 
     return "workflow/resource-requirements-result";
 }
-
 
 
 // @PostMapping("/process-resource-requirements")
@@ -1433,6 +1563,12 @@ private String extractKeyword(String input) {
             System.out.println("Disaster Recovery: " +form.getDisasterRecoveryNeeds());
             System.out.println("Budget: " +form.getBudget());
             System.out.println("latency: "+form.getLatencyRequirement());
+            System.out.println(" primary goal " +form.getPrimaryGoal());
+            System.out.println(" control requirement " + form.getControlRequirement());
+            System.out.println(" compliance requirement " + form.getComplianceRequirement());
+
+            
+
         //     // Προσθήκη μηνύματος επιβεβαίωσης στο RedirectAttributes
             form.setUrgencyDecision(getUrgencyShort(form.getUrgencyDecision()));
             form.setInfrastructureDecision(getFirstValue(form.getInfrastructureDecision()));
@@ -1449,7 +1585,7 @@ private String extractKeyword(String input) {
         //Here goes all the process like process-urgency and other similar
         //to execute gorgias query
             //function yamlgen(form)
-            System.out.println("Executing Gorgias Query for Urgency...");
+         //   System.out.println("Executing Gorgias Query for Urgency...");
     
             // Store input values in model
            
@@ -1745,262 +1881,7 @@ private String removeDuplicates(String input) {
             .collect(Collectors.toSet()); // Store unique values
     return String.join(", ", uniqueValues); // Convert back to a string
 }
-    // private void createYamlFileBasedOnDecisions(WorkflowForm form) throws IOException {
-    //     Map<String, Object> yamlData = new HashMap<>();
-    //     List<Map<String, Object>> resources = new ArrayList<>();
-    //     System.out.println("DECISIONS PRINT");
-    //     System.out.println("LOCATION"+form.getLocationDecision());
-    //     System.out.println("      "+form.getUrgencyDecision());
-    //     System.out.println("      "+form.getScalabilityAndPerformanceDecision());
-    //     System.out.println("      "+form.getResourceDecision());
-    //     System.out.println("      "+form.getInfrastructureDecision());
-    //     String location = form.getLocationDecision().equalsIgnoreCase("azure_cloud") ? "eastus" : "local";
-    
-    //     // 1. Infrastructure Decision
-    //     switch (form.getInfrastructureDecision().toLowerCase()) {
-    //         case "serverless":
-    //             Map<String, Object> functionApp = new HashMap<>();
-    //             functionApp.put("type", "Microsoft.Web/sites");
-    //             functionApp.put("kind", "functionapp");
-    //             functionApp.put("name", "myFunctionApp");
-    //             functionApp.put("location", location);
-    //             resources.add(functionApp);
-    //             break;
-    
-    //         case "iaas":
-    //             Map<String, Object> virtualMachine = new HashMap<>();
-    //             virtualMachine.put("type", "Microsoft.Compute/virtualMachines");
-    //             virtualMachine.put("name", "myAzureVM");
-    //             virtualMachine.put("location", location);
-    
-    //             Map<String, Object> hardwareProfile = new HashMap<>();
-    //             hardwareProfile.put("vmSize", "Standard_D2s_v3");
-    
-    //             Map<String, Object> osDisk = new HashMap<>();
-    //             osDisk.put("createOption", "FromImage");
-    
-    //             Map<String, Object> storageProfile = new HashMap<>();
-    //             storageProfile.put("osDisk", osDisk);
-    
-    //             Map<String, Object> networkInterface = new HashMap<>();
-    //             networkInterface.put("id", "[resourceId('Microsoft.Network/networkInterfaces', 'myNic')]");
-    
-    //             List<Map<String, Object>> networkInterfacesList = new ArrayList<>();
-    //             networkInterfacesList.add(networkInterface);
-    
-    //             Map<String, Object> networkProfile = new HashMap<>();
-    //             networkProfile.put("networkInterfaces", networkInterfacesList);
-    
-    //             Map<String, Object> vmProperties = new HashMap<>();
-    //             vmProperties.put("hardwareProfile", hardwareProfile);
-    //             vmProperties.put("storageProfile", storageProfile);
-    //             vmProperties.put("networkProfile", networkProfile);
-    
-    //             virtualMachine.put("properties", vmProperties);
-    //             resources.add(virtualMachine);
-    //             break;
-    
-    //         case "paas":
-    //             Map<String, Object> paasService = new HashMap<>();
-    //             paasService.put("type", "Microsoft.AppPlatform/Spring");
-    //             paasService.put("name", "mySpringApp");
-    //             paasService.put("location", location);
-    //             resources.add(paasService);
-    //             break;
-    
-    //         case "saas":
-    //             Map<String, Object> saasService = new HashMap<>();
-    //             saasService.put("type", "Microsoft.SaaS/application");
-    //             saasService.put("name", "mySaaSApp");
-    //             saasService.put("location", location);
-    //             resources.add(saasService);
-    //             break;
-    
-    //         default:
-    //             System.out.println("Unknown infrastructure decision, using default: IaaS");
-    //             virtualMachine = new HashMap<>();
-    //             virtualMachine.put("type", "Microsoft.Compute/virtualMachines");
-    //             virtualMachine.put("name", "defaultAzureVM");
-    //             virtualMachine.put("location", location);
-    //             resources.add(virtualMachine);
-    //             break;
-    //     }
-    
-    //     // 2. Resource Decision
-    //     switch (form.getResourceDecision().toLowerCase()) {
-    //         case "dedicated":
-    //             Map<String, Object> dedicatedResource = new HashMap<>();
-    //             dedicatedResource.put("type", "Dedicated/Resource");
-    //             dedicatedResource.put("name", "dedicatedResource");
-    //             dedicatedResource.put("location", location);
-    //             resources.add(dedicatedResource);
-    //             break;
-    
-    //         case "shared":
-    //             Map<String, Object> sharedResource = new HashMap<>();
-    //             sharedResource.put("type", "Shared/Resource");
-    //             sharedResource.put("name", "sharedResource");
-    //             sharedResource.put("location", location);
-    //             resources.add(sharedResource);
-    //             break;
-    
-    //         case "public_cloud":
-    //             Map<String, Object> publicCloudResource = new HashMap<>();
-    //             publicCloudResource.put("type", "Public/Cloud");
-    //             publicCloudResource.put("name", "publicCloudResource");
-    //             publicCloudResource.put("location", location);
-    //             resources.add(publicCloudResource);
-    //             break;
-    
-    //         case "memory_optimized":
-    //             Map<String, Object> memoryOptimizedResource = new HashMap<>();
-    //             memoryOptimizedResource.put("type", "Microsoft.Compute/memoryOptimized");
-    //             memoryOptimizedResource.put("name", "memoryOptimizedResource");
-    //             memoryOptimizedResource.put("location", location);
-    //             resources.add(memoryOptimizedResource);
-    //             break;
-    
-    //         case "compute_optimized":
-    //             Map<String, Object> computeOptimizedResource = new HashMap<>();
-    //             computeOptimizedResource.put("type", "Microsoft.Compute/computeOptimized");
-    //             computeOptimizedResource.put("name", "computeOptimizedResource");
-    //             computeOptimizedResource.put("location", location);
-    //             resources.add(computeOptimizedResource);
-    //             break;
-    
-    //         default:
-    //             System.out.println("Unknown resource decision, using default: Shared Resource");
-    //             sharedResource = new HashMap<>();
-    //             sharedResource.put("type", "Shared/Resource");
-    //             sharedResource.put("name", "defaultSharedResource");
-    //             sharedResource.put("location", location);
-    //             resources.add(sharedResource);
-    //             break;
-    //     }
-    
-    //     // 3. Scaling Decision
-    //     switch (form.getScalabilityAndPerformanceDecision().toLowerCase()) {
-    //         case "auto_scaling":
-    //             Map<String, Object> autoScalingSettings = new HashMap<>();
-    //             autoScalingSettings.put("type", "Microsoft.Insights/autoscaleSettings");
-    //             autoScalingSettings.put("name", "autoScalingSettings");
-    //             autoScalingSettings.put("location", location);
-    
-    //             Map<String, Object> profile = new HashMap<>();
-    //             profile.put("name", "AutoScaleProfile");
-    
-    //             Map<String, String> capacity = new HashMap<>();
-    //             capacity.put("default", "1");
-    //             capacity.put("minimum", "1");
-    //             capacity.put("maximum", "10");
-    
-    //             profile.put("capacity", capacity);
-    
-    //             List<Map<String, Object>> profilesList = new ArrayList<>();
-    //             profilesList.add(profile);
-    
-    //             Map<String, Object> properties = new HashMap<>();
-    //             properties.put("profiles", profilesList);
-    
-    //             autoScalingSettings.put("properties", properties);
-    //             resources.add(autoScalingSettings);
-    //             break;
-    
-    //         case "fixed_resources":
-    //             Map<String, Object> fixedScalingSettings = new HashMap<>();
-    //             fixedScalingSettings.put("type", "Scaling/Fixed");
-    //             fixedScalingSettings.put("name", "fixedScalingSettings");
-    //             fixedScalingSettings.put("location", location);
-    //             properties = new HashMap<>();
-    //             properties.put("capacity", "fixed_capacity");
-    //             fixedScalingSettings.put("properties", properties);
-    
-    //             resources.add(fixedScalingSettings);
-    //             break;
-    
-    //         default:
-    //             System.out.println("Unknown scaling decision, using default: Fixed Scaling");
-    //             fixedScalingSettings = new HashMap<>();
-    //             fixedScalingSettings.put("type", "Scaling/Fixed");
-    //             fixedScalingSettings.put("name", "defaultFixedScaling");
-    //             fixedScalingSettings.put("location", location);
-    //             properties = new HashMap<>();
-    //             properties.put("capacity", "fixed_capacity");
-    //             fixedScalingSettings.put("properties", properties);
-    //             resources.add(fixedScalingSettings);
-    //             break;
-    //     }
-    
-    //     // 4. Urgency Decision
-    //    // System.out.println(form.getUrgencyDecision());
-    //     switch (form.getUrgencyDecision().toLowerCase().trim()) {
-    //         case "high":
-    //             Map<String, Object> highUrgencyResource = new HashMap<>();
-    //             highUrgencyResource.put("type", "Urgency/High");
-    //             highUrgencyResource.put("name", "highUrgencyRequirement");
-    //             highUrgencyResource.put("location", location);
-    //             resources.add(highUrgencyResource);
-    //             break;
-    
-    //         case "normal":
-    //             Map<String, Object> normalUrgencyResource = new HashMap<>();
-    //             normalUrgencyResource.put("type", "Urgency/Normal");
-    //             normalUrgencyResource.put("name", "normalUrgencyRequirement");
-    //             normalUrgencyResource.put("location", location);
-    //             resources.add(normalUrgencyResource);
-    //             break;
-    
-    //         case "urgent":
-    //             Map<String, Object> urgentUrgencyResource = new HashMap<>();
-    //             urgentUrgencyResource.put("type", "Urgency/Urgent");
-    //             urgentUrgencyResource.put("name", "UrgentUrgencyRequirement");
-    //             urgentUrgencyResource.put("location", location);
-    //             resources.add(urgentUrgencyResource);
-    //             break;
-    
-    //         default:
-                
-    //             System.out.println("Unknown urgency decision, using default: Normal Urgency");
-    //             normalUrgencyResource = new HashMap<>();
-    //             normalUrgencyResource.put("type", "Urgency/Normal");
-    //             normalUrgencyResource.put("name", "defaultNormalUrgency");
-    //             normalUrgencyResource.put("location", location);
-    //             resources.add(normalUrgencyResource);
-                
-    //             break;
-                
-    //     }
-    //     switch (form.getLocationDecision().toLowerCase().trim()) {
-    //         case "onPremise":
-    //             yamlData.put("location", "local");
-    //             break;
-        
-    //         case "azure":
-    //             yamlData.put("location", "eastus");
-    //             break;
-        
-    //         default:
-    //             System.out.println("Unknown location decision, using default: azure");
-    //             yamlData.put("location", "eastus");
-    //             break;
-    //     }
-        
-    
-    //     // Προσθήκη των resources στο yamlData
-    //     yamlData.put("resources", resources);
-    
-    //     // Ρυθμίσεις YAML και αποθήκευση σε αρχείο
-    //     DumperOptions options = new DumperOptions();
-    //     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-    //     Yaml yaml = new Yaml(options);
-    
-    //     try (FileWriter writer = new FileWriter("azure_infrastructure.yaml")) {
-    //         yaml.dump(yamlData, writer);
-    //         // Αντιγραφή του αρχείου στο φάκελο static για λήψη
-    //         Files.copy(Paths.get("azure_infrastructure.yaml"), Paths.get("src/main/resources/static/azure_infrastructure.yaml"), StandardCopyOption.REPLACE_EXISTING);
-    //     }
-    // }
-    
+
     
     
     
