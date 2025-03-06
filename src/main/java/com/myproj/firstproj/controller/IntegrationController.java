@@ -144,31 +144,45 @@ public class IntegrationController {
             List<Map<String, Object>> resultsList = new ArrayList<>();
             List<String> infrastructureDecisions = new ArrayList<>();
     
-            for (ParsedResult result : parsedResults) {
+            // Add raw results for debugging
+            model.addAttribute("rawResults", parsedResults);
+    
+            for (int i = 0; i < parsedResults.size(); i++) {
+                ParsedResult result = parsedResults.get(i);
                 Map<String, Object> resultMap = new HashMap<>();
+                
+                System.out.println("Processing result " + (i+1) + ": " + result.getMainResult());
+                System.out.println("  Supporting facts: " + result.getSupportingFacts());
     
-                // Process supporting facts
-                List<String> supportingFacts = result.getSupportingFacts() != null ? result.getSupportingFacts() : new ArrayList<>();
-                List<String> naturalLanguageFacts = supportingFacts.stream()
-                    .map(fact -> gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", "")))
-                    .collect(Collectors.toList());
-    
-                // Process main result and extract only X from propose_infrastructure(X)
+                // Get supporting facts
+                List<String> facts = result.getSupportingFacts();
+                if (facts == null) facts = new ArrayList<>();
+                
+                // Convert to natural language
+                List<String> naturalLanguageFacts = new ArrayList<>();
+                for (String fact : facts) {
+                    String cleanFact = fact.trim().replaceAll("[\"']", "");
+                    String naturalFact = gorgiasService.convertFactToNaturalLanguage(cleanFact);
+                    naturalLanguageFacts.add(naturalFact);
+                    System.out.println("  Converted: " + cleanFact + " -> " + naturalFact);
+                }
+                
+                // Add debugging info directly to result map
+                resultMap.put("resultIndex", i+1);
+                resultMap.put("rawFacts", String.join(", ", facts));
+                
+                // Process main result
                 String rawResult = result.getMainResult();
                 String extractedDecision = rawResult.contains("(") && rawResult.contains(")")
                     ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
                     : rawResult;
     
-                // Store processed data in the map
                 resultMap.put("naturalLanguageMainResult", gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form));
                 resultMap.put("convertedFact", naturalLanguageFacts);
                 resultsList.add(resultMap);
-    
-                // Add only extracted decision (X)
                 infrastructureDecisions.add(extractedDecision);
             }
     
-            // Save all decisions as a comma-separated string
             form.setInfrastructureDecision(String.join(", ", infrastructureDecisions));
             session.setAttribute("infrastructureDecision", form.getInfrastructureDecision());
             session.setAttribute("infrastructureStatus", "✅ Completed");
@@ -180,8 +194,4 @@ public class IntegrationController {
         model.addAttribute("form", form);
         return "gorgiasReq/infrastructureReq-result";
     }
-    
-    
-
-
 }

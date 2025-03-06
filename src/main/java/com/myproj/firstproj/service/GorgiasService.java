@@ -253,6 +253,16 @@ public class GorgiasService{
                 facts.add("compute_optimized");
             }
         }
+            // // ✅ Resource Priority
+            // if (form.getPrimaryGoal() != null) {
+            //     if (form.getPrimaryGoal().equalsIgnoreCase("compute")) {
+            //         facts.add("compute_optimized");
+            //     } else if (form.getProcessingOptimization().equalsIgnoreCase("memory_optimized")) {
+            //         facts.add("memory_optimized");
+            //     }
+            
+            // }
+        
     
         return facts;
     }
@@ -485,49 +495,52 @@ private List<String> extractSupportingFacts(String humanExplanation) {
         return facts;
     }
 
-    // First, extract the section that contains the supporting facts
-    int factsStart = humanExplanation.indexOf("is supported by:");
-    if (factsStart == -1) {
-        return facts;
-    }
-
-    // Get the text after "is supported by:"
-    String factsSection = humanExplanation.substring(factsStart + "is supported by:".length()).trim();
-    
-    // Pattern to match bullet points with their content, including compound facts with "and"
-    Pattern pattern = Pattern.compile("- \"([^\"]+?)\"");
-    Matcher matcher = pattern.matcher(factsSection);
-    
-    while (matcher.find()) {
-        String fact = matcher.group(1).trim();
-        if (!fact.isEmpty()) {
-            // Add the complete fact, which may include "and" conjunctions
-            facts.add(fact);
-            
-            // If this is a compound fact with "and", also add the individual components
-            if (fact.contains(" and ")) {
-                String[] individualFacts = fact.split(" and ");
-                for (String individualFact : individualFacts) {
-                    String trimmedFact = individualFact.trim();
-                    // Avoid duplicates by checking if we already have this fact
-                    if (!trimmedFact.isEmpty() && !facts.contains(trimmedFact)) {
-                        facts.add(trimmedFact);
-                    }
-                }
+    try {
+        // Extract the section containing the main supporting facts
+        int factsStart = humanExplanation.indexOf("is supported by:");
+        if (factsStart == -1) return facts;
+        
+        // Find where the main facts section ends (before any "This reason is" part)
+        int reasonStart = humanExplanation.indexOf("This reason is :");
+        String factsSection;
+        
+        if (reasonStart != -1) {
+            // If there's a "This reason is" section, get only the main facts before it
+            factsSection = humanExplanation.substring(factsStart + "is supported by:".length(), reasonStart).trim();
+        } else {
+            // Otherwise, get everything after "is supported by:"
+            factsSection = humanExplanation.substring(factsStart + "is supported by:".length()).trim();
+        }
+        
+        System.out.println("Main facts section: " + factsSection);
+        
+        // Extract quoted facts from the main facts section only
+        Pattern quotePattern = Pattern.compile("\"([^\"]+)\"");
+        Matcher quoteMatcher = quotePattern.matcher(factsSection);
+        
+        while (quoteMatcher.find()) {
+            String fact = quoteMatcher.group(1).trim();
+            if (!fact.isEmpty()) {
+                facts.add(fact);
+                System.out.println("Found main fact: " + fact);
             }
         }
+        
+        System.out.println("All extracted facts: " + facts);
+    } catch (Exception e) {
+        System.err.println("Error extracting facts: " + e.getMessage());
+        e.printStackTrace();
     }
     
     return facts;
 }
-        
-        
-   
         /**
  * Enhanced method to convert facts to natural language
  * This handles both individual facts and compound fact strings
  */
 public String convertFactToNaturalLanguage(String factInput) {
+    System.out.println("Converting fact to natural language: " + factInput);
+    
     if (factInput == null || factInput.trim().isEmpty()) {
         return "Unknown fact";
     }
@@ -537,10 +550,7 @@ public String convertFactToNaturalLanguage(String factInput) {
             .replaceAll("\\s+", " ")  // Replace multiple spaces with single space
             .replaceAll("•\\s*", ""); // Remove bullet points
     
-    // Process as a compound fact to handle deduplication
-    if (normalizedFact.contains(" and ") || normalizedFact.contains("•")) {
-        return handleCompoundFact(normalizedFact);
-    }
+    System.out.println("Normalized fact: " + normalizedFact);
     
     // Load fact mappings
     Map<String, String> factMappings = new HashMap<>();
@@ -562,12 +572,7 @@ public String convertFactToNaturalLanguage(String factInput) {
         }
     }
     
-    // If still no mapping found, check for complex reasoning
-    if (result.equals(factInput)) {
-        result = handleComplexReasoning(factInput);
-    }
-    
-    System.out.println("✅ Mapped Fact: " + result);
+    System.out.println("Mapped fact result: " + result);
     return simplifyLogicalComparison(result);
 }
 
