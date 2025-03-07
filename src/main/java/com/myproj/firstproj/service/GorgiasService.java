@@ -157,22 +157,54 @@ public class GorgiasService{
     }
     
     
-    public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form) {
-        GorgiasQuery gorgiasQuery = new GorgiasQuery();
-        ArrayList<String> gorgiasFiles = new ArrayList<>();
-        gorgiasFiles.add("finaldecision/final.pl"); // Reference to final Prolog file
-        gorgiasQuery.setGorgiasFiles(gorgiasFiles);
+    // public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form) {
+    //     GorgiasQuery gorgiasQuery = new GorgiasQuery();
+    //     ArrayList<String> gorgiasFiles = new ArrayList<>();
+    //     gorgiasFiles.add("finaldecision/final.pl"); // Reference to final Prolog file
+    //     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
     
-       // ✅ Generate facts inside this method
+    //    // ✅ Generate facts inside this method
+    // List<String> facts = generateFactsForGorgias(form);
+
+    // gorgiasQuery.setFacts(facts);
+
+    // System.out.println("Final Facts for Gorgias Query: " + facts);
+
+    // gorgiasQuery.setResultSize(5);
+    // gorgiasQuery.setQuery("yamlfile(X)");
+
+    // GorgiasQueryResult result = null;
+    // try {
+    //     result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
+    //     System.out.println("Query Result: " + result);
+    // } catch (ApiException e) {
+    //     System.out.println("Result is null due to an exception.");
+    //     e.printStackTrace();
+    // }
+
+    // return parseGorgiasQueryResult(result);
+    // }
+    /**
+ * Execute Gorgias query for YAML generation with enhanced fact generation
+ * 
+ * @param form WorkflowForm containing user selections
+ * @return List of ParsedResult containing the query results
+ */
+public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form) {
+    GorgiasQuery gorgiasQuery = new GorgiasQuery();
+    ArrayList<String> gorgiasFiles = new ArrayList<>();
+    gorgiasFiles.add("finaldecision/final2.pl"); // Reference to enhanced Prolog file
+    gorgiasQuery.setGorgiasFiles(gorgiasFiles);
+    
+    // Generate comprehensive facts from form inputs
     List<String> facts = generateFactsForGorgias(form);
-
     gorgiasQuery.setFacts(facts);
-
+    
     System.out.println("Final Facts for Gorgias Query: " + facts);
-
+    
     gorgiasQuery.setResultSize(5);
     gorgiasQuery.setQuery("yamlfile(X)");
-
+    
     GorgiasQueryResult result = null;
     try {
         result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
@@ -181,10 +213,9 @@ public class GorgiasService{
         System.out.println("Result is null due to an exception.");
         e.printStackTrace();
     }
-
-    return parseGorgiasQueryResult(result);
-    }
     
+    return parseGorgiasQueryResult(result);
+}
     
     private List<String> generateFactsForGorgias(WorkflowForm form) {
         List<String> facts = new ArrayList<>();
@@ -235,12 +266,54 @@ public class GorgiasService{
             }
         }
     
-        // ✅ Latency Requirement
-        if (form.getLatencyRequirement() != null) {
-            if (form.getLatencyRequirement().equalsIgnoreCase("strict")) {
-                facts.add("strict_latency");
-            }
+       // Extract latency requirement (from location.html - select)
+    
+       // Extract expected load (from scalability-performance.html - select)
+       String expectedLoad = form.getExpectedLoad();
+       if (expectedLoad != null) {
+           if (expectedLoad.equals("low")) {
+               facts.add("low_load");
+           } else if (expectedLoad.equals("medium")) {
+               facts.add("medium_load");
+           } else if (expectedLoad.equals("high")) {
+               facts.add("high_load");
+           }
+       }
+       String peakTimes = form.getPeakTimes();
+       if (peakTimes != null) {
+           if (peakTimes.equals("rarely")) {
+               facts.add("rare_peaks");
+           } else if (peakTimes.equals("occasionally")) {
+               facts.add("occasional_peaks");
+           } else if (peakTimes.equals("frequently")) {
+               facts.add("frequent_peaks");
+           } else if (peakTimes.equals("always")) {
+               facts.add("continuous_high_demand");
+           }
+       }
+        // Extract response time (from scalability-performance.html - select)
+    String responseTime = form.getResponseTime();
+    if (responseTime != null) {
+        if (responseTime.equals("low")) {
+            facts.add("relaxed_response_time");
+        } else if (responseTime.equals("medium")) {
+            facts.add("standard_response_time");
+        } else if (responseTime.equals("high")) {
+            facts.add("strict_response_time");
         }
+    }
+    
+    // Extract cost sensitivity (from scalability-performance.html - select)
+    
+
+    String performanceRequirement = form.getPerformanceRequirement();
+    if (performanceRequirement != null) {
+        if (performanceRequirement.equals("low_latency")) {
+            facts.add("low_latency_required");
+        } else if (performanceRequirement.equals("high_throughput")) {
+            facts.add("high_throughput_required");
+        }
+    }
     
         // ✅ Resource Priority
         if (form.getResourcePriority() != null) {
@@ -973,7 +1046,58 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
             case "cpu_intensive":
                 form.setProcessingOptimizationForFinal("cpu_intensive");
                 return "CPU-Optimized: Ideal for compute-heavy tasks such as AI/ML or simulations.";
-            case "firstyaml":
+           // ===== VIRTUAL MACHINE CONFIGURATIONS =====
+        case "azure_vm_high_performance":
+        return "Azure Virtual Machine (High Performance): Full control with compute-optimized resources for demanding workloads requiring maximum performance and customization";
+        
+    case "azure_vm_standard":
+        return "Azure Virtual Machine (Standard): Full control with balanced resources for general-purpose workloads with predictable resource needs";
+        
+    case "azure_vm_memory_optimized":
+        return "Azure Virtual Machine (Memory Optimized): Full control with enhanced memory allocation for data-intensive workloads requiring large RAM capacity";
+        
+    case "azure_vm_basic":
+        return "Azure Virtual Machine (Basic): Cost-effective virtual machines for development, testing, or low-traffic production workloads with minimal resource requirements";
+        
+    // ===== APP SERVICE CONFIGURATIONS =====
+    case "azure_app_service_autoscaling":
+        return "Azure App Service (Auto-scaling): Fully managed web hosting platform with dynamic scaling based on traffic patterns and resource utilization";
+        
+    case "azure_app_service_standard":
+        return "Azure App Service (Standard): Managed web hosting with fixed resource allocation for applications with consistent traffic patterns";
+        
+    case "azure_app_service_premium":
+        return "Azure App Service (Premium): Enhanced web hosting with dedicated compute resources for high-performance web applications with strict latency requirements";
+        
+    // ===== AZURE FUNCTIONS CONFIGURATIONS =====
+    case "azure_functions":
+        return "Azure Functions (Standard): Serverless compute service for event-driven applications with automatic scaling and flexible resource allocation";
+        
+    case "azure_functions_premium":
+        return "Azure Functions (Premium): Enhanced serverless compute with dedicated resources, VNet integration, and pre-warmed instances for performance-critical event processing";
+        
+    case "azure_functions_consumption":
+        return "Azure Functions (Consumption): Cost-optimized serverless compute with consumption-based pricing for irregular workloads and budget-conscious deployments";
+        
+    // ===== CONTAINER SOLUTIONS =====
+    case "azure_kubernetes_service":
+        return "Azure Kubernetes Service (AKS): Managed Kubernetes platform for containerized applications with dynamic scaling and orchestration capabilities";
+        
+    case "azure_container_apps":
+        return "Azure Container Apps: Serverless container service with auto-scaling, service discovery, and built-in application gateway for modern microservices";
+        
+    // ===== SPECIALIZED CONFIGURATIONS =====
+    case "azure_high_performance_compute":
+        return "Azure High Performance Compute: Specialized compute configuration optimized for CPU-intensive workloads requiring low latency and high throughput processing";
+        
+    case "azure_memory_intensive":
+        return "Azure Memory Intensive Deployment: Specialized configuration optimized for memory-intensive workloads requiring large RAM capacity and high throughput data processing";
+        
+    case "azure_disaster_recovery_optimized":
+        return "Azure Disaster Recovery Optimized: Multi-region deployment with automated failover and backup for applications requiring high availability and business continuity";
+        
+           
+                case "firstyaml":
                 return "Auto Scaling Compute Optimized";
             case "secondyaml":
                 return "Infrastructure As A Service, Compute Optimized - Fixed Allocation (IaaS)";

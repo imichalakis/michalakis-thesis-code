@@ -1609,44 +1609,201 @@ private String extractKeyword(String input) {
         return "redirect:/workflow/yaml-generated";
     }
 
-    private void processGorgiasResults(List<ParsedResult> parsedResults, WorkflowForm form, HttpSession session) {
-        List<String> finalDecisions = new ArrayList<>();
-    
-        for (ParsedResult result : parsedResults) {
-            String rawResult = result.getMainResult();
-            System.out.println("Raw Gorgias Result: " + rawResult);
-    
-            // Extract meaningful decision
-            String extractedDecision = rawResult.contains("(") && rawResult.contains(")")
-                    ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
-                    : rawResult;
-    
-            // Convert into human-readable text
-            String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form).trim();
-            if (!humanReadableDecision.isEmpty()) {
-                finalDecisions.add(humanReadableDecision);
-            }
-    
-            // Extract supporting facts
-            List<String> supportingFacts = result.getSupportingFacts();
-            List<String> convertedFacts = new ArrayList<>();
-            for (String fact : supportingFacts) {
-                convertedFacts.add(gorgiasService.convertFactToNaturalLanguage(fact.trim().replaceAll("[\"']", "")));
-            }
-    
-            System.out.println("Converted Facts: " + convertedFacts);
-        }
-    
-        // Store final decision
-        String finalDecisionString = String.join("; ", finalDecisions);
-        form.setYamlGenerationDecision(finalDecisionString);
-        // ✅ Store in session so it can be accessed later
-    session.setAttribute("finalYamlDecision", finalDecisionString);
+    // private void processGorgiasResults(List<ParsedResult> parsedResults, WorkflowForm form, HttpSession session) {
+    //     List<String> candidateDecisions = new ArrayList<>();
+    //     Map<String, List<String>> supportingFactsMap = new HashMap<>();
+        
+    //     for (ParsedResult result : parsedResults) {
+    //         String rawResult = result.getMainResult();
+    //         System.out.println("Raw Gorgias Result: " + rawResult);
+            
+    //         if (rawResult == null) continue;
+            
+    //         // Extract meaningful decision
+    //         String extractedDecision = rawResult.contains("(") && rawResult.contains(")")
+    //                 ? rawResult.substring(rawResult.indexOf('(') + 1, rawResult.indexOf(')'))
+    //                 : rawResult;
+            
+    //         try {
+    //             // Call the service method to convert to human-readable format
+    //             String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form);
+                
+    //             if (humanReadableDecision != null && !humanReadableDecision.trim().isEmpty()) {
+    //                 candidateDecisions.add(humanReadableDecision);
+                    
+    //                 // Process supporting facts
+    //                 List<String> convertedFacts = new ArrayList<>();
+    //                 for (String fact : result.getSupportingFacts()) {
+    //                     String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim());
+    //                     convertedFacts.add(convertedFact);
+    //                 }
+                    
+    //                 supportingFactsMap.put(humanReadableDecision, convertedFacts);
+    //             }
+    //         } catch (Exception e) {
+    //             System.err.println("Error mapping decision: " + e.getMessage());
+    //             e.printStackTrace();
+    //         }
+    //     }
+        
+    //     // Select a single optimal decision
+    //     String finalDecision = selectOptimalDecision(candidateDecisions, form);
+        
+    //     // Store final decision in form and session
+    //     form.setYamlGenerationDecision(finalDecision);
+    //     session.setAttribute("finalYamlDecision", finalDecision);
+        
+    //     // Store supporting facts for the selected decision
+    //     if (supportingFactsMap.containsKey(finalDecision)) {
+    //         session.setAttribute("decisionRationale", supportingFactsMap.get(finalDecision));
+    //     }
+        
+    //     System.out.println("Final YAML Decision: " + finalDecision);
+    // }
 
-        System.out.println("Final YAML Decision: " + finalDecisionString);
-         // ✅ Store in session so it can be accessed later
-   
+/** 
+
+/**
+ * Process Gorgias query results and select a single optimal recommendation
+ * 
+ * @param parsedResults List of parsed results from Gorgias query
+ * @param form WorkflowForm containing user selections
+ * @param session HttpSession for storing the decision
+ */
+private void processGorgiasResults(List<ParsedResult> parsedResults, WorkflowForm form, HttpSession session) {
+    if (parsedResults.isEmpty()) {
+        session.setAttribute("finalYamlDecision", "No suitable deployment configuration found");
+        return;
     }
+    
+    // Get the first result (highest priority from Prolog rules)
+    ParsedResult firstResult = parsedResults.get(0);
+    String mainResult = firstResult.getMainResult();
+    
+    // Extract the decision from the result
+    String extractedDecision = mainResult.contains("(") && mainResult.contains(")")
+            ? mainResult.substring(mainResult.indexOf('(') + 1, mainResult.indexOf(')'))
+            : mainResult;
+    
+    // Convert to human-readable description
+    String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form);
+    
+    // Process supporting facts
+    List<String> supportingFacts = new ArrayList<>();
+    for (String fact : firstResult.getSupportingFacts()) {
+        String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim());
+        supportingFacts.add(convertedFact);
+    }
+    
+    // Store the decision and supporting facts
+    form.setYamlGenerationDecision(humanReadableDecision);
+    session.setAttribute("finalYamlDecision", humanReadableDecision);
+    session.setAttribute("decisionRationale", supportingFacts);
+    
+    System.out.println("Selected decision: " + extractedDecision);
+    System.out.println("Human-readable decision: " + humanReadableDecision);
+    System.out.println("Supporting facts: " + supportingFacts);
+}
+private String selectOptimalDecision(List<String> decisions, WorkflowForm form) {
+    if (decisions == null || decisions.isEmpty()) {
+        return "No suitable deployment configuration found";
+    }
+    
+    // If only one decision, return it
+    if (decisions.size() == 1) {
+        return decisions.get(0);
+    }
+    
+    // Create a map to store decision scores
+    Map<String, Integer> decisionScores = new HashMap<>();
+    
+    for (String decision : decisions) {
+        int score = 0;
+        String lowerDecision = decision.toLowerCase();
+        
+        // Infrastructure alignment - higher priority
+        String infrastructure = form.getInfrastructureDecision();
+        if (infrastructure != null) {
+            if (infrastructure.equalsIgnoreCase("serverless") && lowerDecision.contains("function")) {
+                score += 50;
+            } else if (infrastructure.equalsIgnoreCase("iaas") && lowerDecision.contains("machine")) {
+                score += 50;
+            } else if (infrastructure.equalsIgnoreCase("paas") && lowerDecision.contains("app service")) {
+                score += 50;
+            }
+        }
+        
+        // Control requirements
+        String controlReq = form.getControlRequirement();
+        if (controlReq != null) {
+            if (controlReq.contains("full") && lowerDecision.contains("full control")) {
+                score += 40;
+            } else if (!controlReq.contains("full") && !lowerDecision.contains("full control")) {
+                score += 30;
+            }
+        }
+        
+        // Performance optimization
+        String procOpt = form.getProcessingOptimization();
+        if (procOpt != null) {
+            if (procOpt.contains("memory") && lowerDecision.contains("memory")) {
+                score += 35;
+            } else if (procOpt.contains("compute") && 
+                    (lowerDecision.contains("compute") || lowerDecision.contains("performance"))) {
+                score += 35;
+            }
+        }
+        
+        // Scalability preferences
+        String scalability = form.getScalabilityAndPerformanceDecision();
+        if (scalability != null) {
+            if (scalability.contains("auto") && lowerDecision.contains("auto-scaling")) {
+                score += 30;
+            } else if (scalability.contains("fixed") && lowerDecision.contains("fixed")) {
+                score += 30;
+            }
+        }
+        
+        // Urgency alignment
+        String urgency = form.getUrgencyDecision();
+        if (urgency != null && urgency.equalsIgnoreCase("urgent") && 
+            (lowerDecision.contains("premium") || lowerDecision.contains("high performance"))) {
+            score += 25;
+        }
+        
+        // Latency requirements
+        String latency = form.getLatencyRequirement();
+        if (latency != null && latency.equalsIgnoreCase("strict") && 
+            (lowerDecision.contains("premium") || lowerDecision.contains("performance"))) {
+            score += 20;
+        }
+        
+        // Budget alignment
+        String budget = form.getBudget();
+        if (budget != null) {
+            if (budget.contains("high") && 
+                (lowerDecision.contains("premium") || lowerDecision.contains("high"))) {
+                score += 15;
+            } else if (budget.contains("low") && lowerDecision.contains("basic")) {
+                score += 15;
+            }
+        }
+        
+        // Penalize duplicate recommendations
+        if (lowerDecision.contains("standard") && score < 70) {
+            score -= 10;
+        }
+        
+        decisionScores.put(decision, score);
+    }
+    
+    // Find the highest scoring decision
+    return decisionScores.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .map(Map.Entry::getKey)
+            .findFirst()
+            .orElse(decisions.get(0)); // Fallback to first decision
+}
     @GetMapping("/download-yaml")
 public ResponseEntity<Resource> downloadYaml(HttpSession session) {
     // Get the final YAML decision from session
@@ -1689,23 +1846,81 @@ public ResponseEntity<Resource> downloadYaml(HttpSession session) {
     
     
     
-    private String mapYamlDecisionToFile(String decision) {
-        switch (decision.toLowerCase()) {
-            case "firstyaml":
-            case "auto scaling compute optimized":  // ✅ Ensure it matches the human-readable output
-                return "firstyaml.yaml";
-            case "secondyaml":
-            case "infrastructure as a service, compute optimized - fixed allocation (iaas)":
-                return "secondyaml.yaml";
-            case "thirdyaml":
-            case "platform as a service standard memory deployment": // ✅ Add this case
-                return "thirdyaml.yaml";
-            default:
-                System.out.println("❌ ERROR: No mapping found for decision '" + decision + "'");
-                return "default.yaml";  // Provide a default file
-        }
+    // private String mapYamlDecisionToFile(String decision) {
+    //     switch (decision.toLowerCase()) {
+    //         case "firstyaml":
+    //         case "auto scaling compute optimized":  // ✅ Ensure it matches the human-readable output
+    //             return "firstyaml.yaml";
+    //         case "secondyaml":
+    //         case "infrastructure as a service, compute optimized - fixed allocation (iaas)":
+    //             return "secondyaml.yaml";
+    //         case "thirdyaml":
+    //         case "platform as a service standard memory deployment": // ✅ Add this case
+    //             return "thirdyaml.yaml";
+    //         default:
+    //             System.out.println("❌ ERROR: No mapping found for decision '" + decision + "'");
+    //             return "default.yaml";  // Provide a default file
+    //     }
+    // }
+    /**
+ * Maps YAML file names to actual template files for download
+ * 
+ * @param decision The YAML file decision from Prolog
+ * @return Filename of the YAML template
+ */
+private String mapYamlDecisionToFile(String decision) {
+    switch (decision.toLowerCase()) {
+        // Virtual Machine configurations
+        case "azure_vm_high_performance":
+            return "azure_vm_high_performance.yaml";
+        case "azure_vm_standard":
+            return "azure_vm_standard.yaml";
+            
+        // Managed compute services
+        case "azure_batch":
+            return "azure_batch.yaml";
+        case "azure_spring_apps":
+            return "azure_spring_apps.yaml";
+        case "azure_spring_apps_autoscaling":
+            return "azure_spring_apps_autoscaling.yaml";
+            
+        // Serverless options
+        case "azure_functions":
+            return "azure_functions.yaml";
+        case "azure_functions_premium":
+            return "azure_functions_premium.yaml";
+            
+        // Web hosting
+        case "azure_app_service":
+            return "azure_app_service.yaml";
+        case "azure_app_service_autoscaling":
+            return "azure_app_service_autoscaling.yaml";
+            
+        // Container solutions
+        case "azure_container_instances":
+            return "azure_container_instances.yaml";
+        case "azure_kubernetes_service":
+            return "azure_kubernetes_service.yaml";
+        case "azure_red_hat_openshift":
+            return "azure_red_hat_openshift.yaml";
+        case "azure_service_fabric":
+            return "azure_service_fabric.yaml";
+        case "azure_container_apps":
+            return "azure_container_apps.yaml";
+            
+        // Legacy mappings for backward compatibility
+        case "firstyaml":
+            return "firstyaml.yaml";
+        case "secondyaml":
+            return "secondyaml.yaml";
+        case "thirdyaml":
+            return "thirdyaml.yaml";
+            
+        default:
+            System.out.println("⚠️ WARNING: No mapping found for decision '" + decision + "'");
+            return "default.yaml";  // Provide a default file
     }
-    
+}
 
 
     

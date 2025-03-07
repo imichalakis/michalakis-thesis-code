@@ -301,7 +301,7 @@
 
                 <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
                     <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
-                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                        <h3 class="recommendation-title">Solution <span th:text="${iterStat.count}"></span>: 
                             <span th:text="${result['naturalLanguageMainResult']}"></span>
                         </h3>
 
