@@ -930,13 +930,13 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
             // Urgency decisions
             case "urgent":
               
-                return "URGENT PRIORITY: Critical deployment required within 72 hours. Immediate resource allocation necessary. All standard procedures may be expedited to meet this critical timeline.";
+                return "Urgent Priority: Critical deployment required within 72 hours. Immediate resource allocation necessary. All standard procedures may be expedited to meet this critical timeline.";
             case "normal":
                
-                return "NORMAL PRIORITY: Regular deployment timeline of up to 60 days. Standard resource allocation appropriate. All normal procedures and quality checks to be followed without modification.";
+                return "Normal Priority: Regular deployment timeline of up to 60 days. Standard resource allocation appropriate. All normal procedures and quality checks to be followed without modification.";
             case "high":
                
-                return "HIGH PRIORITY: Accelerated deployment required within 10 days. Prompt resource allocation recommended. Standard procedures should be followed with expedited processing.";
+                return "High Priority: Accelerated deployment required within 10 days. Prompt resource allocation recommended. Standard procedures should be followed with expedited processing.";
             
             // Scalability decisions
             case "fixed_allocation":

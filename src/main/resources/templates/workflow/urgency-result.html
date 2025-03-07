@@ -22,125 +22,229 @@
     <div class="container mt-5">
         <!-- Page Title -->
         <div class="text-center mb-4">
-            <h2 class="display-5">Urgency Decision Review</h2>
+            <h1 class="display-5">Urgency Decision Review</h1>
             <p class="lead">Analyze the urgency level based on your selected parameters.</p>
         </div>
 
         <!-- Selected Parameters -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-info text-white">Your Selection</div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Request Type:</strong> 
-                        <span th:text="${form.requestType == 'ops' ? 'Ministry of Digital Governance' : 'Other Public Sector Entity'}"></span>
-                    </li>
-                    <li class="list-group-item"><strong>Existing Contract:</strong> 
-                        <span th:text="${form.contractWithContractor == 'yes' ? 'Yes' : 'No'}"></span>
-                    </li>
-                    <!-- <li class="list-group-item"><strong>Agency Classification:</strong> 
-                        <span th:if="${form.agencyCategory == 'centralGovernment'}">This request originates from a **Central Government agency**.</span>
-                        <span th:if="${form.agencyCategory == 'localGovernment'}">This request is associated with a **Local Government body**.</span>
-                        <span th:if="${form.agencyCategory == 'independentAuthority'}">The request comes from an **Independent Authority**.</span>
-                        <span th:if="${form.agencyCategory == 'supervisedEntity'}">This agency is a **Supervised Entity** under government oversight.</span>
-                    </li> -->
-                    <li class="list-group-item"><strong>Planned Deployment Date:</strong> 
-                        <span th:text="${form.startDate}"></span>
-                    </li>
-                </ul>
+            <div class="card-header bg-info text-white">
+                <h4>Your Selected Parameters</h4>
             </div>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <strong>Request Type:</strong> 
+                    <span th:text="${form.requestType == 'ops' ? 'Ministry of Digital Governance' : 'Other Public Sector Entity'}"></span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Existing Contract:</strong> 
+                    <span th:text="${form.contractWithContractor == 'yes' ? 'Yes' : 'No'}"></span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Planned Deployment Date:</strong> 
+                    <span th:text="${form.startDate}"></span>
+                </li>
+            </ul>
         </div>
 
-      <!-- Recommended Urgency Levels -->
-<div class="card shadow-sm">
-    <div class="card-header bg-success text-white">Urgency Recommendation</div>
-    <div class="card-body">
-        <h2 class="recommendation-title">Suggested Urgency Level</h2>
+        <!-- Recommendation Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Urgency Recommendation</h4>
+            </div>
 
-        <!-- Add this script at the top of your card body -->
-        <script>
-            window.addEventListener('DOMContentLoaded', function() {
-                // Store seen combinations of title + reasoning
-                const seen = {};
-                // Get all recommendation boxes
-                const boxes = document.querySelectorAll('.recommendation-box');
+            <style>
+                .recommendation-box {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-left: 5px solid #007bff;
+                    margin-bottom: 25px;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                }
                 
-                boxes.forEach(function(box) {
-                    // Get the title (includes "Option X: ")
-                    const title = box.querySelector('h3 span:nth-child(2)').textContent.trim();
+                .recommendation-box:hover {
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                }
+                
+                .recommendation-title {
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #007bff;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #eee;
+                }
+                
+                .reason-box {
+                    background: #eef7ff;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin-top: 15px;
+                }
+                
+                .reason-box ul {
+                    margin-bottom: 0;
+                }
+                
+                .reason-box li {
+                    margin-bottom: 8px;
+                }
+                
+                .reason-box li:last-child {
+                    margin-bottom: 0;
+                }
+                
+                /* Special styling for different priority levels */
+                .recommendation-box[data-priority="urgent"] {
+                    border-left-color: #dc3545;
+                }
+                
+                .recommendation-box[data-priority="urgent"] .recommendation-title {
+                    color: #dc3545;
+                }
+                
+                .recommendation-box[data-priority="high"] {
+                    border-left-color: #fd7e14;
+                }
+                
+                .recommendation-box[data-priority="high"] .recommendation-title {
+                    color: #fd7e14;
+                }
+                
+                .recommendation-box[data-priority="normal"] {
+                    border-left-color: #28a745;
+                }
+                
+                .recommendation-box[data-priority="normal"] .recommendation-title {
+                    color: #28a745;
+                }
+            </style>
+            <script>
+                window.addEventListener('DOMContentLoaded', function() {
+                    // Group recommendations by their title (priority level)
+                    const recommendations = {};
+                    const boxes = document.querySelectorAll('.recommendation-box');
                     
-                    // Get all reasoning items as a single string
-                    const reasoningItems = Array.from(box.querySelectorAll('.reason-box li span:first-child'))
-                        .map(span => span.textContent.trim())
-                        .join('|');
-                    
-                    // Create a unique key
-                    const key = title + '::' + reasoningItems;
-                    
-                    // If we've seen this exact combination before, hide this box
-                    if (seen[key]) {
+                    // First pass: collect all recommendations and their reasoning
+                    boxes.forEach(function(box) {
+                        const titleElement = box.querySelector('h3 span:nth-child(2)');
+                        if (!titleElement) return;
+                        
+                        // Extract the priority level from the title
+                        const fullTitle = titleElement.textContent.trim();
+                        const priorityMatch = fullTitle.match(/(Normal|High|Urgent)\s+Priority/i);
+                        const priorityKey = priorityMatch ? priorityMatch[0].toLowerCase() : fullTitle;
+                        
+                        // Add priority as a data attribute for styling
+                        if (priorityMatch) {
+                            const priorityLevel = priorityMatch[1].toLowerCase();
+                            box.setAttribute('data-priority', priorityLevel);
+                        }
+                        
+                        // Get all reasoning items
+                        const reasoningItems = Array.from(box.querySelectorAll('.reason-box li span:first-child'))
+                            .map(span => span.textContent.trim())
+                            .filter(text => text && text.length > 0);
+                        
+                        // Initialize this priority group if it doesn't exist
+                        if (!recommendations[priorityKey]) {
+                            recommendations[priorityKey] = {
+                                fullTitle: fullTitle,
+                                reasons: new Set(),
+                                originalBox: box
+                            };
+                        }
+                        
+                        // Add all reasons to the set (Set automatically handles duplicates)
+                        reasoningItems.forEach(reason => {
+                            recommendations[priorityKey].reasons.add(reason);
+                        });
+                        
+                        // Hide all original boxes
                         box.style.display = 'none';
-                    } else {
-                        // Mark as seen
-                        seen[key] = true;
-                    }
-                });
-                
-                // Renumber the visible options
-                let visibleCount = 1;
-                boxes.forEach(function(box) {
-                    if (box.style.display !== 'none') {
+                    });
+                    
+                    // Second pass: create consolidated recommendations
+                    let count = 1;
+                    for (const key in recommendations) {
+                        const recommendation = recommendations[key];
+                        const box = recommendation.originalBox.cloneNode(true);
+                        box.style.display = 'block';
+                        
+                        // Update the option number
                         const countElement = box.querySelector('h3 span:first-child');
                         if (countElement) {
-                            countElement.textContent = visibleCount++;
+                            countElement.textContent = count++;
                         }
+                        
+                        // Clear existing reasons
+                        const reasonBox = box.querySelector('.reason-box ul');
+                        if (reasonBox) {
+                            reasonBox.innerHTML = '';
+                            
+                            // Add all unique reasons
+                            Array.from(recommendation.reasons).forEach(reason => {
+                                const li = document.createElement('li');
+                                const span = document.createElement('span');
+                                span.textContent = reason.startsWith('•') ? reason.substring(1).trim() : reason;
+                                li.appendChild(span);
+                                reasonBox.appendChild(li);
+                            });
+                        }
+                        
+                        // Add the consolidated box
+                        recommendation.originalBox.parentNode.appendChild(box);
                     }
                 });
-            });
-        </script>
-
-        <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
-            <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
-                <h3>Option <span th:text="${iterStat.count}"></span>: 
-                    <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
-                </h3>
-            
-                <div class="reason-box">
-                    <strong>Reasoning:</strong>
-                    <ul>
-                        <li th:each="fact : ${result['convertedFact']}">
-                            <!-- Clean any remaining bullet points in the template -->
-                            <span th:if="${fact != null and fact != ''}" 
-                                  th:text="${fact.startsWith('•') ? fact.substring(1).trim() : fact}"></span>
-                            <span th:if="${fact == null or fact == ''}" class="text-muted">(Fact not mapped properly)</span>
-                        </li>
-                    </ul>
+            </script>
+                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                            <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
+                        </h3>
+                    
+                        <div class="reason-box">
+                            <strong>Why this choice?</strong>
+                            <ul>
+                                <li th:each="fact : ${result['convertedFact']}">
+                                    <!-- Clean any remaining bullet points in the template -->
+                                    <span th:if="${fact != null and fact != ''}" 
+                                          th:text="${fact.startsWith('•') ? fact.substring(1).trim() : fact}"></span>
+                                    <span th:if="${fact == null or fact == ''}" class="text-muted">(Fact not mapped properly)</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
+
                 <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
                     <p class="text-danger">No recommendations available. Please review your selections.</p>
                 </div>
             </div>
         </div>
 
-       <!-- Navigation Buttons (Now Consistent & Centered) -->
-<!-- Navigation Buttons (Now Consistent & Centered) -->
-<div class="button-container">
-    <a href="/" class="btn btn-secondary-custom btn-custom">Return to Main Menu</a>
-    <a href="/workflow/index" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
-    <a href="/workflow/infrbroadcat" class="btn btn-primary-custom btn-custom">Continue to Infrastructure Selection</a>
-</div>
-
-
-
+        <!-- Navigation Buttons (Consistent with form page) -->
+        <div class="button-container">
+            <a href="/" class="btn btn-secondary-custom btn-custom">Back to Main Menu</a>
+            <a href="/workflow/index" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
+            <a href="/workflow/infrbroadcat" class="btn btn-primary-custom btn-custom">Continue to Infrastructure Selection</a>
+        </div>
     </div>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 bg-light">
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete. <br>
+            Developed as part of a Thesis in Deployment Choice Automation.
+        </p>
+    </footer>
 
 </body>
 </html>

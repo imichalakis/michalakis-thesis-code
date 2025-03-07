@@ -6,15 +6,14 @@
     <title>Infrastructure Selection Result</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-     <!-- Custom Styles -->
-     <link rel="stylesheet" th:href="@{/css/result-style.css}">
-     <link rel="stylesheet" th:href="@{/css/buttons.css}">
+    <link rel="stylesheet" th:href="@{/css/result-style.css}">
+    <link rel="stylesheet" th:href="@{/css/buttons.css}">
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
     </nav>
 
     <!-- Main Container -->
@@ -25,121 +24,324 @@
             <p class="lead">Review the infrastructure parameters and recommended solutions for your deployment.</p>
         </div>
 
-            <!-- Provided Parameters Section -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h4>Your Selected Parameters</h4>
-                </div>
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <strong>Primary Goal:</strong> 
-                        <span th:if="${form.primaryGoal == 'runCustomApps'}">Run and customize applications (Deploy custom software and manage configurations)</span>
-                        <span th:if="${form.primaryGoal == 'consumeReadySoftware'}">Consume ready-made software (Use SaaS solutions with minimal setup)</span>
-                        <span th:if="${form.primaryGoal == 'eventDrivenFunctions'}">Automate tasks with event-driven architecture (Use serverless functions based on triggers)</span>
-                    </li>
-    
-                    <li class="list-group-item">
-                        <strong>Control Requirement:</strong> 
-                        <span th:if="${form.controlRequirement == 'noControl'}">No Control Needed (Fully managed services with no infrastructure management)</span>            
-                        <span th:if="${form.controlRequirement == 'limitedControl'}">Limited Control (Manage runtime and applications but not infrastructure)</span>            
-                        <span th:if="${form.controlRequirement == 'fullControl'}">Full Control (Self-managed infrastructure including VMs, storage, and networking)</span>            
-                    </li>
-    
-                    <li class="list-group-item">
-                        <strong>Scalability Requirements:</strong> 
-                        <span th:text="${form.highScalability ? 'Auto-scaling enabled for dynamic resource allocation' : 'Fixed resources with no auto-scaling'}"></span>
-                    </li>
-    
-                    <li class="list-group-item">
-                        <strong>Data Sensitivity:</strong> 
-                        <span th:text="${form.dataSensitivity ? 'Sensitive Data (Requires encryption and compliance measures)' : 'Not Sensitive (Standard security policies apply)'}"></span>
-                    </li>
-    
-                    <li class="list-group-item">
-                        <strong>Integration Needs:</strong> 
-                        <span th:if="${form.integrationRequirements != null and not #lists.isEmpty(form.integrationRequirements)}">Custom API Integrations (External system connectivity and API-level access)</span>
-                        <span th:if="${form.integrationRequirements == null or #lists.isEmpty(form.integrationRequirements)}">No external integrations required</span>
-                    </li>
-    
-                    <li class="list-group-item">
-                        <strong>Budget:</strong> 
-                        <span th:if="${form.budget == 'low_budget'}">Cost-Optimized (Pay-as-you-go with shared resources)</span> 
-                        <span th:if="${form.budget == 'high_budget'}">High Performance (Dedicated resources and reserved instances)</span> 
-                    </li>
-                </ul>
+        <!-- Provided Parameters Section -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4>Your Selected Parameters</h4>
             </div>
-    
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <strong>Primary Goal:</strong> 
+                    <span th:if="${form.primaryGoal == 'runCustomApps'}">Run and customize applications (Deploy custom software and manage configurations)</span>
+                    <span th:if="${form.primaryGoal == 'consumeReadySoftware'}">Consume ready-made software (Use SaaS solutions with minimal setup)</span>
+                    <span th:if="${form.primaryGoal == 'eventDrivenFunctions'}">Automate tasks with event-driven architecture (Use serverless functions based on triggers)</span>
+                </li>
 
-      
+                <li class="list-group-item">
+                    <strong>Control Requirement:</strong> 
+                    <span th:if="${form.controlRequirement == 'noControl'}">No Control Needed (Fully managed services with no infrastructure management)</span>            
+                    <span th:if="${form.controlRequirement == 'limitedControl'}">Limited Control (Manage runtime and applications but not infrastructure)</span>            
+                    <span th:if="${form.controlRequirement == 'fullControl'}">Full Control (Self-managed infrastructure including VMs, storage, and networking)</span>            
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Scalability Requirements:</strong> 
+                    <span th:text="${form.highScalability ? 'Auto-scaling enabled for dynamic resource allocation' : 'Fixed resources with no auto-scaling'}"></span>
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Data Sensitivity:</strong> 
+                    <span th:text="${form.dataSensitivity ? 'Sensitive Data (Requires encryption and compliance measures)' : 'Not Sensitive (Standard security policies apply)'}"></span>
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Integration Needs:</strong> 
+                    <span th:if="${form.integrationRequirements != null and not #lists.isEmpty(form.integrationRequirements)}">Custom API Integrations (External system connectivity and API-level access)</span>
+                    <span th:if="${form.integrationRequirements == null or #lists.isEmpty(form.integrationRequirements)}">No external integrations required</span>
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Budget:</strong> 
+                    <span th:if="${form.budget == 'low_budget'}">Cost-Optimized (Pay-as-you-go with shared resources)</span> 
+                    <span th:if="${form.budget == 'high_budget'}">High Performance (Dedicated resources and reserved instances)</span> 
+                </li>
+            </ul>
+        </div>
+
+        <!-- Recommendation Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4>Recommended Infrastructure</h4>
+            </div>
 
             <style>
+                /* Base recommendation box styling */
                 .recommendation-box {
-                    background: #f8f9fa; /* Light gray background */
-                    padding: 15px;
-                    border-left: 5px solid #007bff; /* Blue side border for emphasis */
-                    margin-bottom: 15px;
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-left: 5px solid #007bff;
+                    margin-bottom: 25px;
                     border-radius: 5px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
                 }
+                
+                .recommendation-box:hover {
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                }
+                
+                /* Title styling */
                 .recommendation-title {
                     font-size: 20px;
                     font-weight: bold;
                     color: #333;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #eee;
                 }
+                
+                /* Reason box styling */
                 .reason-box {
-                    background: #eef3f7; /* Light blue background */
-                    padding: 10px;
+                    background: #eef7ff;
+                    padding: 15px;
                     border-radius: 5px;
-                    margin-top: 10px;
-                    font-style: italic;
+                    margin-top: 15px;
+                }
+                
+                .reason-box ul {
+                    margin-bottom: 0;
+                }
+                
+                .reason-box li {
+                    margin-bottom: 8px;
+                    line-height: 1.5;
+                }
+                
+                /* Infrastructure-specific styling */
+                .iaas-style .recommendation-title {
+                    color: #6f42c1;
+                }
+                
+                .iaas-style .reason-box {
+                    background: #f3f0fa;
+                }
+                
+                .paas-style .recommendation-title {
+                    color: #20c997;
+                }
+                
+                .paas-style .reason-box {
+                    background: #e6f9f5;
+                }
+                
+                .saas-style .recommendation-title {
+                    color: #fd7e14;
+                }
+                
+                .saas-style .reason-box {
+                    background: #fff3e6;
+                }
+                
+                .serverless-style .recommendation-title {
+                    color: #17a2b8;
+                }
+                
+                .serverless-style .reason-box {
+                    background: #e6f7fa;
+                }
+                
+                .onpremise-style .recommendation-title {
+                    color: #6c757d;
+                }
+                
+                .onpremise-style .reason-box {
+                    background: #f2f2f2;
+                }
+                
+                .azure-style .recommendation-title {
+                    color: #0078d4;
+                }
+                
+                .azure-style .reason-box {
+                    background: #e6f2fa;
+                }
+                
+                /* Add visual indicators for infrastructure types */
+              
+                
+                .iaas-style .recommendation-title::before {
+                    background-color: #6f42c1;
+                }
+                
+                .paas-style .recommendation-title::before {
+                    background-color: #20c997;
+                }
+                
+                .saas-style .recommendation-title::before {
+                    background-color: #fd7e14;
+                }
+                
+                .serverless-style .recommendation-title::before {
+                    background-color: #17a2b8;
+                }
+                
+                .onpremise-style .recommendation-title::before {
+                    background-color: #6c757d;
+                }
+                
+                .azure-style .recommendation-title::before {
+                    background-color: #0078d4;
                 }
             </style>
+            <script>
+                window.addEventListener('DOMContentLoaded', function() {
+                    // Group infrastructure recommendations by their title
+                    const infrastructureRecommendations = {};
+                    const boxes = document.querySelectorAll('.recommendation-box');
+                    
+                    // First pass: collect all recommendations and their supporting facts
+                    boxes.forEach(function(box) {
+                        const titleElement = box.querySelector('h3 span:nth-child(2)');
+                        if (!titleElement) return;
+                        
+                        // Extract the infrastructure type
+                        const fullTitle = titleElement.textContent.trim();
+                        // Create a key based on the infrastructure type
+                        const infraTypeMatch = fullTitle.match(/(IaaS|PaaS|SaaS|Serverless|Azure|On-Premise)/i);
+                        const infraKey = infraTypeMatch ? infraTypeMatch[0].toLowerCase() : fullTitle;
+                        
+                        // Get all supporting facts
+                        const factItems = Array.from(box.querySelectorAll('.reason-box li'))
+                            .map(li => li.textContent.trim())
+                            .filter(text => text && text.length > 0);
+                        
+                        // Initialize this infrastructure group if it doesn't exist
+                        if (!infrastructureRecommendations[infraKey]) {
+                            infrastructureRecommendations[infraKey] = {
+                                fullTitle: fullTitle,
+                                facts: new Set(),
+                                originalBox: box
+                            };
+                        }
+                        
+                        // Add all facts to the set (Set automatically handles duplicates)
+                        factItems.forEach(fact => {
+                            infrastructureRecommendations[infraKey].facts.add(fact);
+                        });
+                        
+                        // Hide all boxes initially - we'll show only the consolidated ones
+                        box.style.display = 'none';
+                    });
+                    
+                    // Second pass: create consolidated recommendations
+                    let count = 1;
+                    for (const key in infrastructureRecommendations) {
+                        const recommendation = infrastructureRecommendations[key];
+                        const box = recommendation.originalBox.cloneNode(true);
+                        box.style.display = 'block';
+                        
+                        // Update the option number
+                        const countElement = box.querySelector('h3 span:first-child');
+                        if (countElement) {
+                            countElement.textContent = count++;
+                        }
+                        
+                        // Apply visual styling based on infrastructure type
+                        applyInfrastructureStyling(box, key);
+                        
+                        // Clear existing facts
+                        const factBox = box.querySelector('.reason-box ul');
+                        if (factBox) {
+                            factBox.innerHTML = '';
+                            
+                            // Add all unique facts
+                            Array.from(recommendation.facts).forEach(fact => {
+                                const li = document.createElement('li');
+                                li.textContent = fact;
+                                factBox.appendChild(li);
+                            });
+                        }
+                        
+                        // Add the consolidated box
+                        recommendation.originalBox.parentNode.appendChild(box);
+                    }
+                    
+                    // Helper function to apply specific styling based on infrastructure type
+                    function applyInfrastructureStyling(box, infraType) {
+                        // Remove any existing styling classes
+                        box.classList.remove('iaas-style', 'paas-style', 'saas-style', 'serverless-style', 'onpremise-style', 'azure-style');
+                        
+                        // Apply appropriate styling class
+                        if (infraType.includes('iaas')) {
+                            box.classList.add('iaas-style');
+                            box.style.borderLeftColor = '#6f42c1'; // Purple for IaaS
+                        } else if (infraType.includes('paas')) {
+                            box.classList.add('paas-style');
+                            box.style.borderLeftColor = '#20c997'; // Teal for PaaS
+                        } else if (infraType.includes('saas')) {
+                            box.classList.add('saas-style');
+                            box.style.borderLeftColor = '#fd7e14'; // Orange for SaaS
+                        } else if (infraType.includes('serverless')) {
+                            box.classList.add('serverless-style');
+                            box.style.borderLeftColor = '#17a2b8'; // Cyan for Serverless
+                        } else if (infraType.includes('onpremise') || infraType.includes('on-premise')) {
+                            box.classList.add('onpremise-style');
+                            box.style.borderLeftColor = '#6c757d'; // Gray for On-Premise
+                        } else if (infraType.includes('azure')) {
+                            box.classList.add('azure-style');
+                            box.style.borderLeftColor = '#0078d4'; // Azure blue
+                        }
+                    }
+                });
+            </script>
 
-          <!-- Recommended Infrastructure -->
-<div class="card shadow-sm">
-    <div class="card-header bg-success text-white">Infrastructure Recommendation</div>
-    <div class="card-body">
-        <h2 class="recommendation-title">Suggested Infrastructure Options</h2>
+            <div class="card-body">
+                <h2>Suggested Infrastructure Options</h2>
+                <p>Based on your requirements, here are the best infrastructure options for your system:</p>
 
-        <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
-            <div th:each="result, iterStat : ${#sets.toSet(resultsList)}" class="recommendation-box">
-                <h3>Option <span th:text="${iterStat.count}"></span>: 
-                    <span th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></span>
-                </h3>
+                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
+                        <h3 class="recommendation-title">Option <span th:text="${iterStat.count}"></span>: 
+                            <span th:text="${result['naturalLanguageMainResult']}"></span>
+                        </h3>
 
-                <div class="reason-box">
-                    <strong>Reasoning:</strong>
-                    <ul>
-                        <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
-                    </ul>
+                        <div class="reason-box">
+                            <strong>Why this choice?</strong>
+                            <ul>
+                                <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+                    <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
                 </div>
             </div>
         </div>
 
-        <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
-            <p class="text-danger">No infrastructure recommendations available. Please review your selections.</p>
-        </div>
-    </div>
-</div>
-
-     <!-- Navigation Buttons (Consistent with Global Button Styles) -->
+    <!-- Navigation Buttons -->
+<!-- Navigation Buttons -->
 <div class="button-container">
-    <a href="/" class="btn btn-secondary-custom btn-custom">Return to Main Menu</a>
+    <a href="/" class="btn btn-secondary-custom btn-custom">Back to Main Menu</a>
     <a href="/workflow/infrbroadcat" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
     <a href="/workflow/location" class="btn btn-primary-custom btn-custom">Proceed to Location Requirements</a>
 </div>
+    </div>
 
 
+    
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<!-- Footer -->
-<footer class="text-center py-4 mt-5 bg-light">
-    <p class="mb-0">
-        &copy; 2024 Technical University of Crete. <br>
-        Developed as part of a Thesis in Deployment Choice Automation.
-    </p>
-</footer>
 
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 bg-light">
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete. <br>
+            Developed as part of a Thesis in Deployment Choice Automation.
+        </p>
+    </footer>
 </body>
 </html>

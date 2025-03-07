@@ -7,14 +7,12 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js"></script>
     <link rel="stylesheet" th:href="@{/css/final.css}">
-
-   
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
     </nav>
 
     <div class="container mt-5">
@@ -32,196 +30,155 @@
                 <h4><i class="fas fa-tasks"></i> Deployment Decisions Summary</h4>
             </div>
             <div class="card-body">
-                <ul class="list-group">
-                    <form id="decision-form" action="/save-selections" method="post">
-                        <ul class="list-group">
-                    
-         <!-- Infrastructure Decision - Ultra Simple Solution -->
-<li class="list-group-item">
-    <strong><i class="fas fa-server"></i> Infrastructure:</strong>
-    <div th:if="${infrastructureDecision != null}">
-        <!-- Step 1: Create a JavaScript array to track processed values -->
-        <script th:inline="javascript">
-            /*<![CDATA[*/
-            var processedValues = [];
-            /*]]>*/
-        </script>
-        
-        <!-- Step 2: First pass - create hidden elements with all values -->
-        <div th:each="item : ${#strings.arraySplit(infrastructureDecision, ',')}" 
-             th:with="trimmedItem=${#strings.trim(item)}"
-             style="display:none;">
-            <span th:text="${trimmedItem}" class="infra-value"></span>
-        </div>
-        
-        <!-- Step 3: Use JavaScript to deduplicate and create the actual form elements -->
-        <div id="infrastructure-options"></div>
-        
-        <script th:inline="javascript">
-            /*<![CDATA[*/
-            document.addEventListener('DOMContentLoaded', function() {
-                // Get all infrastructure values
-                var values = document.querySelectorAll('.infra-value');
-                var uniqueValues = [];
-                
-                // Deduplicate values
-                values.forEach(function(element) {
-                    var value = element.textContent;
-                    if (uniqueValues.indexOf(value) === -1) {
-                        uniqueValues.push(value);
-                    }
-                });
-                
-                // Create form elements for unique values
-                var container = document.getElementById('infrastructure-options');
-                uniqueValues.forEach(function(value, index) {
-                    var displayValue = value;
-                    if (value === 'iaas') displayValue = ' Infrastructure As A Service';
-                    else if (value === 'paas') displayValue = ' Platform As A Service';
-                    else if (value === 'saas') displayValue = ' Software As A Service';
-                    else if (value === 'serverless') displayValue = ' Serverless (AWS Lambda, etc.)';
-                    
-                    var div = document.createElement('div');
-                    div.className = 'decision-box';
-                    
-                    var input = document.createElement('input');
-                    input.type = 'radio';
-                    input.name = 'infrastructure';
-                    input.id = 'infra-' + index;
-                    input.value = value;
-                    
-                    var label = document.createElement('label');
-                    label.htmlFor = 'infra-' + index;
-                    label.textContent = displayValue;
-                    
-                    div.appendChild(input);
-                    div.appendChild(label);
-                    container.appendChild(div);
-                });
-            });
-            /*]]>*/
-        </script>
-    </div>
-    <div th:if="${infrastructureDecision == null}" class="not-provided">
-        <span class="text-muted"><i>Not Provided</i></span>
-    </div>
-</li>
-                            <!-- Scalability Decision -->
-                            <li class="list-group-item">
-                                <strong><i class="fas fa-chart-line"></i> Scalability & Performance:</strong>
-                                <div th:if="${scalabilityAndPerformanceDecision != null}">
-                                    <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(scalabilityAndPerformanceDecision, ','))}" class="decision-box">
-                                        <input type="checkbox" name="scalability" th:value="${decision.trim()}">
-                                        <label th:text="${decision.trim()}"></label>
-                                    </div>
+                <form id="decision-form" action="/save-selections" method="post">
+                    <ul class="list-group">
+                        <!-- Infrastructure Decision -->
+                        <li class="list-group-item">
+                            <strong><i class="fas fa-server"></i> Infrastructure:</strong>
+                            <div th:if="${infrastructureDecision != null}">
+                                <div id="infrastructure-options" class="option-container"></div>
+                                
+                                <script th:inline="javascript">
+                                    /*<![CDATA[*/
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const infraStr = /*[[${infrastructureDecision}]]*/ '';
+                                        const values = infraStr.split(',').map(item => item.trim());
+                                        const uniqueValues = [...new Set(values)];
+                                        
+                                        const container = document.getElementById('infrastructure-options');
+                                        uniqueValues.forEach(function(value, index) {
+                                            let displayValue = value;
+                                            if (value === 'iaas') displayValue = ' Infrastructure As A Service';
+                                            else if (value === 'paas') displayValue = ' Platform As A Service';
+                                            else if (value === 'saas') displayValue = ' Software As A Service';
+                                            else if (value === 'serverless') displayValue = ' Serverless (AWS Lambda, etc.)';
+                                            
+                                            const div = document.createElement('div');
+                                            div.className = 'decision-box';
+                                            
+                                            const input = document.createElement('input');
+                                            input.type = 'radio';
+                                            input.name = 'infrastructure';
+                                            input.id = 'infra-' + index;
+                                            input.value = value;
+                                            
+                                            const label = document.createElement('label');
+                                            label.htmlFor = 'infra-' + index;
+                                            label.textContent = displayValue;
+                                            
+                                            div.appendChild(input);
+                                            div.appendChild(label);
+                                            container.appendChild(div);
+                                        });
+                                    });
+                                    /*]]>*/
+                                </script>
+                            </div>
+                            <div th:if="${infrastructureDecision == null}" class="not-provided">
+                                <span class="text-muted"><i>Not Provided</i></span>
+                            </div>
+                        </li>
+                        
+                        <!-- Scalability Decision -->
+                        <li class="list-group-item">
+                            <strong><i class="fas fa-chart-line"></i> Scalability & Performance:</strong>
+                            <div th:if="${scalabilityAndPerformanceDecision != null}" class="option-container">
+                                <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(scalabilityAndPerformanceDecision, ','))}" class="decision-box">
+                                    <input type="radio" name="scalability" 
+                                           th:id="${'scale-' + iterStat.index}"
+                                           th:value="${decision.trim()}">
+                                    <label th:for="${'scale-' + iterStat.index}" th:text="${decision.trim()}"></label>
                                 </div>
-                                <div th:if="${scalabilityAndPerformanceDecision == null}" class="not-provided">
-                                    <span class="text-muted"><i>Not Provided</i></span>
+                            </div>
+                            <div th:if="${scalabilityAndPerformanceDecision == null}" class="not-provided">
+                                <span class="text-muted"><i>Not Provided</i></span>
+                            </div>
+                        </li>
+                        
+                        <!-- Urgency Decision -->
+                        <li class="list-group-item">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Urgency:</strong>
+                            <div th:if="${urgencyDecision != null}" class="option-container">
+                                <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(urgencyDecision, ';'))}" class="decision-box">
+                                    <input type="radio" name="urgency" 
+                                           th:id="${'urgency-' + iterStat.index}"
+                                           th:value="${decision.trim()}">
+                                    <label th:for="${'urgency-' + iterStat.index}" th:text="${decision.trim()}"></label>
                                 </div>
-                            </li>
+                            </div>
+                            <div th:if="${urgencyDecision == null}" class="not-provided">
+                                <span class="text-muted"><i>Not Provided</i></span>
+                            </div>
+                        </li>
+                        
+                        <!-- Computing Resources -->
+                        <li class="list-group-item">
+                            <strong><i class="fas fa-memory"></i> Computing Resources:</strong>
+                            <div th:if="${resourceDecision != null}" class="option-container">
+                                <div th:each="decision, iterStat : ${#strings.arraySplit(resourceDecision, '|')}" class="decision-box">
+                                    <input type="radio" name="resources" 
+                                           th:id="${'res-' + iterStat.index}" 
+                                           th:value="${decision.trim()}">
+                                    <label th:for="${'res-' + iterStat.index}" th:text="${decision.trim()}"></label>
+                                </div>
+                            </div>
+                            <div th:if="${resourceDecision == null}" class="not-provided">
+                                <span class="text-muted"><i>Not Provided</i></span>
+                            </div>
+                        </li>
+                        
+                        <!-- Location Decision -->
+                        <li class="list-group-item">
+                            <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+                            <div th:if="${locationDecision != null}" class="option-container">
+                                <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(locationDecision, ';'))}" class="decision-box">
+                                    <input type="radio" name="location" 
+                                           th:id="${'location-' + iterStat.index}"
+                                           th:value="${decision.trim()}">
+                                    <label th:for="${'location-' + iterStat.index}" th:text="${decision.trim()}"></label>
+                                </div>
+                            </div>
+                            <div th:if="${locationDecision == null}" class="not-provided">
+                                <span class="text-muted"><i>Not Provided</i></span>
+                            </div>
+                        </li>
+                    </ul>
                     
-                            <!-- Urgency Decision -->
-                            <li class="list-group-item">
-                                <strong><i class="fas fa-exclamation-triangle"></i> Urgency:</strong>
-                                <div th:if="${urgencyDecision != null}">
-                                    <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(urgencyDecision, ';'))}" class="decision-box">
-                                        <input type="radio" name="urgency" th:value="${decision.trim()}">
-                                        <label th:text="${decision.trim()}"></label>
-                                    </div>
-                                </div>
-                                <div th:if="${urgencyDecision == null}" class="not-provided">
-                                    <span class="text-muted"><i>Not Provided</i></span>
-                                </div>
-                            </li>
-                    
-                            <!-- Computing Resources
-                            <li class="list-group-item">
-                                <strong><i class="fas fa-memory"></i> Computing Resources:</strong>
-                                <div th:if="${resourceDecision != null}">
-                                    <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(resourceDecision, ','))}" class="decision-box">
-                                        <input type="checkbox" name="resources" th:value="${decision.trim()}">
-                                        <label th:text="${decision.trim()}"></label>
-                                    </div>
-                                </div>
-                                <div th:if="${resourceDecision == null}" class="not-provided">
-                                    <span class="text-muted"><i>Not Provided</i></span>
-                                </div>
-                            </li> -->
-
-
-                            <!-- Computing Resources - Updated for Pipe Delimiter -->
-<li class="list-group-item">
-    <strong><i class="fas fa-memory"></i> Computing Resources:</strong>
-    <div th:if="${resourceDecision != null}">
-        <!-- Use pipe character as delimiter instead of comma -->
-        <div th:each="decision, iterStat : ${#strings.arraySplit(resourceDecision, '|')}" class="decision-box">
-            <input type="checkbox" name="resources" 
-                   th:id="${'res-' + iterStat.index}" 
-                   th:value="${decision.trim()}">
-            <label th:for="${'res-' + iterStat.index}" th:text="${decision.trim()}"></label>
-        </div>
-    </div>
-    <div th:if="${resourceDecision == null}" class="not-provided">
-        <span class="text-muted"><i>Not Provided</i></span>
-    </div>
-</li>
-                    
-                            <!-- Location Decision -->
-                            <li class="list-group-item">
-                                <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
-                                <div th:if="${locationDecision != null}">
-                                    <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(locationDecision, ';'))}" class="decision-box">
-                                        <input type="radio" name="location" th:value="${decision.trim()}">
-                                        <label th:text="${decision.trim()}"></label>
-                                    </div>
-                                </div>
-                                <div th:if="${locationDecision == null}" class="not-provided">
-                                    <span class="text-muted"><i>Not Provided</i></span>
-                                </div>
-                            </li>
-                    
-                        </ul>
-                    
-                        <!-- Submit Button -->
-                        <div class="text-center mt-4">
-                            <button type="button" class="btn btn-primary" onclick="submitSelections()">
-                                <i class="fas fa-save"></i> Save Selections
-                            </button>
-                        </div>
-                    </form>
-                    
-
-
-
-                </ul>
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-primary" onclick="submitSelections()">
+                            <i class="fas fa-save"></i> Save Selections
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
-     <!-- Final Steps (Improved Section) -->
-<div class="card shadow-sm mt-4">
-    <div class="card-header bg-success text-white">
-        <h4><i class="fas fa-file-code"></i> Ready to Generate Deployment Configuration?</h4>
-    </div>
-    <div class="card-body text-center">
-        <p>Your deployment strategy has been saved. Click the button below to generate the YAML configuration file.</p>
-        <form id="yamlForm" th:action="@{/workflow/generate-yaml}" method="post">
-            <button type="submit" class="btn btn-lg btn-primary" id="generateYamlBtn" disabled>
-                <i class="fas fa-download"></i> Generate Deployment Configuration
+        <!-- Final Steps -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-success text-white">
+                <h4><i class="fas fa-file-code"></i> Ready to Generate Deployment Configuration?</h4>
+            </div>
+            <div class="card-body text-center">
+                <p>Your deployment strategy has been saved. Click the button below to generate the YAML configuration file.</p>
+                <form id="yamlForm" th:action="@{/workflow/generate-yaml}" method="post">
+                    <button type="submit" class="btn btn-lg btn-primary" id="generateYamlBtn" disabled>
+                        <i class="fas fa-download"></i> Generate Deployment Configuration
+                    </button>
+                    <div id="loadingMessage" style="display: none; color: green; margin-top: 10px;">
+                        <i class="fas fa-spinner fa-spin"></i> Generating YAML file...
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="text-center mt-4">
+            <button onclick="window.location.href='/'" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Return to Main Menu
             </button>
-            <div id="loadingMessage" style="display: none; color: green; margin-top: 10px;">
-                <i class="fas fa-spinner fa-spin"></i> Generating YAML file...
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<!-- Navigation Buttons -->
-<div class="text-center mt-4">
-    <button onclick="window.location.href='/'" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left"></i> Return to Main Menu
-    </button>
-</div>
-
 
     <!-- Footer -->
     <footer class="text-center py-4 mt-5 bg-light">
@@ -231,46 +188,180 @@
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Main JavaScript - Consolidated -->
     <script>
-   function submitSelections() {
-    let formData = new FormData(document.getElementById('decision-form'));
-
-    let selections = {};
-    formData.forEach((value, key) => {
-        if (!selections[key]) {
-            selections[key] = [];
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to auto-select single options in each category
+            function autoSelectSingleOptions() {
+                const sections = ['infrastructure', 'scalability', 'urgency', 'resources', 'location'];
+                
+                sections.forEach(section => {
+                    const options = document.querySelectorAll(`input[name="${section}"]`);
+                    
+                    // If there's only one option, select it automatically
+                    if (options.length === 1) {
+                        options[0].checked = true;
+                        
+                        // Add visual indication that this was auto-selected
+                        const parentBox = options[0].closest('.decision-box');
+                        if (parentBox) {
+                            parentBox.classList.add('auto-selected');
+                        }
+                    }
+                });
+            }
+            
+            // Call the auto-select function after all elements are rendered
+            setTimeout(autoSelectSingleOptions, 100);
+            
+            // Function to validate that all sections have a selection
+            function validateSelections() {
+                const sections = ['infrastructure', 'scalability', 'urgency', 'resources', 'location'];
+                let valid = true;
+                let missingSelections = [];
+                
+                sections.forEach(section => {
+                    // Skip validation for sections that don't have options
+                    const options = document.querySelectorAll(`input[name="${section}"]`);
+                    if (options.length === 0) return;
+                    
+                    // Check if at least one option is selected
+                    const selected = Array.from(options).some(option => option.checked);
+                    if (!selected) {
+                        valid = false;
+                        missingSelections.push(section.charAt(0).toUpperCase() + section.slice(1));
+                    }
+                });
+                
+                return { valid, missingSelections };
+            }
+            
+            // Show a loading message when generating YAML
+            document.getElementById("yamlForm").addEventListener("submit", function() {
+                document.getElementById("loadingMessage").style.display = "block";
+            });
+        });
+        
+        // Make submitSelections globally available
+        function submitSelections() {
+            const sections = ['infrastructure', 'scalability', 'urgency', 'resources', 'location'];
+            let valid = true;
+            let missingSelections = [];
+            
+            sections.forEach(section => {
+                // Skip validation for sections that don't have options
+                const options = document.querySelectorAll(`input[name="${section}"]`);
+                if (options.length === 0) return;
+                
+                // Check if at least one option is selected
+                const selected = Array.from(options).some(option => option.checked);
+                if (!selected) {
+                    valid = false;
+                    missingSelections.push(section.charAt(0).toUpperCase() + section.slice(1));
+                }
+            });
+            
+            if (!valid) {
+                alert(`Please select one option for each of the following sections: ${missingSelections.join(', ')}`);
+                return;
+            }
+            
+            let formData = new FormData(document.getElementById('decision-form'));
+            let selections = {};
+            
+            formData.forEach((value, key) => {
+                if (!selections[key]) {
+                    selections[key] = [];
+                }
+                selections[key].push(value);
+            });
+            
+            console.log("Sending data to backend:", selections);
+            
+            fetch('/workflow/save-selections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(selections)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Response from backend:", data);
+                alert("✅ Selections have been saved successfully!");
+                document.getElementById("generateYamlBtn").disabled = false;
+            })
+            .catch(error => {
+                console.error("Error saving:", error);
+                alert("❌ An error occurred while saving selections: " + error.message);
+            });
         }
-        selections[key].push(value);
-    });
-
-    console.log("Sending data to backend:", selections);
-
-    fetch('/workflow/save-selections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selections)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Response from backend:", data);
-        alert("✅ Selections have been saved successfully!");
-
-        // Enable the "Generate Deployment Configuration" button
-        document.getElementById("generateYamlBtn").disabled = false;
-    })
-    .catch(error => {
-        console.error("Error saving:", error);
-        alert("❌ An error occurred while saving selections.");
-    });
-}
-
-// Show a loading message when generating YAML
-document.getElementById("yamlForm").addEventListener("submit", function() {
-    document.getElementById("loadingMessage").style.display = "block";
-});
-
-
     </script>
     
+    <!-- CSS Styles -->
+    <style>
+        /* Styling for options */
+        .option-container {
+            margin-top: 10px;
+        }
+        
+        .decision-box {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: block;
+        }
+        
+        .decision-box:hover {
+            background-color: #e9ecef;
+        }
+        
+        .decision-box input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .decision-box label {
+            cursor: pointer;
+            font-weight: normal;
+            display: inline-block;
+            margin-bottom: 0;
+            width: calc(100% - 30px);
+        }
+        
+        /* Highlight the selected option */
+        .decision-box input[type="radio"]:checked + label {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        /* Add a subtle focus effect */
+        .decision-box:focus-within {
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .not-provided {
+            padding: 8px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Auto-selected styling */
+        .decision-box.auto-selected {
+            background-color: #e6f2ff;
+            border-left: 3px solid #007bff;
+        }
+        
+        .decision-box.auto-selected label {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
 </body>
 </html>

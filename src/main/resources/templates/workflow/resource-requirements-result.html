@@ -13,7 +13,7 @@
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+    <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
 </nav>
 
 <!-- Main Container -->
@@ -74,27 +74,193 @@
         </div>
 
         <style>
-            .recommendation-box {
-                background: #f8f9fa;
-                padding: 15px;
-                border-left: 5px solid #007bff;
-                margin-bottom: 15px;
-                border-radius: 5px;
-            }
-            .recommendation-title {
-                font-size: 20px;
-                font-weight: bold;
-                color: #333;
-            }
-            .reason-box {
-                background: #eef3f7;
-                padding: 10px;
-                border-radius: 5px;
-                margin-top: 10px;
-                font-style: italic;
-            }
-        </style>
+          /* Base recommendation box styling */
+.recommendation-box {
+    background: #f8f9fa;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+}
 
+/* Title styling */
+.recommendation-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+/* Reason box styling */
+.reason-box {
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+/* Resource type styling variants */
+.compute-optimized {
+    border-left: 5px solid #6f42c1; /* Purple for compute */
+}
+.compute-optimized .recommendation-title {
+    color: #6f42c1;
+}
+.compute-optimized .reason-box {
+    background: #f3f0fa; /* Light purple background */
+}
+
+.memory-optimized {
+    border-left: 5px solid #fd7e14; /* Orange for memory */
+}
+.memory-optimized .recommendation-title {
+    color: #fd7e14;
+}
+.memory-optimized .reason-box {
+    background: #fff3e6; /* Light orange background */
+}
+
+.real-time {
+    border-left: 5px solid #20c997; /* Teal for real-time */
+}
+.real-time .recommendation-title {
+    color: #20c997;
+}
+.real-time .reason-box {
+    background: #e6f9f5; /* Light teal background */
+}
+
+.batch-processing {
+    border-left: 5px solid #17a2b8; /* Cyan for batch processing */
+}
+.batch-processing .recommendation-title {
+    color: #17a2b8;
+}
+.batch-processing .reason-box {
+    background: #e6f7fa; /* Light cyan background */
+}
+
+.elastic-scaling {
+    border-left: 5px solid #28a745; /* Green for elastic/auto-scaling */
+}
+.elastic-scaling .recommendation-title {
+    color: #28a745;
+}
+.elastic-scaling .reason-box {
+    background: #e9f7ef; /* Light green background */
+}
+
+.fixed-allocation {
+    border-left: 5px solid #6c757d; /* Gray for fixed allocation */
+}
+.fixed-allocation .recommendation-title {
+    color: #6c757d;
+}
+.fixed-allocation .reason-box {
+    background: #f2f2f2; /* Light gray background */
+}
+        </style>
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+    // Group resource recommendations by their title
+    const resourceRecommendations = {};
+    const boxes = document.querySelectorAll('.recommendation-box');
+    
+    // First pass: collect all recommendations and their reasons
+    boxes.forEach(function(box) {
+        const titleElement = box.querySelector('h3 span:nth-child(2)');
+        if (!titleElement) return;
+        
+        const title = titleElement.textContent.trim();
+        
+        // Get all reasons
+        const reasonItems = Array.from(box.querySelectorAll('.reason-box li'))
+            .map(li => li.textContent.trim());
+        
+        // Initialize this title group if it doesn't exist
+        if (!resourceRecommendations[title]) {
+            resourceRecommendations[title] = {
+                reasons: new Set(),
+                originalBox: box
+            };
+        }
+        
+        // Add all reasons to the set (Set automatically handles duplicates)
+        reasonItems.forEach(reason => {
+            resourceRecommendations[title].reasons.add(reason);
+        });
+        
+        // Hide all boxes initially - we'll show only the consolidated ones
+        box.style.display = 'none';
+    });
+    
+    // Second pass: create consolidated recommendations
+    let count = 1;
+    for (const title in resourceRecommendations) {
+        const recommendation = resourceRecommendations[title];
+        const box = recommendation.originalBox.cloneNode(true);
+        box.style.display = 'block';
+        
+        // Update the option number
+        const countElement = box.querySelector('h3 span:first-child');
+        if (countElement) {
+            countElement.textContent = count++;
+        }
+        
+        // Apply styling based on resource configuration type
+        applyResourceStyling(box, title.toLowerCase());
+        
+        // Clear existing reasons
+        const reasonList = box.querySelector('.reason-box ul');
+        if (reasonList) {
+            reasonList.innerHTML = '';
+            
+            // Add all unique reasons
+            Array.from(recommendation.reasons).sort().forEach(reason => {
+                const li = document.createElement('li');
+                li.textContent = reason;
+                reasonList.appendChild(li);
+            });
+        }
+        
+        // Add the consolidated box
+        recommendation.originalBox.parentNode.appendChild(box);
+    }
+    
+    // Helper function to apply specific styling based on resource type
+    function applyResourceStyling(box, titleText) {
+        // Remove any existing styling classes
+        box.classList.remove(
+            'compute-optimized', 
+            'memory-optimized', 
+            'real-time', 
+            'batch-processing',
+            'elastic-scaling',
+            'fixed-allocation'
+        );
+        
+        // Apply appropriate styling class based on the title content
+        if (titleText.includes('compute') || titleText.includes('cpu')) {
+            box.classList.add('compute-optimized');
+        } 
+        else if (titleText.includes('memory') || titleText.includes('cache')) {
+            box.classList.add('memory-optimized');
+        }
+        else if (titleText.includes('real-time') || titleText.includes('low-latency')) {
+            box.classList.add('real-time');
+        }
+        else if (titleText.includes('batch') || titleText.includes('throughput')) {
+            box.classList.add('batch-processing');
+        }
+        else if (titleText.includes('auto') || titleText.includes('elastic')) {
+            box.classList.add('elastic-scaling');
+        }
+        else if (titleText.includes('fixed') || titleText.includes('static')) {
+            box.classList.add('fixed-allocation');
+        }
+    }
+});
+</script>
         <div class="card-body">
             <h2>Recommended Resource Allocation</h2>
             <p>Based on your requirements, here is the optimal resource configuration for your system:</p>
