@@ -155,22 +155,22 @@
         </div>
 
         <!-- Final Steps -->
-        <div class="card shadow-sm mt-4">
-            <div class="card-header bg-success text-white">
-                <h4><i class="fas fa-file-code"></i> Ready to Generate Deployment Configuration?</h4>
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-success text-white">
+        <h4><i class="fas fa-lightbulb"></i> Ready to View Your Recommended Strategy?</h4>
+    </div>
+    <div class="card-body text-center">
+        <p>Your requirements have been analyzed! Click the button below to view your recommended deployment strategy and generate the corresponding YAML configuration file.</p>
+        <form id="yamlForm" th:action="@{/workflow/generate-yaml}" method="post">
+            <button type="submit" class="btn btn-lg btn-primary" id="generateYamlBtn" disabled>
+                <i class="fas fa-download"></i> View Recommendation & Generate Configuration
+            </button>
+            <div id="loadingMessage" style="display: none; color: green; margin-top: 10px;">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
             </div>
-            <div class="card-body text-center">
-                <p>Your deployment strategy has been saved. Click the button below to generate the YAML configuration file.</p>
-                <form id="yamlForm" th:action="@{/workflow/generate-yaml}" method="post">
-                    <button type="submit" class="btn btn-lg btn-primary" id="generateYamlBtn" disabled>
-                        <i class="fas fa-download"></i> Generate Deployment Configuration
-                    </button>
-                    <div id="loadingMessage" style="display: none; color: green; margin-top: 10px;">
-                        <i class="fas fa-spinner fa-spin"></i> Generating YAML file...
-                    </div>
-                </form>
-            </div>
-        </div>
+        </form>
+    </div>
+</div>
 
         <!-- Navigation Buttons -->
         <div class="text-center mt-4">
