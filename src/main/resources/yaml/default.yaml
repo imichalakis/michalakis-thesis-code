@@ -1,0 +1,103 @@
+# Azure Deployment YAML Template
+# This file can be used with Azure DevOps Pipelines or GitHub Actions
+
+name: $(Build.DefinitionName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    exclude:
+    - README.md
+    - docs/*
+
+variables:
+  # Environment variables
+  environment: 'dev'  # options: dev, test, prod
+  location: 'eastus'
+  
+  # Resource naming convention
+  resourcePrefix: 'myapp'
+  
+  # Service connection
+  azureSubscription: 'your-azure-subscription-name'
+  
+  # Resource-specific variables
+  resourceGroupName: '$(resourcePrefix)-$(environment)-rg'
+  appServicePlanName: '$(resourcePrefix)-$(environment)-asp'
+  webAppName: '$(resourcePrefix)-$(environment)-app'
+
+stages:
+- stage: Validate
+  displayName: 'Validate Infrastructure'
+  jobs:
+  - job: ValidateTemplate
+    displayName: 'Validate ARM Template'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Validate ARM Template'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az group create --name $(resourceGroupName) --location $(location)
+          az deployment group validate \
+            --resource-group $(resourceGroupName) \
+            --template-file ./infrastructure/main.json \
+            --parameters environment=$(environment) location=$(location)
+
+- stage: Deploy
+  displayName: 'Deploy Infrastructure'
+  dependsOn: Validate
+  jobs:
+  - job: DeployInfrastructure
+    displayName: 'Deploy Azure Resources'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Deploy Resource Group'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az group create --name $(resourceGroupName) --location $(location) --tags environment=$(environment)
+    
+    - task: AzureResourceManagerTemplateDeployment@3
+      displayName: 'Deploy ARM Template'
+      inputs:
+        deploymentScope: 'Resource Group'
+        azureResourceManagerConnection: $(azureSubscription)
+        subscriptionId: '$(subscriptionId)'
+        action: 'Create Or Update Resource Group'
+        resourceGroupName: $(resourceGroupName)
+        location: $(location)
+        templateLocation: 'Linked artifact'
+        csmFile: './infrastructure/main.json'
+        csmParametersFile: './infrastructure/parameters.$(environment).json'
+        deploymentMode: 'Incremental'
+        deploymentName: 'deployment-$(environment)-$(Build.BuildId)'
+
+- stage: DeployApp
+  displayName: 'Deploy Application'
+  dependsOn: Deploy
+  jobs:
+  - job: DeployWebApp
+    displayName: 'Deploy Web Application'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureWebApp@1
+      displayName: 'Deploy Azure Web App'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appType: 'webApp'
+        appName: $(webAppName)
+        package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+        deploymentMethod: 'auto'

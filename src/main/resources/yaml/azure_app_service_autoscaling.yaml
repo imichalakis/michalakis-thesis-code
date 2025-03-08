@@ -1,0 +1,110 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: azure-app-service-autoscaler
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: azure-app-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 5
+        periodSeconds: 60
+      selectPolicy: Max
+---
+# Azure App Service Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-app-service-config
+  namespace: production
+data:
+  WEBSITES_ENABLE_APP_SERVICE_STORAGE: "true"
+  WEBSITES_PORT: "8080"
+  WEBSITE_NODE_DEFAULT_VERSION: "14.17.0"
+  WEBSITE_TIME_ZONE: "UTC"
+  WEBSITE_HEALTHCHECK_MAXPINGFAILURES: "10"
+  ENABLE_ORYX_BUILD: "true"
+---
+# Azure App Service Resource Limits
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: azure-app-service-quota
+  namespace: production
+spec:
+  hard:
+    cpu: "8"
+    memory: 16Gi
+    pods: "20"
+---
+# Azure App Service Monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: azure-app-service-monitor
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: azure-app-service
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+---
+# Azure Alerts Configuration
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: azure-app-service-alerts
+  namespace: monitoring
+spec:
+  groups:
+  - name: azure-app-service
+    rules:
+    - alert: HighCpuUsage
+      expr: avg(rate(container_cpu_usage_seconds_total{namespace="production",pod=~"azure-app-service-.*"}[5m])) by (pod) > 0.85
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage detected"
+        description: "Pod {{ $labels.pod }} has high CPU usage for more than 10 minutes."
+    - alert: HighMemoryUsage
+      expr: avg(container_memory_usage_bytes{namespace="production",pod=~"azure-app-service-.*"}) by (pod) / avg(container_spec_memory_limit_bytes{namespace="production",pod=~"azure-app-service-.*"}) by (pod) > 0.85
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage detected"
+        description: "Pod {{ $labels.pod }} has high memory usage for more than 10 minutes."

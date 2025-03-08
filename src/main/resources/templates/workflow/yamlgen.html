@@ -155,7 +155,7 @@
             </div>
         </div>
 
-        <!-- Decision Reasoning Section -->
+   <!-- Decision Reasoning Section -->
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-success text-white">
         <h4><i class="fas fa-brain"></i> Decision Reasoning</h4>
@@ -170,15 +170,16 @@
                 <h4><i class="fas fa-lightbulb"></i> Technical Reasoning</h4>
             </div>
 
-            <!-- This is where we need to fix the iteration -->
-            <div th:each="result : ${resultsList}">
-                
-                <div>
-                    <div th:each="factName : ${result.convertedFact}" class="reasoning-point">
-                        <i class="fas fa-check-circle"></i>
-                        <!-- Here we need to lookup the human-readable version -->
-                        <div class="reasoning-point-content" th:text="${@gorgiasService.convertFactToNaturalLanguage(factName)}">
-                            Platform as a Service: Provides hardware and software tools over the internet for application development.
+            <!-- Track displayed facts to avoid duplicates -->
+            <div th:with="displayedFacts=${new java.util.HashSet()}">
+                <div th:each="result : ${resultsList}">
+                    <div th:each="factName : ${result.convertedFact}">
+                        <!-- Only display if this fact hasn't been displayed before -->
+                        <div th:if="${displayedFacts.add(factName)}" class="reasoning-point">
+                            <i class="fas fa-check-circle"></i>
+                            <div class="reasoning-point-content" th:text="${@gorgiasService.convertFactToNaturalLanguage(factName)}">
+                                Platform as a Service: Provides hardware and software tools over the internet for application development.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -187,15 +188,16 @@
 
         <!-- Fallback if no results -->
         <div class="reasoning-section" th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
-            <!-- Fallback content remains the same -->
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> No detailed reasoning available for this recommendation.
+            </div>
         </div>
         
         <div class="alert alert-secondary mt-3">
             <i class="fas fa-info-circle"></i> The decision engine evaluated multiple deployment options and selected this strategy based on the best match for your specific requirements.
         </div>
     </div>
-</div>
-                
+</div> 
                
             
 
