@@ -190,21 +190,20 @@ public class GorgiasService{
  * @param form WorkflowForm containing user selections
  * @return List of ParsedResult containing the query results
  */
-public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form) {
+public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form, HttpSession session) {
     GorgiasQuery gorgiasQuery = new GorgiasQuery();
     ArrayList<String> gorgiasFiles = new ArrayList<>();
-    gorgiasFiles.add("finaldecision/final2.pl"); // Reference to enhanced Prolog file
+    gorgiasFiles.add("finaldecision/final5.pl"); 
     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
-    
-    // Generate comprehensive facts from form inputs
+
     List<String> facts = generateFactsForGorgias(form);
     gorgiasQuery.setFacts(facts);
-    
+
     System.out.println("Final Facts for Gorgias Query: " + facts);
-    
+
     gorgiasQuery.setResultSize(5);
     gorgiasQuery.setQuery("yamlfile(X)");
-    
+
     GorgiasQueryResult result = null;
     try {
         result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
@@ -213,9 +212,29 @@ public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form) {
         System.out.println("Result is null due to an exception.");
         e.printStackTrace();
     }
-    
-    return parseGorgiasQueryResult(result);
+
+    List<ParsedResult> parsedResults = parseGorgiasQueryResult(result);
+
+    // Convert parsed results into a list of maps for Thymeleaf
+    List<Map<String, Object>> resultsList = new ArrayList<>();
+    for (ParsedResult parsedResult : parsedResults) {
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("naturalLanguageMainResult", parsedResult.getMainResult());
+        resultMap.put("convertedFact", parsedResult.getSupportingFacts());
+        resultsList.add(resultMap);
+    }
+
+    // ❗ Ensure resultsList is NOT empty before saving
+    if (!resultsList.isEmpty()) {
+        session.setAttribute("resultsList", resultsList);
+        System.out.println("✅ Results List Stored in Session: " + resultsList);
+    } else {
+        System.out.println("❌ No valid results found for storage in session.");
+    }
+
+    return parsedResults;
 }
+
     
     private List<String> generateFactsForGorgias(WorkflowForm form) {
         List<String> facts = new ArrayList<>();
@@ -803,7 +822,7 @@ factMappings.put("fixed_allocation", "Fixed Allocation: Suitable for predictable
         factMappings.put("cost_sensitivity(high)", "Budget constraints require cost-effective infrastructure choices.");
         factMappings.put("eventdrivenfunctions", "The system is designed for event-driven automation, enabling responsive and serverless computing.");
         // Software Consumption Model
-factMappings.put("consumereadysoftware", "The primary goal is to use pre-configured software solutions with minimal customization (e.g., SaaS).");
+factMappings.put("consumereadysoftware", "The primary goal is to use pre-configured software solutions with minimal customization (e.g., SaaS and PaaS).");
 
 // Integration Requirements
 factMappings.put("custom_integrations", "Custom integrations are necessary to align with existing systems and workflows.");
@@ -916,6 +935,98 @@ factMappings.put("runcustomapps", "The main objective is to deploy and manage cu
    // factMappings.put("request_type(ops)", "It's a request type from Ministry Of Digital Governance");
 
     factMappings.put("highbasedondate", "Based on the date there is high request for deployment");
+     factMappings.put("iaas", "Infrastructure as a Service: Provides virtual machines and network infrastructure with maximum control.");
+    factMappings.put("paas", "Platform as a Service: Managed application hosting environment with reduced management overhead.");
+    factMappings.put("serverless", "Serverless Computing: Event-driven architecture that automatically scales and charges only for execution time.");
+    
+    // Urgency Levels
+    factMappings.put("urgent", "Urgent Deployment: Requires immediate provisioning with priority resource allocation.");
+    factMappings.put("high_urgency", "High Urgency: Requires expedited deployment with minimal delays.");
+    factMappings.put("normal", "Normal Urgency: Standard deployment timeline with regular prioritization.");
+    factMappings.put("low_urgency", "Low Urgency: Flexible deployment timeline with no immediate pressure.");
+    
+    // Scaling Approach
+    factMappings.put("auto_scaling", "Auto Scaling: Dynamically adjusts resources based on workload demands and traffic patterns.");
+    factMappings.put("fixed_allocation", "Fixed Allocation: Suitable for predictable workloads with static resource limits.");
+    
+    // Budget Considerations
+    factMappings.put("high_budget", "High Budget: Financial resources available for premium services and optimal performance.");
+    factMappings.put("low_budget", "Low Budget: Cost-constrained deployment requiring economical resource utilization.");
+    
+    // Disaster Recovery
+    factMappings.put("high_disaster_recovery", "High Disaster Recovery: Comprehensive backup, replication, and failover capabilities for critical workloads.");
+    factMappings.put("low_disaster_recovery", "Low Disaster Recovery: Basic recovery capabilities sufficient for non-critical workloads.");
+    
+    // Workload Intensity
+    factMappings.put("low_load", "Low Load: Minimal resource utilization with limited concurrent users or transactions.");
+    factMappings.put("medium_load", "Medium Load: Moderate resource requirements with average concurrency and throughput needs.");
+    factMappings.put("high_load", "High Load: Intensive resource utilization with significant concurrency and throughput demands.");
+    
+    // Traffic Pattern
+    factMappings.put("rare_peaks", "Rare Traffic Peaks: Infrequent spikes in demand requiring occasional scaling.");
+    factMappings.put("occasional_peaks", "Occasional Traffic Peaks: Periodic spikes in demand requiring intermittent scaling.");
+    factMappings.put("frequent_peaks", "Frequent Traffic Peaks: Regular spikes in demand requiring responsive scaling capabilities.");
+    factMappings.put("continuous_high_demand", "Continuous High Demand: Sustained high utilization requiring constant availability of resources.");
+    
+    // Response Time Requirements
+    factMappings.put("relaxed_response_time", "Relaxed Response Time: Non-time-sensitive operations where latency is not critical.");
+    factMappings.put("standard_response_time", "Standard Response Time: Balanced performance expectations with reasonable latency targets.");
+    factMappings.put("strict_response_time", "Strict Response Time: Time-sensitive operations requiring consistent low-latency responses.");
+    
+    // Performance Characteristics
+    factMappings.put("low_latency_required", "Low Latency Required: Applications requiring minimal processing and response delays.");
+    factMappings.put("high_throughput_required", "High Throughput Required: Systems processing large volumes of data or transactions.");
+    
+    // Compute Optimization
+    factMappings.put("compute_optimized", "Compute Optimized: Configured for CPU-intensive workloads like batch processing, scientific modeling, or high-performance computing.");
+    factMappings.put("memory_optimized", "Memory Optimized: Configured for memory-intensive workloads like in-memory databases, caching, or real-time analytics.");
+    // Urgency Levels
+factMappings.put("urgent", "Deployment requires immediate attention and expedited implementation.");
+factMappings.put("high_urgency", "Deployment has high priority with short timeline requirements.");
+factMappings.put("normal", "Deployment follows standard implementation timelines.");
+factMappings.put("low_urgency", "Deployment has flexible timeline with no immediate pressure.");
+
+// Service Models
+factMappings.put("iaas", "Infrastructure as a Service: Provides virtualized computing resources over the internet.");
+factMappings.put("paas", "Platform as a Service: Provides hardware and software tools over the internet for application development.");
+factMappings.put("serverless", "Serverless Computing: Allows code execution without managing underlying infrastructure.");
+factMappings.put("saas", "Software as a Service: Delivers software applications over the internet on a subscription basis.");
+
+// Resource Allocation Strategies
+factMappings.put("auto_scaling", "Auto Scaling: Dynamically adjusts resources based on demand.");
+factMappings.put("fixed_allocation", "Fixed Allocation: Suitable for predictable workloads with static resource limits.");
+
+// Budget Constraints
+factMappings.put("high_budget", "High Budget: Sufficient financial resources available for premium services and optimal performance.");
+factMappings.put("low_budget", "Low Budget: Limited financial resources requiring cost-effective solutions.");
+
+// Disaster Recovery Requirements
+factMappings.put("high_disaster_recovery", "High Disaster Recovery: Comprehensive backup, replication, and failover capabilities for critical workloads.");
+factMappings.put("low_disaster_recovery", "Low Disaster Recovery: Basic backup solutions for non-critical workloads with flexible recovery time objectives.");
+
+// Load Characteristics
+factMappings.put("low_load", "Low Load: Minimal resource utilization with limited concurrent users or operations.");
+factMappings.put("medium_load", "Medium Load: Moderate resource utilization with average concurrency requirements.");
+factMappings.put("high_load", "High Load: Intensive resource utilization with significant concurrent operations.");
+
+// Traffic Pattern Characteristics
+factMappings.put("rare_peaks", "Rare Peaks: Traffic spikes occur very infrequently (few times per year).");
+factMappings.put("occasional_peaks", "Occasional Peaks: Traffic spikes occur periodically (few times per month).");
+factMappings.put("frequent_peaks", "Frequent Peaks: Traffic spikes occur regularly (multiple times per week).");
+factMappings.put("continuous_high_demand", "Continuous High Demand: Consistently high traffic levels with minimal variation.");
+
+// Response Time Requirements
+factMappings.put("relaxed_response_time", "Relaxed Response Time: Application can tolerate longer processing times without significant impact.");
+factMappings.put("standard_response_time", "Standard Response Time: Application requires industry-standard response times for good user experience.");
+factMappings.put("strict_response_time", "Strict Response Time: Application requires guaranteed response times with minimal variation.");
+
+// Performance Requirements
+factMappings.put("low_latency_required", "Low Latency Required: Applications requiring minimal processing and response delays.");
+factMappings.put("high_throughput_required", "High Throughput Required: Applications needing to process large volumes of data or transactions.");
+
+// Optimization Preferences
+factMappings.put("compute_optimized", "Compute Optimized: Workloads requiring high-performance processors and computing power.");
+factMappings.put("memory_optimized", "Memory Optimized: Workloads requiring large memory allocations for data processing or caching.");
 }
 
 private String handleComplexReasoning(String fact) {
@@ -1220,8 +1331,8 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
                 return "Auto Scaling: Dynamically adjusts resources based on demand.";
             case "scalability_decision(fixed_allocation)":
                 return "Fixed Allocation: Suitable for predictable workloads with static resource limits.";
-            default:
-                return "Unknown Strategy";
+                default:
+                return "Azure App Service (Standard): Default managed web hosting platform for general-purpose applications";
         }
     }
     

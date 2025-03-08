@@ -3,51 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YAML Generation Result</title>
+    <title>Recommended Deployment Strategy</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <style>
+        .strategy-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .feature-icon {
+            font-size: 1.5rem;
+            color: #0275d8;
+            margin-right: 0.5rem;
+        }
+        .recommendation-card {
+            border-left: 5px solid #0275d8;
+        }
+        .detail-section {
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .yaml-section {
+            background-color: #e9ecef;
+            border-radius: 0.25rem;
+            padding: 1rem;
+        }
+        .reason-box {
+            background-color: #f0f7ff;
+            border-radius: 0.25rem;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            border-left: 4px solid #0275d8;
+        }
+        .reason-box ul {
+            margin-bottom: 0;
+        }
+        .recommendation-box {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .recommendation-box:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .recommendation-title {
+            color: #0275d8;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+        .fact-list-item {
+            padding: 0.5rem 0;
+        }
+        .fact-list-item i {
+            color: #28a745;
+            margin-right: 0.5rem;
+        }
+        .reasoning-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .reasoning-header {
+            border-bottom: 2px solid #0275d8;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+        }
+        .reasoning-point {
+            display: flex;
+            margin-bottom: 14px;
+            align-items: flex-start;
+            background-color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        .reasoning-point:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.08);
+        }
+        .reasoning-point i {
+            color: #0275d8;
+            margin-right: 12px;
+            margin-top: 3px;
+            font-size: 1.1rem;
+        }
+        .reasoning-point-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .reasoning-description {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        <div class="container">
+            <a class="navbar-brand" href="/">Deployment Choice Automation</a>
+        </div>
     </nav>
 
     <div class="container mt-5">
-        <h2 class="display-5 text-center">YAML Generation Completed</h2>
-        <p class="lead text-center">Your configuration file has been generated successfully.</p>
+        <h2 class="display-5 text-center">Recommended Deployment Strategy</h2>
+        <p class="lead text-center">Based on your requirements, we've identified the optimal deployment approach.</p>
 
-        <!-- Card with YAML Decision Information -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-success text-white">
-                <h4><i class="fas fa-file-code"></i> YAML File Details</h4>
+        <!-- Main Recommendation Card -->
+        <div class="card shadow recommendation-card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-cloud"></i> Recommended Deployment Strategy</h3>
             </div>
             <div class="card-body">
-                <p><strong>Generated Decision:</strong> 
-                    <span class="text-success font-weight-bold" th:text="${finalYamlDecision}"></span>
-                </p>
-                <p><i class="fas fa-check-circle text-success"></i> Your deployment configuration is now available for download.</p>
+                <div class="text-center mb-4">
+                    <div class="strategy-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h4 class="text-primary font-weight-bold" th:text="${finalYamlDecision}">Azure Disaster Recovery Optimized: Multi-region deployment with automated failover and backup</h4>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> This recommendation is based on your specific requirements for availability, performance, budget, and technical constraints.
+                </div>
+                
+                <!-- Key Features Section -->
+                <h5 class="mt-4 mb-3"><i class="fas fa-star"></i> Key Features of This Deployment Strategy</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="feature-icon fas fa-globe-americas"></i> Multi-region deployment</li>
+                            <li class="mb-2"><i class="feature-icon fas fa-sync"></i> Automated failover capability</li>
+                            <li class="mb-2"><i class="feature-icon fas fa-shield-alt"></i> High availability architecture</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="feature-icon fas fa-database"></i> Comprehensive backup strategy</li>
+                            <li class="mb-2"><i class="feature-icon fas fa-tachometer-alt"></i> Optimized performance</li>
+                            <li class="mb-2"><i class="feature-icon fas fa-chart-line"></i> Business continuity support</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Download Button -->
-        <div class="text-center">
-            <a href="/workflow/download-yaml" class="btn btn-lg btn-primary">
-                <i class="fas fa-download"></i> Download YAML File
+        <!-- Decision Reasoning Section -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white">
+        <h4><i class="fas fa-brain"></i> Decision Reasoning</h4>
+    </div>
+    <div class="card-body">
+        <h5>Why This Strategy Was Chosen</h5>
+        <p class="reasoning-description">Our analysis of your requirements led to this recommendation based on the following key factors:</p>
+        
+        <!-- Updated Dynamic reasoning section -->
+        <div class="reasoning-section" th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+            <div class="reasoning-header">
+                <h4><i class="fas fa-lightbulb"></i> Technical Reasoning</h4>
+            </div>
+
+            <!-- This is where we need to fix the iteration -->
+            <div th:each="result : ${resultsList}">
+                
+                <div>
+                    <div th:each="factName : ${result.convertedFact}" class="reasoning-point">
+                        <i class="fas fa-check-circle"></i>
+                        <!-- Here we need to lookup the human-readable version -->
+                        <div class="reasoning-point-content" th:text="${@gorgiasService.convertFactToNaturalLanguage(factName)}">
+                            Platform as a Service: Provides hardware and software tools over the internet for application development.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fallback if no results -->
+        <div class="reasoning-section" th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
+            <!-- Fallback content remains the same -->
+        </div>
+        
+        <div class="alert alert-secondary mt-3">
+            <i class="fas fa-info-circle"></i> The decision engine evaluated multiple deployment options and selected this strategy based on the best match for your specific requirements.
+        </div>
+    </div>
+</div>
+                
+               
+            
+
+        <!-- Details Section -->
+        <div class="detail-section">
+            <h4 class="mb-3">Implementation Details</h4>
+            <p>This deployment strategy implements a robust disaster recovery solution with the following components:</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-cogs"></i> Infrastructure Components</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Primary and secondary Azure regions</li>
+                                <li>Traffic Manager for global load balancing</li>
+                                <li>Azure Site Recovery for VM replication</li>
+                                <li>Geo-redundant storage for data resilience</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Benefits</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>99.99% availability SLA</li>
+                                <li>Minimal recovery time objective (RTO)</li>
+                                <li>Protection against regional outages</li>
+                                <li>Automated recovery processes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Best Practices</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul>
+                                <li>Regularly test failover procedures</li>
+                                <li>Implement monitoring and alerting</li>
+                                <li>Document recovery procedures</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul>
+                                <li>Review and update RTO/RPO objectives</li>
+                                <li>Consider cost optimization strategies</li>
+                                <li>Implement security best practices</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- YAML Download Section -->
+        <div class="yaml-section text-center p-4 mb-4">
+            <h5><i class="fas fa-file-code"></i> Deployment Configuration</h5>
+            <p>The infrastructure-as-code template for this deployment strategy is available for download.</p>
+            <a href="/workflow/download-yaml" class="btn btn-primary">
+                <i class="fas fa-download"></i> Download YAML Configuration
             </a>
         </div>
 
         <!-- Navigation -->
-        <div class="text-center mt-4">
-            <a href="/" class="btn btn-outline-secondary">
+        <div class="text-center mt-4 mb-5">
+            <a href="/" class="btn btn-outline-secondary mr-2">
                 <i class="fas fa-arrow-left"></i> Back to Main Menu
+            </a>
+            <a href="/deployment-guide" class="btn btn-outline-primary">
+                <i class="fas fa-book"></i> View Deployment Guide
             </a>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="text-center py-4 mt-5 bg-light">
+    <footer class="text-center py-4 mt-3 bg-light">
         <p class="mb-0">&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Choice Automation.</p>
     </footer>
 

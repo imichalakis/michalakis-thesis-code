@@ -1,4 +1,9 @@
 package com.myproj.firstproj.controller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.net.MalformedURLException;
@@ -66,6 +71,7 @@ import java.util.Map;
 @RequestMapping("/workflow")
 @SessionAttributes("form")
 public class WorkflowController {
+    private static final Logger logger = LoggerFactory.getLogger(WorkflowController.class);
 
     private final WorkflowService workflowService;
     @Autowired
@@ -168,20 +174,29 @@ public String showLocationPage(Model model) {
 public String showYamlGen(Model model, HttpSession session) {
     System.out.println("🚀 DEBUG: showYamlGen() triggered. Checking session data...");
 
-    // Retrieve the stored decision from session
+    // Retrieve decision and results list from session
     String yamlDecision = (String) session.getAttribute("finalYamlDecision");
+    List<Map<String, Object>> resultsList = (List<Map<String, Object>>) session.getAttribute("resultsList");
 
     if (yamlDecision == null) {
         yamlDecision = "No decision available";
     }
 
-    System.out.println("✅ YAML Decision Loaded: " + yamlDecision);
+    if (resultsList == null || resultsList.isEmpty()) {
+        resultsList = new ArrayList<>();
+        System.out.println("❌ No results found in session.");
+    } else {
+        System.out.println("✅ Results List Loaded Successfully: " + resultsList);
+    }
 
-    // Add to model for rendering in the HTML
-    
+    // Pass data to Thymeleaf
     model.addAttribute("finalYamlDecision", yamlDecision);
-    return "workflow/yamlgen"; // Επιστρέφει τη σελίδα location.html
+    model.addAttribute("resultsList", resultsList);
+
+    return "workflow/yamlgen";
 }
+
+
 
 @GetMapping("/resource-requirements")
 public String showResourcesPage(Model model) {
@@ -1591,7 +1606,7 @@ private String extractKeyword(String input) {
            
       
            // ✅ Call Gorgias Service to execute query (Facts are set inside the method)
-    List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForYamlGen(form);
+    List<ParsedResult> parsedResults = gorgiasService.executeGorgiasQueryForYamlGen(form, session);
 
     if (parsedResults != null && !parsedResults.isEmpty()) {
         processGorgiasResults(parsedResults, form, session);
@@ -1664,45 +1679,128 @@ private String extractKeyword(String input) {
 /** 
 
 /**
- * Process Gorgias query results and select a single optimal recommendation
+ /**
+ * Processes the results from the Gorgias rule engine, extracting the main decision and supporting facts.
+ * Stores the processed results in the session for use by the view layer.
  * 
- * @param parsedResults List of parsed results from Gorgias query
- * @param form WorkflowForm containing user selections
- * @param session HttpSession for storing the decision
+ * @param parsedResults The list of parsed results from the Gorgias engine
+ * @param form The workflow form containing user selections
+ * @param session The HTTP session for storing results
  */
 private void processGorgiasResults(List<ParsedResult> parsedResults, WorkflowForm form, HttpSession session) {
-    if (parsedResults.isEmpty()) {
+    // Add logging
+    logger.debug("Processing Gorgias results: {} results received", 
+                 parsedResults != null ? parsedResults.size() : 0);
+    
+    // Check for null or empty results
+    if (parsedResults == null || parsedResults.isEmpty()) {
+        logger.warn("No parsed results available from Gorgias engine");
         session.setAttribute("finalYamlDecision", "No suitable deployment configuration found");
+        // Add empty supporting facts to avoid NPE in view
+        session.setAttribute("decisionRationale", Collections.emptyList());
         return;
     }
     
-    // Get the first result (highest priority from Prolog rules)
-    ParsedResult firstResult = parsedResults.get(0);
-    String mainResult = firstResult.getMainResult();
-    
-    // Extract the decision from the result
-    String extractedDecision = mainResult.contains("(") && mainResult.contains(")")
-            ? mainResult.substring(mainResult.indexOf('(') + 1, mainResult.indexOf(')'))
-            : mainResult;
-    
-    // Convert to human-readable description
-    String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form);
-    
-    // Process supporting facts
-    List<String> supportingFacts = new ArrayList<>();
-    for (String fact : firstResult.getSupportingFacts()) {
-        String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim());
-        supportingFacts.add(convertedFact);
+    try {
+        // Get the first result (highest priority from Prolog rules)
+        ParsedResult firstResult = parsedResults.get(0);
+        
+        if (firstResult == null) {
+            logger.warn("First result is null despite non-empty results list");
+            handleDefaultDecision(form, session);
+            return;
+        }
+        
+        String mainResult = firstResult.getMainResult();
+        
+        // Check for null mainResult
+        if (mainResult == null || mainResult.trim().isEmpty()) {
+            logger.warn("Main result is null or empty");
+            handleDefaultDecision(form, session);
+            return;
+        }
+        
+        // Extract the decision from the result with defensive string manipulation
+        String extractedDecision;
+        if (mainResult.contains("(") && mainResult.contains(")") && 
+            mainResult.indexOf('(') < mainResult.indexOf(')')) {
+            // Safe substring extraction with bounds checking
+            int openParenIndex = mainResult.indexOf('(');
+            int closeParenIndex = mainResult.indexOf(')');
+            extractedDecision = mainResult.substring(openParenIndex + 1, closeParenIndex);
+        } else {
+            // If no parentheses or invalid format, use the whole string
+            logger.info("Main result doesn't contain expected parentheses format, using as-is: {}", mainResult);
+            extractedDecision = mainResult;
+        }
+        
+        // Convert to human-readable description
+        String humanReadableDecision = gorgiasService.mapMainResultToNaturalLanguage(extractedDecision, form);
+        
+        // Check if we got a valid human-readable decision
+        if (humanReadableDecision == null || humanReadableDecision.trim().isEmpty()) {
+            logger.warn("Failed to map result to natural language: {}", extractedDecision);
+            humanReadableDecision = "Azure deployment configuration: " + extractedDecision;
+        }
+        
+        // Process supporting facts safely
+        List<String> supportingFacts = new ArrayList<>();
+        if (firstResult.getSupportingFacts() != null) {
+            for (String fact : firstResult.getSupportingFacts()) {
+                if (fact != null && !fact.trim().isEmpty()) {
+                    try {
+                        String convertedFact = gorgiasService.convertFactToNaturalLanguage(fact.trim());
+                        if (convertedFact != null && !convertedFact.trim().isEmpty()) {
+                            supportingFacts.add(convertedFact);
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Error converting fact '{}' to natural language: {}", fact, e.getMessage());
+                        // Add the raw fact as fallback
+                        supportingFacts.add(fact.trim());
+                    }
+                }
+            }
+        }
+        
+        // If no supporting facts were successfully processed, add a default explanation
+        if (supportingFacts.isEmpty()) {
+            supportingFacts.add("This recommendation is based on your requirements");
+        }
+        
+        // Store the decision and supporting facts
+        form.setYamlGenerationDecision(humanReadableDecision);
+        session.setAttribute("finalYamlDecision", humanReadableDecision);
+        session.setAttribute("decisionRationale", supportingFacts);
+        
+        logger.info("Selected decision: {}", extractedDecision);
+        logger.info("Human-readable decision: {}", humanReadableDecision);
+        logger.debug("Supporting facts: {}", supportingFacts);
+        
+    } catch (Exception e) {
+        logger.error("Unexpected error processing Gorgias results", e);
+        handleDefaultDecision(form, session);
     }
+}
+
+/**
+ * Handles the case when no valid decision could be determined by setting default values.
+ * 
+ * @param form The workflow form
+ * @param session The HTTP session
+ */
+private void handleDefaultDecision(WorkflowForm form, HttpSession session) {
+    String defaultDecision = "Azure App Service (Standard): Managed web hosting with fixed resource allocation";
     
-    // Store the decision and supporting facts
-    form.setYamlGenerationDecision(humanReadableDecision);
-    session.setAttribute("finalYamlDecision", humanReadableDecision);
-    session.setAttribute("decisionRationale", supportingFacts);
+    form.setYamlGenerationDecision(defaultDecision);
+    session.setAttribute("finalYamlDecision", defaultDecision);
     
-    System.out.println("Selected decision: " + extractedDecision);
-    System.out.println("Human-readable decision: " + humanReadableDecision);
-    System.out.println("Supporting facts: " + supportingFacts);
+    List<String> defaultRationale = new ArrayList<>();
+    defaultRationale.add("This is a default recommendation based on general best practices");
+    defaultRationale.add("For more specific recommendations, please refine your requirements");
+    
+    session.setAttribute("decisionRationale", defaultRationale);
+    
+    logger.info("Applied default decision: {}", defaultDecision);
 }
 private String selectOptimalDecision(List<String> decisions, WorkflowForm form) {
     if (decisions == null || decisions.isEmpty()) {
