@@ -1,0 +1,171 @@
+# Azure VM High Performance Configuration
+# Purpose: Deploys a high-performance virtual machine optimized for compute-intensive workloads
+# Use case: Applications requiring significant CPU power, such as data processing, AI/ML workloads
+
+apiVersion: 2023-01-01
+kind: AzureDeployment
+metadata:
+  name: high-performance-vm
+  description: High-performance VM deployment for compute-intensive workloads
+  tags:
+    environment: production
+    workloadType: compute-intensive
+    costCenter: IT-Infrastructure
+
+parameters:
+  location:
+    type: string
+    defaultValue: westeurope
+    allowedValues:
+      - westeurope
+      - northeurope
+      - eastus
+      - westus2
+    description: Azure region for resource deployment
+  
+  vmName:
+    type: string
+    defaultValue: highperf-vm
+    description: Name of the virtual machine
+  
+  adminUsername:
+    type: string
+    description: Administrator username for the VM
+  
+  adminPasswordOrKey:
+    type: securestring
+    description: SSH key or password for the Virtual Machine
+
+resources:
+  # Virtual Network
+  - type: Microsoft.Network/virtualNetworks
+    apiVersion: 2022-07-01
+    name: highperf-vnet
+    location: "[parameters('location')]"
+    properties:
+      addressSpace:
+        addressPrefixes:
+          - 10.1.0.0/16
+      subnets:
+        - name: compute-subnet
+          properties:
+            addressPrefix: 10.1.1.0/24
+            networkSecurityGroup:
+              id: "[resourceId('Microsoft.Network/networkSecurityGroups', 'highperf-nsg')]"
+
+  # Network Security Group
+  - type: Microsoft.Network/networkSecurityGroups
+    apiVersion: 2022-07-01
+    name: highperf-nsg
+    location: "[parameters('location')]"
+    properties:
+      securityRules:
+        - name: SSH
+          properties:
+            priority: 1000
+            protocol: Tcp
+            access: Allow
+            direction: Inbound
+            sourceAddressPrefix: '*'
+            sourcePortRange: '*'
+            destinationAddressPrefix: '*'
+            destinationPortRange: '22'
+
+  # Public IP Address
+  - type: Microsoft.Network/publicIPAddresses
+    apiVersion: 2022-07-01
+    name: highperf-pip
+    location: "[parameters('location')]"
+    sku:
+      name: Standard
+    properties:
+      publicIPAllocationMethod: Static
+      dnsSettings:
+        domainNameLabel: "[parameters('vmName')]"
+
+  # Network Interface
+  - type: Microsoft.Network/networkInterfaces
+    apiVersion: 2022-07-01
+    name: highperf-nic
+    location: "[parameters('location')]"
+    dependsOn:
+      - "[resourceId('Microsoft.Network/virtualNetworks', 'highperf-vnet')]"
+      - "[resourceId('Microsoft.Network/publicIPAddresses', 'highperf-pip')]"
+    properties:
+      ipConfigurations:
+        - name: ipconfig1
+          properties:
+            subnet:
+              id: "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'highperf-vnet', 'compute-subnet')]"
+            privateIPAllocationMethod: Dynamic
+            publicIPAddress:
+              id: "[resourceId('Microsoft.Network/publicIPAddresses', 'highperf-pip')]"
+      enableAcceleratedNetworking: true  # Enables SR-IOV for higher network performance
+
+  # High-Performance Virtual Machine
+  - type: Microsoft.Compute/virtualMachines
+    apiVersion: 2022-11-01
+    name: "[parameters('vmName')]"
+    location: "[parameters('location')]"
+    dependsOn:
+      - "[resourceId('Microsoft.Network/networkInterfaces', 'highperf-nic')]"
+    properties:
+      hardwareProfile:
+        vmSize: Standard_F16s_v2  # Compute optimized VM with 16 vCPUs and 32 GiB memory
+      storageProfile:
+        imageReference:
+          publisher: Canonical
+          offer: UbuntuServer
+          sku: 20.04-LTS
+          version: latest
+        osDisk:
+          createOption: FromImage
+          managedDisk:
+            storageAccountType: Premium_LRS  # Premium SSD for higher performance
+          diskSizeGB: 128
+        dataDisks:
+          - diskSizeGB: 1024
+            lun: 0
+            createOption: Empty
+            managedDisk:
+              storageAccountType: Premium_LRS
+            caching: ReadWrite
+      osProfile:
+        computerName: "[parameters('vmName')]"
+        adminUsername: "[parameters('adminUsername')]"
+        linuxConfiguration:
+          disablePasswordAuthentication: true
+          ssh:
+            publicKeys:
+              - path: "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
+                keyData: "[parameters('adminPasswordOrKey')]"
+      networkProfile:
+        networkInterfaces:
+          - id: "[resourceId('Microsoft.Network/networkInterfaces', 'highperf-nic')]"
+      diagnosticsProfile:
+        bootDiagnostics:
+          enabled: true
+
+  # VM Extensions for Monitoring
+  - type: Microsoft.Compute/virtualMachines/extensions
+    apiVersion: 2022-11-01
+    name: "[concat(parameters('vmName'), '/AzureMonitorLinuxAgent')]"
+    location: "[parameters('location')]"
+    dependsOn:
+      - "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+    properties:
+      publisher: Microsoft.Azure.Monitor
+      type: AzureMonitorLinuxAgent
+      typeHandlerVersion: 1.0
+      autoUpgradeMinorVersion: true
+
+outputs:
+  adminUsername:
+    type: string
+    value: "[parameters('adminUsername')]"
+  hostname:
+    type: string
+    value: "[reference(resourceId('Microsoft.Network/publicIPAddresses', 'highperf-pip')).dnsSettings.fqdn]"
+  sshCommand:
+    type: string
+    value: "[concat('ssh ', parameters('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses', 'highperf-pip')).dnsSettings.fqdn)]"

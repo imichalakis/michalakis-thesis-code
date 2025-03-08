@@ -1902,41 +1902,72 @@ private String selectOptimalDecision(List<String> decisions, WorkflowForm form) 
             .findFirst()
             .orElse(decisions.get(0)); // Fallback to first decision
 }
-    @GetMapping("/download-yaml")
+   /**
+ * Downloads the YAML configuration file based on the selected deployment option
+ * 
+ * @param session The HTTP session containing the deployment decision
+ * @return The YAML file as a downloadable resource
+ */
+@GetMapping("/download-yaml")
 public ResponseEntity<Resource> downloadYaml(HttpSession session) {
-    // Get the final YAML decision from session
-    String yamlDecision = (String) session.getAttribute("finalYamlDecision");
-
-    if (yamlDecision == null || yamlDecision.isEmpty()) {
-        System.out.println("❌ ERROR: No YAML decision found in session.");
-        return ResponseEntity.badRequest().body(null);
-    }
-
-    // Map decision to YAML file name
-    String yamlFileName = mapYamlDecisionToFile(yamlDecision);
-    System.out.println("🧐 Attempting to load file: " + yamlFileName);
-
-    // ✅ Load file from classpath (Works inside JAR and Docker)
-    ClassPathResource resource = new ClassPathResource("yaml/" + yamlFileName);
-
     try {
+        // Retrieve the resultsList from session
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> resultsList = (List<Map<String, Object>>) session.getAttribute("resultsList");
+        
+        if (resultsList == null || resultsList.isEmpty()) {
+            System.out.println("❌ ERROR: No results found in session.");
+            return ResponseEntity.badRequest().body(null);
+        }
+        
+        // Get the first result's mainResult (which contains our decision)
+        String mainResult = (String) resultsList.get(0).get("naturalLanguageMainResult");
+        System.out.println("📝 Main result from session: " + mainResult);
+        
+        if (mainResult == null || mainResult.isEmpty()) {
+            System.out.println("❌ ERROR: No main result found in session.");
+            return ResponseEntity.badRequest().body(null);
+        }
+        
+        // Extract the deployment type from yamlfile(azure_vm_high_performance) format
+        String deploymentType = null;
+        if (mainResult.startsWith("yamlfile(") && mainResult.endsWith(")")) {
+            deploymentType = mainResult.substring(9, mainResult.length() - 1);
+            System.out.println("🔑 Extracted deployment type: " + deploymentType);
+        } else {
+            System.out.println("⚠️ WARNING: Main result is not in expected format: " + mainResult);
+            deploymentType = mainResult; // Use as-is and let the mapping function handle it
+        }
+        
+        // Map decision to YAML file name
+        String yamlFileName = mapYamlDecisionToFile(deploymentType);
+        System.out.println("🧐 Attempting to load file: " + yamlFileName);
+        
+        // Load file from classpath (Works inside JAR and Docker)
+        ClassPathResource resource = new ClassPathResource("yaml/" + yamlFileName);
+        
         if (!resource.exists()) {
             System.out.println("❌ ERROR: YAML file not found -> " + yamlFileName);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
-        // ✅ Read as InputStream (Required for JAR & Docker)
+        
+        // Read as InputStream (Required for JAR & Docker)
         InputStreamResource inputStreamResource = new InputStreamResource(resource.getInputStream());
-
+        
         System.out.println("✅ YAML File Found: " + yamlFileName);
-
+        
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM) // Ensure proper MIME type
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + yamlFileName + "\"")
                 .body(inputStreamResource);
-
+        
     } catch (IOException e) {
-        System.out.println("❌ ERROR: Could not read file -> " + yamlFileName);
+        System.out.println("❌ ERROR: Could not read file: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    } catch (Exception e) {
+        System.out.println("❌ ERROR: Unexpected exception: " + e.getMessage());
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 }

@@ -1,0 +1,125 @@
+# Azure Functions Configuration
+# Purpose: Deploys a serverless Azure Functions app with consumption plan
+# Use case: Event-driven applications, microservices, and background processing
+
+apiVersion: 2023-01-01
+kind: AzureDeployment
+metadata:
+  name: serverless-functions
+  description: Azure Functions deployment for event-driven applications
+  tags:
+    environment: production
+    workloadType: serverless
+    costCenter: IT-Applications
+
+parameters:
+  location:
+    type: string
+    defaultValue: westeurope
+    allowedValues:
+      - westeurope
+      - northeurope
+      - eastus
+      - westus2
+    description: Azure region for resource deployment
+  
+  functionAppName:
+    type: string
+    defaultValue: func-app
+    description: Name of the function app (must be globally unique)
+  
+  runtime:
+    type: string
+    defaultValue: dotnet
+    allowedValues:
+      - dotnet
+      - node
+      - python
+      - java
+    description: Runtime stack for the function app
+
+resources:
+  # Storage Account for Function App
+  - type: Microsoft.Storage/storageAccounts
+    apiVersion: 2022-09-01
+    name: "[concat('st', uniqueString(resourceGroup().id))]"
+    location: "[parameters('location')]"
+    sku:
+      name: Standard_LRS
+    kind: StorageV2
+    properties:
+      supportsHttpsTrafficOnly: true
+      minimumTlsVersion: TLS1_2
+      allowBlobPublicAccess: false
+      networkAcls:
+        defaultAction: Allow
+        bypass: AzureServices
+
+  # Application Insights
+  - type: Microsoft.Insights/components
+    apiVersion: 2020-02-02
+    name: "[concat(parameters('functionAppName'), '-insights')]"
+    location: "[parameters('location')]"
+    kind: web
+    properties:
+      Application_Type: web
+      WorkspaceResourceId: "[resourceId('Microsoft.OperationalInsights/workspaces', concat(parameters('functionAppName'), '-workspace'))]"
+      publicNetworkAccessForIngestion: Enabled
+      publicNetworkAccessForQuery: Enabled
+
+  # Log Analytics Workspace
+  - type: Microsoft.OperationalInsights/workspaces
+    apiVersion: 2022-10-01
+    name: "[concat(parameters('functionAppName'), '-workspace')]"
+    location: "[parameters('location')]"
+    properties:
+      sku:
+        name: PerGB2018
+      retentionInDays: 30
+
+  # Consumption Plan (Serverless)
+  - type: Microsoft.Web/serverfarms
+    apiVersion: 2022-03-01
+    name: "[concat(parameters('functionAppName'), '-plan')]"
+    location: "[parameters('location')]"
+    sku:
+      name: Y1
+      tier: Dynamic
+    properties:
+      reserved: true  # Required for Linux
+
+  # Function App
+  - type: Microsoft.Web/sites
+    apiVersion: 2022-03-01
+    name: "[parameters('functionAppName')]"
+    location: "[parameters('location')]"
+    kind: functionapp,linux
+    dependsOn:
+      - "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-plan'))]"
+      - "[resourceId('Microsoft.Storage/storageAccounts', concat('st', uniqueString(resourceGroup().id)))]"
+      - "[resourceId('Microsoft.Insights/components', concat(parameters('functionAppName'), '-insights'))]"
+    properties:
+      serverFarmId: "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-plan'))]"
+      siteConfig:
+        linuxFxVersion: "[concat('FUNCTIONS:', parameters('runtime'))]"
+        appSettings:
+          - name: AzureWebJobsStorage
+            value: "[concat('DefaultEndpointsProtocol=https;AccountName=', concat('st', uniqueString(resourceGroup().id)), ';EndpointSuffix=', environment().suffixes.storage, ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', concat('st', uniqueString(resourceGroup().id))), '2022-09-01').keys[0].value)]"
+          - name: WEBSITE_CONTENTAZUREFILECONNECTIONSTRING
+            value: "[concat('DefaultEndpointsProtocol=https;AccountName=', concat('st', uniqueString(resourceGroup().id)), ';EndpointSuffix=', environment().suffixes.storage, ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', concat('st', uniqueString(resourceGroup().id))), '2022-09-01').keys[0].value)]"
+          - name: WEBSITE_CONTENTSHARE
+            value: "[toLower(parameters('functionAppName'))]"
+          - name: FUNCTIONS_EXTENSION_VERSION
+            value: ~4
+          - name: APPINSIGHTS_INSTRUMENTATIONKEY
+            value: "[reference(resourceId('Microsoft.Insights/components', concat(parameters('functionAppName'), '-insights')), '2020-02-02').InstrumentationKey]"
+          - name: FUNCTIONS_WORKER_RUNTIME
+            value: "[parameters('runtime')]"
+        ftpsState: Disabled
+        minTlsVersion: 1.2
+        http20Enabled: true
+
+outputs:
+  functionAppUrl:
+    type: string
+    value: "[concat('https://', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName'))).defaultHostName)]"

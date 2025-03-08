@@ -1,0 +1,128 @@
+# Azure App Service Configuration
+# Purpose: Deploys a standard Azure App Service for web applications
+# Use case: Web applications, APIs, and traditional web workloads
+
+apiVersion: 2023-01-01
+kind: AzureDeployment
+metadata:
+  name: app-service
+  description: Azure App Service deployment for web applications
+  tags:
+    environment: production
+    workloadType: web-application
+    costCenter: IT-Applications
+
+parameters:
+  location:
+    type: string
+    defaultValue: westeurope
+    allowedValues:
+      - westeurope
+      - northeurope
+      - eastus
+      - westus2
+    description: Azure region for resource deployment
+  
+  appServiceName:
+    type: string
+    defaultValue: webapp
+    description: Name of the app service (must be globally unique)
+  
+  sku:
+    type: string
+    defaultValue: S1
+    allowedValues:
+      - B1
+      - B2
+      - S1
+      - S2
+      - P1v2
+      - P2v2
+    description: App Service plan SKU
+  
+  runtimeStack:
+    type: string
+    defaultValue: DOTNETCORE|6.0
+    allowedValues:
+      - DOTNETCORE|6.0
+      - NODE|16-lts
+      - NODE|18-lts
+      - PYTHON|3.9
+      - PYTHON|3.10
+      - JAVA|11-java11
+      - JAVA|17-java17
+      - PHP|8.0
+      - PHP|8.1
+    description: Runtime stack for the web app
+
+resources:
+  # App Service Plan
+  - type: Microsoft.Web/serverfarms
+    apiVersion: 2022-03-01
+    name: "[concat(parameters('appServiceName'), '-plan')]"
+    location: "[parameters('location')]"
+    sku:
+      name: "[parameters('sku')]"
+    properties:
+      reserved: true  # Required for Linux
+
+  # Application Insights
+  - type: Microsoft.Insights/components
+    apiVersion: 2020-02-02
+    name: "[concat(parameters('appServiceName'), '-insights')]"
+    location: "[parameters('location')]"
+    kind: web
+    properties:
+      Application_Type: web
+      WorkspaceResourceId: "[resourceId('Microsoft.OperationalInsights/workspaces', concat(parameters('appServiceName'), '-workspace'))]"
+      publicNetworkAccessForIngestion: Enabled
+      publicNetworkAccessForQuery: Enabled
+
+  # Log Analytics Workspace
+  - type: Microsoft.OperationalInsights/workspaces
+    apiVersion: 2022-10-01
+    name: "[concat(parameters('appServiceName'), '-workspace')]"
+    location: "[parameters('location')]"
+    properties:
+      sku:
+        name: PerGB2018
+      retentionInDays: 30
+
+  # Web App
+  - type: Microsoft.Web/sites
+    apiVersion: 2022-03-01
+    name: "[parameters('appServiceName')]"
+    location: "[parameters('location')]"
+    kind: app,linux
+    dependsOn:
+      - "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appServiceName'), '-plan'))]"
+      - "[resourceId('Microsoft.Insights/components', concat(parameters('appServiceName'), '-insights'))]"
+    properties:
+      serverFarmId: "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appServiceName'), '-plan'))]"
+      siteConfig:
+        linuxFxVersion: "[parameters('runtimeStack')]"
+        alwaysOn: true
+        ftpsState: Disabled
+        minTlsVersion: 1.2
+        http20Enabled: true
+        appSettings:
+          - name: APPINSIGHTS_INSTRUMENTATIONKEY
+            value: "[reference(resourceId('Microsoft.Insights/components', concat(parameters('appServiceName'), '-insights')), '2020-02-02').InstrumentationKey]"
+          - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+            value: "[reference(resourceId('Microsoft.Insights/components', concat(parameters('appServiceName'), '-insights')), '2020-02-02').ConnectionString]"
+          - name: ApplicationInsightsAgent_EXTENSION_VERSION
+            value: ~3
+          - name: WEBSITE_RUN_FROM_PACKAGE
+            value: "1"
+      httpsOnly: true
+
+  # Diagnostic Settings
+  - type: Microsoft.Insights/diagnosticSettings
+    apiVersion: 2021-05-01-preview
+    name: "[concat(parameters('appServiceName'), '-diag')]"
+    scope: "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+    dependsOn:
+      - "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+      - "[resourceId('Microsoft.OperationalInsights/workspaces', concat(parameters('appServiceName'), '-workspace'))]"
+    properties:
+      workspaceId: "[resourceId('Microsoft.OperationalInsights/

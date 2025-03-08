@@ -1,0 +1,169 @@
+# Azure VM Standard Configuration
+# Purpose: Deploys a standard virtual machine for general-purpose workloads
+# Use case: Standard applications, development environments, and testing
+
+apiVersion: 2023-01-01
+kind: AzureDeployment
+metadata:
+  name: standard-vm
+  description: Standard VM deployment for general-purpose workloads
+  tags:
+    environment: production
+    workloadType: general-purpose
+    costCenter: IT-Applications
+
+parameters:
+  location:
+    type: string
+    defaultValue: westeurope
+    allowedValues:
+      - westeurope
+      - northeurope
+      - eastus
+      - westus2
+    description: Azure region for resource deployment
+  
+  vmName:
+    type: string
+    defaultValue: std-vm
+    description: Name of the virtual machine
+  
+  adminUsername:
+    type: string
+    description: Administrator username for the VM
+  
+  adminPasswordOrKey:
+    type: securestring
+    description: SSH key or password for the Virtual Machine
+
+resources:
+  # Virtual Network
+  - type: Microsoft.Network/virtualNetworks
+    apiVersion: 2022-07-01
+    name: std-vnet
+    location: "[parameters('location')]"
+    properties:
+      addressSpace:
+        addressPrefixes:
+          - 10.0.0.0/16
+      subnets:
+        - name: default-subnet
+          properties:
+            addressPrefix: 10.0.1.0/24
+            networkSecurityGroup:
+              id: "[resourceId('Microsoft.Network/networkSecurityGroups', 'std-nsg')]"
+
+  # Network Security Group
+  - type: Microsoft.Network/networkSecurityGroups
+    apiVersion: 2022-07-01
+    name: std-nsg
+    location: "[parameters('location')]"
+    properties:
+      securityRules:
+        - name: SSH
+          properties:
+            priority: 1000
+            protocol: Tcp
+            access: Allow
+            direction: Inbound
+            sourceAddressPrefix: '*'
+            sourcePortRange: '*'
+            destinationAddressPrefix: '*'
+            destinationPortRange: '22'
+
+  # Public IP Address
+  - type: Microsoft.Network/publicIPAddresses
+    apiVersion: 2022-07-01
+    name: std-pip
+    location: "[parameters('location')]"
+    sku:
+      name: Standard
+    properties:
+      publicIPAllocationMethod: Static
+      dnsSettings:
+        domainNameLabel: "[parameters('vmName')]"
+
+  # Network Interface
+  - type: Microsoft.Network/networkInterfaces
+    apiVersion: 2022-07-01
+    name: std-nic
+    location: "[parameters('location')]"
+    dependsOn:
+      - "[resourceId('Microsoft.Network/virtualNetworks', 'std-vnet')]"
+      - "[resourceId('Microsoft.Network/publicIPAddresses', 'std-pip')]"
+    properties:
+      ipConfigurations:
+        - name: ipconfig1
+          properties:
+            subnet:
+              id: "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'std-vnet', 'default-subnet')]"
+            privateIPAllocationMethod: Dynamic
+            publicIPAddress:
+              id: "[resourceId('Microsoft.Network/publicIPAddresses', 'std-pip')]"
+
+  # Standard Virtual Machine
+  - type: Microsoft.Compute/virtualMachines
+    apiVersion: 2022-11-01
+    name: "[parameters('vmName')]"
+    location: "[parameters('location')]"
+    dependsOn:
+      - "[resourceId('Microsoft.Network/networkInterfaces', 'std-nic')]"
+    properties:
+      hardwareProfile:
+        vmSize: Standard_D2s_v3  # General purpose VM with 2 vCPUs and 8 GiB memory
+      storageProfile:
+        imageReference:
+          publisher: Canonical
+          offer: UbuntuServer
+          sku: 20.04-LTS
+          version: latest
+        osDisk:
+          createOption: FromImage
+          managedDisk:
+            storageAccountType: StandardSSD_LRS  # Standard SSD for balanced performance/cost
+          diskSizeGB: 64
+        dataDisks:
+          - diskSizeGB: 128
+            lun: 0
+            createOption: Empty
+            managedDisk:
+              storageAccountType: StandardSSD_LRS
+      osProfile:
+        computerName: "[parameters('vmName')]"
+        adminUsername: "[parameters('adminUsername')]"
+        linuxConfiguration:
+          disablePasswordAuthentication: true
+          ssh:
+            publicKeys:
+              - path: "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
+                keyData: "[parameters('adminPasswordOrKey')]"
+      networkProfile:
+        networkInterfaces:
+          - id: "[resourceId('Microsoft.Network/networkInterfaces', 'std-nic')]"
+      diagnosticsProfile:
+        bootDiagnostics:
+          enabled: true
+
+  # VM Extensions for Monitoring
+  - type: Microsoft.Compute/virtualMachines/extensions
+    apiVersion: 2022-11-01
+    name: "[concat(parameters('vmName'), '/AzureMonitorLinuxAgent')]"
+    location: "[parameters('location')]"
+    dependsOn:
+      - "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+    properties:
+      publisher: Microsoft.Azure.Monitor
+      type: AzureMonitorLinuxAgent
+      typeHandlerVersion: 1.0
+      autoUpgradeMinorVersion: true
+
+outputs:
+  adminUsername:
+    type: string
+    value: "[parameters('adminUsername')]"
+  hostname:
+    type: string
+    value: "[reference(resourceId('Microsoft.Network/publicIPAddresses', 'std-pip')).dnsSettings.fqdn]"
+  sshCommand:
+    type: string
+    value: "[concat('ssh ', parameters('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses', 'std-pip')).dnsSettings.fqdn)]"
