@@ -193,7 +193,7 @@ public class GorgiasService{
 public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form, HttpSession session) {
     GorgiasQuery gorgiasQuery = new GorgiasQuery();
     ArrayList<String> gorgiasFiles = new ArrayList<>();
-    gorgiasFiles.add("finaldecision/final5.pl"); 
+    gorgiasFiles.add("finaldecision/final6.pl"); 
     gorgiasQuery.setGorgiasFiles(gorgiasFiles);
 
     List<String> facts = generateFactsForGorgias(form);
@@ -238,7 +238,7 @@ public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form, HttpS
     
     private List<String> generateFactsForGorgias(WorkflowForm form) {
         List<String> facts = new ArrayList<>();
-    
+        System.out.println("resources decision  "+form.getResourceDecision());
         // ✅ Urgency Decision
         String urgency = form.getUrgencyDecision();
         if (urgency.equals("urgent")) {
@@ -248,7 +248,15 @@ public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form, HttpS
         } else if (urgency.equals("normal")) {
             facts.add("normal");
         }
-    
+        
+        if (form.getResourceDecision() != null && !form.getResourceDecision().trim().isEmpty()) {
+            // Simply add the resource decision as a fact directly
+            facts.add(form.getResourceDecision());
+            
+            // Log the added fact for debugging
+            System.out.println("Added resource decision fact: " + form.getResourceDecision());
+        }
+
         // ✅ Infrastructure Decision
         String infrastructure = form.getInfrastructureDecision();
         if (infrastructure.equalsIgnoreCase("iaas")) {
@@ -870,7 +878,44 @@ factMappings.put("runcustomapps", "The main objective is to deploy and manage cu
     // ** Scalability Strategy**
     factMappings.put("scalability_requirement(auto_scaling)", "The system dynamically scales resources based on demand fluctuations.");
     factMappings.put("scalability_requirement(fixed_allocation)", "A fixed resource allocation strategy is in place, suitable for predictable workloads.");
-
+    // Basic Resource Decisions
+    factMappings.put("high_compute", "High Compute: Infrastructure optimized for CPU-intensive workloads requiring substantial processing power.");
+    factMappings.put("high_storage", "High Storage: Infrastructure optimized for data-intensive applications requiring substantial storage capacity.");
+    factMappings.put("real_time_compute", "Real-time Compute: Processing architecture designed for immediate data handling with minimal latency.");
+    factMappings.put("batch_processing", "Batch Processing: System optimized for processing large volumes of data in scheduled, non-interactive jobs.");
+    factMappings.put("scalable_architecture", "Scalable Architecture: Infrastructure designed to automatically adjust resources based on demand fluctuations.");
+    factMappings.put("static_allocation", "Static Allocation: Fixed resource allocation suitable for predictable workloads with consistent resource requirements.");
+    factMappings.put("memory_intensive", "Memory Intensive: System optimized for applications requiring large amounts of RAM for data caching or in-memory processing.");
+    factMappings.put("cpu_intensive", "CPU Intensive: System optimized for applications requiring high computational throughput and processing power.");
+    
+    // Combined Resource Profiles
+    factMappings.put("real_time_compute_optimized", "Real-time Compute Optimized: Architecture specifically designed for low-latency, immediate processing with optimized CPU resources.");
+    factMappings.put("data_processing_optimized", "Data Processing Optimized: Storage-centric architecture engineered for efficient handling of large data volumes with high throughput.");
+    factMappings.put("elastic_compute_optimized", "Elastic Compute Optimized: Auto-scaling compute resources that dynamically adjust to maintain optimal performance during varying loads.");
+    factMappings.put("in_memory_processing_optimized", "In-memory Processing Optimized: System designed for applications that require data to be kept in memory for low-latency access and processing.");
+    factMappings.put("compute_cluster_optimized", "Compute Cluster Optimized: CPU-optimized architecture designed for high-throughput batch processing across multiple nodes.");
+    factMappings.put("dedicated_storage_optimized", "Dedicated Storage Optimized: Fixed-allocation storage architecture designed for consistent, predictable data access patterns.");
+    factMappings.put("elastic_cache_optimized", "Elastic Cache Optimized: Memory-optimized system with auto-scaling capabilities for dynamic caching requirements.");
+    factMappings.put("elastic_compute_cluster", "Elastic Compute Cluster: Auto-scaling CPU-optimized architecture that dynamically adjusts processing capacity based on workload.");
+    
+    // Complex Workload Scenarios
+    factMappings.put("real_time_elastic_compute", "Real-time Elastic Compute: Auto-scaling architecture optimized for immediate processing with dynamic resource allocation for varying loads.");
+    factMappings.put("high_performance_compute", "High Performance Compute: System designed for maximum computational power with optimized CPU resources for latency-sensitive applications.");
+    factMappings.put("in_memory_real_time_compute", "In-memory Real-time Compute: Memory-optimized architecture designed for immediate data processing with data kept in RAM for minimal latency.");
+    factMappings.put("data_warehouse_optimized", "Data Warehouse Optimized: Storage-centric architecture with fixed allocation designed for structured data analytics and reporting.");
+    factMappings.put("data_lake_optimized", "Data Lake Optimized: Auto-scaling storage architecture designed for varied data types and ad-hoc analytical processing.");
+    factMappings.put("in_memory_analytics_optimized", "In-memory Analytics Optimized: Memory-optimized system designed for high-throughput data analysis with data stored in RAM.");
+    factMappings.put("distributed_processing_optimized", "Distributed Processing Optimized: CPU-optimized system designed for parallel data processing across multiple nodes.");
+    
+    // Comprehensive Workload Scenarios
+    factMappings.put("high_performance_elastic_compute", "High Performance Elastic Compute: Auto-scaling CPU-optimized architecture that dynamically adjusts to maintain maximum performance for critical workloads.");
+    factMappings.put("elastic_in_memory_real_time", "Elastic In-memory Real-time: Auto-scaling memory-optimized architecture for immediate data processing with dynamic resource allocation.");
+    factMappings.put("dedicated_high_performance_compute", "Dedicated High Performance Compute: Fixed-allocation CPU-optimized system designed for maximum computational power with dedicated resources.");
+    factMappings.put("dedicated_in_memory_real_time", "Dedicated In-memory Real-time: Fixed-allocation memory-optimized system for immediate data processing with consistent, predictable performance.");
+    factMappings.put("elastic_distributed_processing", "Elastic Distributed Processing: Auto-scaling CPU-optimized architecture for parallel data processing that adjusts resources based on workload.");
+    factMappings.put("elastic_in_memory_analytics", "Elastic In-memory Analytics: Auto-scaling memory-optimized system for high-throughput data analysis with dynamic resource allocation.");
+    factMappings.put("dedicated_distributed_processing", "Dedicated Distributed Processing: Fixed-allocation CPU-optimized system for parallel data processing with consistent, predictable performance.");
+    factMappings.put("dedicated_in_memory_analytics", "Dedicated In-memory Analytics: Fixed-allocation memory-optimized system for high-throughput data analysis with consistent performance.");
     // ** Processing Optimization**
     factMappings.put("processing_optimization(memory_optimized)", "High memory allocation is required for caching, in-memory processing, and large datasets.");
     factMappings.put("processing_optimization(cpu_optimized)", "The system is optimized for high CPU usage, making it suitable for AI, ML, and scientific computations.");
