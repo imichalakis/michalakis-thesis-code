@@ -128,21 +128,89 @@
                         </li>
                         
                         <!-- Location Decision -->
-                        <li class="list-group-item">
-                            <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
-                            <div th:if="${locationDecision != null}" class="option-container">
-                                <div th:each="decision, iterStat : ${#sets.toSet(#strings.arraySplit(locationDecision, ';'))}" class="decision-box">
-                                    <input type="radio" name="location" 
-                                           th:id="${'location-' + iterStat.index}"
-                                           th:value="${decision.trim()}">
-                                    <label th:for="${'location-' + iterStat.index}" th:text="${decision.trim()}"></label>
-                                </div>
-                            </div>
-                            <div th:if="${locationDecision == null}" class="not-provided">
-                                <span class="text-muted"><i>Not Provided</i></span>
-                            </div>
-                        </li>
-                    </ul>
+<li class="list-group-item">
+    <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+    <div th:if="${locationDecision != null}" class="option-container" id="location-options">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function() {
+                const locationStr = /*[[${locationDecision}]]*/ '';
+                const locations = locationStr.split(';').map(item => item.trim());
+                
+                const container = document.getElementById('location-options');
+                
+                locations.forEach(function(location, index) {
+                    const div = document.createElement('div');
+                    
+                    // If on-premise, create a special disabled version
+                    if (location.toLowerCase().includes('premise') || location.toLowerCase().includes('on premise') || location.toLowerCase().includes('on-premise')) {
+                        div.className = 'decision-box disabled';
+                        
+                        // Create a disabled-looking radio button (but not an actual input)
+                        const fakeRadio = document.createElement('span');
+                        fakeRadio.className = 'fake-radio';
+                        
+                        const label = document.createElement('label');
+                        label.textContent = location;
+                        
+                        // Add unavailable note
+                        const note = document.createElement('span');
+                        note.className = 'unavailable-note';
+                        note.textContent = ' (not supported in current version)';
+                        label.appendChild(note);
+                        
+                        div.appendChild(fakeRadio);
+                        div.appendChild(label);
+                        
+                        // Add a hidden input for form consistency but ensure it's not interactive
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'disabled-location';
+                        hiddenInput.value = location;
+                        div.appendChild(hiddenInput);
+                    } else {
+                        div.className = 'decision-box';
+                        
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = 'location';
+                        input.id = 'location-' + index;
+                        input.value = location;
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = 'location-' + index;
+                        label.textContent = location;
+                        
+                        // If Azure, pre-select it
+                        if (location.toLowerCase() === 'azure') {
+                            input.checked = true;
+                            div.classList.add('auto-selected');
+                        }
+                        
+                        div.appendChild(input);
+                        div.appendChild(label);
+                    }
+                    
+                    container.appendChild(div);
+                });
+                
+                // Prevent any clicks on disabled options
+                const disabledOptions = document.querySelectorAll('.decision-box.disabled');
+                disabledOptions.forEach(function(option) {
+                    option.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }, true);
+                });
+            });
+            /*]]>*/
+        </script>
+    </div>
+    <div th:if="${locationDecision == null}" class="not-provided">
+        <span class="text-muted"><i>Not Provided</i></span>
+    </div>
+</li>
                     
                     <!-- Submit Button -->
                     <div class="text-center mt-4">
@@ -362,6 +430,49 @@
             font-weight: bold;
             color: #007bff;
         }
+        /* Fake radio button for disabled options */
+.fake-radio {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #f0f0f0;
+    position: relative;
+    vertical-align: middle;
+}
+
+/* Completely prevent interactions with disabled items */
+/* Improved disabled option styling */
+.decision-box.disabled {
+    background-color: #f8f9fa;
+    border-left: 3px solid #dc3545;
+    opacity: 0.85; /* Less aggressive opacity */
+    cursor: not-allowed;
+    pointer-events: none;
+    user-select: none;
+}
+
+.decision-box.disabled label {
+    cursor: not-allowed;
+    color: #495057; /* Darker text color for better contrast */
+    text-decoration: none;
+}
+
+.unavailable-note {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.85em;
+    color: #dc3545;
+    font-weight: 500; /* Make it slightly bolder */
+    font-style: italic;
+}
+
+/* Remove the overlay that might be causing excessive blur */
+.decision-box.disabled::before {
+    display: none;
+}
     </style>
 </body>
 </html>
