@@ -561,4 +561,90 @@ public void setScalabilityNeeds(String scalabilityNeeds) {
     public void setProcessingOptimization(String processingOptimization) {
         this.processingOptimization = processingOptimization;
     }
+
+    /**
+ * Resets all form fields to their default values.
+ * This method is used when a complete workflow reset is needed.
+ */
+public void resetAllFields() {
+    // Reset primitive string fields to defaults or empty strings
+    this.urgency = "Normal";
+    this.agencyCategory = null;
+    this.startDate = null;
+    this.dataType = null;
+    this.requestType = null;
+    this.contractWithContractor = null;
+    this.connectivity = "false";
+    this.deploymentLocation = null;
+    this.buildNewOrMigrate = null;
+    this.step = 1;
+    
+    // Reset Azure decision flowchart fields
+    this.controlLevel = null;
+    this.workloadType = null;
+    this.applicationType = null;
+    this.isContainerized = null;
+    this.fullControl = null;
+    this.HPCWorkload = null;
+    this.SBapps = null;
+    this.eventDriven = null;
+    this.cloudOptimised = null;
+    this.containerized = null;
+    this.cotsapp = null;
+    this.serviceName = null;
+    
+    // Reset boolean fields to defaults
+    this.highScalability = false;
+    this.devopsFriendly = false;
+    this.highPerformance = false;
+    this.highBudget = false;
+    this.complexApp = false;
+    this.dataSensitivity = false;
+    this.integrationRequirements = false;
+    
+    // Reset requirement fields
+    this.budgetLimitation = null;
+    this.latencyRequirement = null;
+    this.scalabilityRequirement = null;
+    this.complianceRequirement = null;
+    this.disasterRecoveryNeeds = null;
+    this.primaryGoal = null;
+    this.controlRequirement = null;
+    this.budget = null;
+    
+    // Reset load and performance fields
+    this.expectedLoad = null;
+    this.peakTimes = null;
+    this.scalabilityNeeds = null;
+    this.responseTime = null;
+    this.costSensitivity = null;
+    
+    // Reset resource requirement fields
+    this.cpuRequirements = null;
+    this.memoryRequirements = null;
+    this.storageNeeds = null;
+    this.scalingStrategy = null;
+    
+    // Reset all decision fields
+    this.urgencyDecision = null;
+    this.locationDecision = null;
+    this.infrastructureDecision = null;
+    this.resourceDecision = null;
+    this.scalabilityAndPerformanceDecision = null;
+    this.scalingDecision = null;
+    this.finalDecision = null;
+    
+    // Reset resource priority fields
+    this.resourcePriority = null;
+    this.performanceRequirement = null;
+    this.processingOptimization = null;
+    
+    // Reset final decision fields
+    this.urgencyForFinal = null;
+    this.infrastructureForFinal = null;
+    this.scalabilityForFinal = null;
+    this.resourceForFinal = null;
+    this.processingOptimizationForFinal = null;
+    this.yamlGenerationDecision = null;
+}
 }

@@ -36,7 +36,7 @@ import org.springframework.http.ResponseEntity;
 import javax.servlet.http.HttpSession;
 
 import javax.servlet.http.HttpServletRequest;
-
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -94,59 +94,70 @@ public class WorkflowController {
 // }
 
 @PostMapping("/reset-status")
-public String resetStatus(HttpServletRequest request, HttpSession session, RedirectAttributes redirectAttributes, Model model) {
-    System.out.println("Resetting session manually...");
+public String resetStatus(HttpServletRequest request, HttpSession session, 
+                          RedirectAttributes redirectAttributes) {
+    System.out.println("Performing complete workflow reset...");
 
-    // Fully remove form object from session
-    session.removeAttribute("form");
-
-    // Invalidate session
-    session.invalidate();
-
-    // Create a new session
-    HttpSession newSession = request.getSession(true);
-
-    // Create a new, empty form
-    WorkflowForm newForm = new WorkflowForm();
-    newSession.setAttribute("form", newForm);
-
-    // Reset session attributes to default "Pending" values
-    newSession.setAttribute("urgencyStatus", "⏳ Pending");
-    newSession.setAttribute("infrastructureStatus", "⏳ Pending");
-    newSession.setAttribute("locationStatus", "⏳ Pending");
-    newSession.setAttribute("resourceStatus", "⏳ Pending");
-    newSession.setAttribute("scalabilityStatus", "⏳ Pending");
-
-    // Reset decision-related session attributes
-    newSession.setAttribute("urgencyDecision", null);
-    newSession.setAttribute("infrastructureDecision", "");  // 🔹 FIX: Set to empty string
-    newSession.setAttribute("locationDecision", "");        // 🔹 FIX: Set to empty string
-    newSession.setAttribute("scalabilityAndPerformanceDecision", null);
-    newSession.setAttribute("resourceDecision", null);
-
-    // Ensure model is updated correctly
-    model.addAttribute("urgencyDecision", "Not Provided");
-    model.addAttribute("infrastructureDecision", "Not Provided");
-    model.addAttribute("locationDecision", "Not Provided");
-    model.addAttribute("scalabilityAndPerformanceDecision", "Not Provided");
-    model.addAttribute("resourceDecision", "Not Provided");
-
-    // Debugging logs
-    System.out.println("Session attributes after reset:");
-    Enumeration<String> attributeNames = newSession.getAttributeNames();
-    while (attributeNames.hasMoreElements()) {
-        String name = attributeNames.nextElement();
-        System.out.println(name + " = " + newSession.getAttribute(name));
+    try {
+        // Get the current form from session
+        WorkflowForm currentForm = (WorkflowForm) session.getAttribute("form");
+        
+        // If form exists, reset all its fields
+        if (currentForm != null) {
+            currentForm.resetAllFields();
+            System.out.println("Form object has been reset to default values");
+        } else {
+            // Create a new form object if none exists
+            currentForm = new WorkflowForm();
+            System.out.println("Created new form object");
+        }
+        
+        // Update the form in the session
+        session.setAttribute("form", currentForm);
+        
+        // Reset all status attributes to pending
+        session.setAttribute("urgencyStatus", "⏳ Pending");
+        session.setAttribute("infrastructureStatus", "⏳ Pending");
+        session.setAttribute("locationStatus", "⏳ Pending");
+        session.setAttribute("resourceStatus", "⏳ Pending");
+        session.setAttribute("scalabilityStatus", "⏳ Pending");
+        
+        // Reset all decision attributes
+        session.setAttribute("urgencyDecision", null);
+        session.setAttribute("infrastructureDecision", null);
+        session.setAttribute("locationDecision", null);
+        session.setAttribute("resourceDecision", null);
+        session.setAttribute("scalabilityAndPerformanceDecision", null);
+        
+        // Clear any reasoning data
+        session.setAttribute("resourceReasoningData", null);
+        session.setAttribute("scalabilityReasoningData", null);
+        
+        // Add the status attributes to flash attributes to ensure they're available after redirect
+        redirectAttributes.addFlashAttribute("urgencyStatus", "⏳ Pending");
+        redirectAttributes.addFlashAttribute("infrastructureStatus", "⏳ Pending");
+        redirectAttributes.addFlashAttribute("locationStatus", "⏳ Pending");
+        redirectAttributes.addFlashAttribute("resourceStatus", "⏳ Pending");
+        redirectAttributes.addFlashAttribute("scalabilityStatus", "⏳ Pending");
+        
+        // Signal to client that reset was performed
+        redirectAttributes.addFlashAttribute("resetPerformed", true);
+        redirectAttributes.addFlashAttribute("message", "Workflow has been completely reset. All selections cleared.");
+        
+        System.out.println("Reset completed successfully");
+        
+        // Add cache-busting parameter
+        return "redirect:/?reset=" + System.currentTimeMillis();
+        
+    } catch (Exception e) {
+        System.err.println("Error during reset: " + e.getMessage());
+        e.printStackTrace();
+        
+        // Add error message
+        redirectAttributes.addFlashAttribute("error", "An error occurred during reset. Please try again.");
+        return "redirect:/";
     }
-
-    // Flash message to confirm reset
-    redirectAttributes.addFlashAttribute("message", "Statuses and decisions have been reset to pending!");
-
-    return "redirect:/"; // Redirect to home page
 }
-
-
-
 
 
 @GetMapping("/index")

@@ -1570,7 +1570,8 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
             ArrayList<String> gorgiasFiles = new ArrayList<>();
           //  gorgiasFiles.add("2025/resource2025.pl");  // Prolog file for resource decisions
          // gorgiasFiles.add("2025/resource2025.pl"); 
-         gorgiasFiles.add("2025/resource2025latest.pl"); 
+         gorgiasFiles.add("2025/resource2025latest2.pl"); 
+          
           gorgiasQuery.setGorgiasFiles(gorgiasFiles);
         
             ArrayList<String> facts = new ArrayList<>();
@@ -1613,7 +1614,7 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
             }
         
             //  Query for multiple results
-            gorgiasQuery.setResultSize(5);  
+            gorgiasQuery.setResultSize(9);  
             gorgiasQuery.setQuery("resource_decision(X)");  
             System.out.println("Executing Query: " + gorgiasQuery.getQuery());
         
