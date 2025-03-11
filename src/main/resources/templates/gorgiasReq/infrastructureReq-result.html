@@ -56,8 +56,9 @@
 
                 <li class="list-group-item">
                     <strong>Integration Needs:</strong> 
-                    <span th:if="${form.integrationRequirements != null and not #lists.isEmpty(form.integrationRequirements)}">Custom API Integrations (External system connectivity and API-level access)</span>
-                    <span th:if="${form.integrationRequirements == null or #lists.isEmpty(form.integrationRequirements)}">No external integrations required</span>
+                    <span th:if="${form.integrationRequirements}">Custom API Integrations (External system connectivity and API-level access)</span>
+<span th:unless="${form.integrationRequirements}">No external integrations required</span>
+ 
                 </li>
 
                 <li class="list-group-item">
