@@ -5,140 +5,726 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infrastructure Type Selection</title>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Custom Styles -->
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/infrastructure-form-style.css}">
-    <link rel="stylesheet" th:href="@{/css/buttons.css}">
-
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Alpine.js for reactivity -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --primary-light: #cfe2ff;
+            --secondary: #6c757d;
+            --success: #198754;
+            --warning: #fd7e14;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            
+            --border-radius-sm: 0.25rem;
+            --border-radius: 0.375rem;
+            --border-radius-lg: 0.5rem;
+            --border-radius-xl: 1rem;
+            
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            --box-shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+            
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f8fa;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            padding: 0.75rem 1rem;
+            box-shadow: var(--box-shadow-sm);
+            background-color: var(--primary);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            letter-spacing: -0.02em;
+        }
+        
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: var(--transition-base);
+            margin-bottom: 1.5rem;
+            background-color: #fff;
+        }
+        
+        .card:hover {
+            box-shadow: var(--box-shadow-lg);
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            background-color: #fff;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+            background-color: rgba(13, 110, 253, 0.1);
+            color: var(--primary);
+        }
+        
+        .card-header-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin: 0;
+            color: var(--dark);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-group-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .custom-radio-card {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            transition: var(--transition-base);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .custom-radio-card:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .custom-radio-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .custom-radio-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .custom-checkbox-card {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            transition: var(--transition-base);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .custom-checkbox-card:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .custom-checkbox-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .custom-checkbox-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .custom-radio-icon,
+        .custom-checkbox-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: #fff;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-600);
+            transition: var(--transition-base);
+            flex-shrink: 0;
+        }
+        
+        .custom-radio-card.selected .custom-radio-icon,
+        .custom-checkbox-card.selected .custom-checkbox-icon {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        
+        .custom-radio-content,
+        .custom-checkbox-content {
+            flex: 1;
+        }
+        
+        .custom-radio-title,
+        .custom-checkbox-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--gray-800);
+        }
+        
+        .custom-radio-description,
+        .custom-checkbox-description {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin: 0;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        
+        .btn-custom {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: none;
+            transition: var(--transition-base);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+        }
+        
+        .btn-custom i {
+            margin-right: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: 1px solid #0056b3;
+        }
+        
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #545b62;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: #ffc107;
+            color: black;
+            border: 1px solid #e0a800;
+        }
+        
+        .btn-warning-custom:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .progress-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: var(--gray-300);
+        }
+        
+        .progress-step.active:not(:last-child):after {
+            background-color: var(--primary);
+        }
+        
+        .step-indicator {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: var(--gray-300);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .progress-step.active .step-indicator {
+            background-color: var(--primary);
+        }
+        
+        .progress-step.completed .step-indicator {
+            background-color: var(--success);
+        }
+        
+        .step-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--success);
+        }
+        
+        .progress-bar-container {
+            height: 0.5rem;
+            background-color: var(--gray-200);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+        
+        footer {
+            background-color: #fff;
+            border-top: 1px solid var(--gray-200);
+            padding: 1.5rem 0;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--secondary);
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .button-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-custom {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .progress-steps {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                Deployment Strategy Automation
+            </a>
+        </div>
     </nav>
 
-    <!-- Main Form Container -->
-    <div class="form-container">
-        <h2 class="form-title">Infrastructure Type Selection</h2>
-        <p class="form-subtitle">Specify your infrastructure requirements for an optimized deployment strategy.</p>
-
-        <!-- Form -->
-        <form th:action="@{/gorgiascloud/request-gorgias}" th:object="${form}" method="post">
-            
-            <!-- Primary Goal -->
-            <div class="form-group">
-                <label>What is your primary objective?</label>
-                <div class="form-check">
-                    <input type="radio" th:field="*{primaryGoal}" value="runCustomApps" class="form-check-input" id="runCustomApps">
-                    <label for="runCustomApps" class="form-check-label">
-                        Full Control & Customization <span class="text-muted">(Best for VMs and containerized workloads.)</span>
-                    </label>
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Infrastructure Type Selection</h1>
+            <p class="page-subtitle">Specify your infrastructure requirements for an optimized deployment strategy.</p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Start</div>
                 </div>
-                <div class="form-check">
-                    <input type="radio" th:field="*{primaryGoal}" value="consumeReadySoftware" class="form-check-input" id="consumeReadySoftware">
-                    <label for="consumeReadySoftware" class="form-check-label">
-                        Minimal Setup <span class="text-muted">(Ideal for SaaS solutions with no infrastructure management.)</span>
-                    </label>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Urgency</div>
                 </div>
-                <div class="form-check">
-                    <input type="radio" th:field="*{primaryGoal}" value="eventDrivenFunctions" class="form-check-input" id="eventDrivenFunctions">
-                    <label for="eventDrivenFunctions" class="form-check-label">
-                        Event-Driven Computing <span class="text-muted">(Optimized for serverless architectures.)</span>
-                    </label>
+                <div class="progress-step active">
+                    <div class="step-indicator">3</div>
+                    <div class="step-label">Infrastructure</div>
                 </div>
-            </div>
-
-            <!-- Infrastructure Control -->
-            <div class="form-group">
-                <label>What level of infrastructure control do you require?</label>
-                <div class="form-check">
-                    <input type="radio" th:field="*{controlRequirement}" value="fullControl" class="form-check-input" id="fullControl">
-                    <label for="fullControl" class="form-check-label">
-                        Full Management <span class="text-muted">(Best for IaaS solutions.)</span>
-                    </label>
+                <div class="progress-step">
+                    <div class="step-indicator">4</div>
+                    <div class="step-label">Location</div>
                 </div>
-                <div class="form-check">
-                    <input type="radio" th:field="*{controlRequirement}" value="limitedControl" class="form-check-input" id="limitedControl">
-                    <label for="limitedControl" class="form-check-label">
-                        Managed Services <span class="text-muted">(Kubernetes or similar platforms.)</span>
-                    </label>
+                <div class="progress-step">
+                    <div class="step-indicator">5</div>
+                    <div class="step-label">Resources</div>
                 </div>
-                <div class="form-check">
-                    <input type="radio" th:field="*{controlRequirement}" value="noControl" class="form-check-input" id="noControl">
-                    <label for="noControl" class="form-check-label">
-                        Fully Managed Solution <span class="text-muted">(No infrastructure maintenance required.)</span>
-                    </label>
+                <div class="progress-step">
+                    <div class="step-indicator">6</div>
+                    <div class="step-label">Scalability</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-indicator">7</div>
+                    <div class="step-label">Review</div>
                 </div>
             </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 50%"></div>
+            </div>
+        </div>
 
-            <!-- Auto Scaling -->
-<div class="form-group">
-    <label>Do you need automatic scaling?</label>
-    <div class="form-check">
-        <input type="checkbox" th:field="*{highScalability}" class="form-check-input" id="highScalability">
-        <label for="highScalability" class="form-check-label">
-            Enable Auto-Scaling <span class="text-muted">(Ideal for fluctuating workloads.)</span>
-        </label>
-    </div>
-</div>
-
-<!-- Security & Compliance -->
-<div class="form-group">
-    <label>Does your application require security compliance?</label>
-    <div class="form-check">
-        <input type="checkbox" th:field="*{dataSensitivity}" class="form-check-input" id="dataSensitivity">
-        <label for="dataSensitivity" class="form-check-label">
-            Enable Compliance <span class="text-muted">(Encryption, access control, and security settings.)</span>
-        </label>
-    </div>
-</div>
-
-<!-- External Integrations -->
-<div class="form-group">
-    <label>Do you require external integrations?</label>
-    <div class="form-check">
-        <input type="checkbox" th:field="*{integrationRequirements}" class="form-check-input" id="customIntegrations">
-        <label for="customIntegrations" class="form-check-label">
-            Custom API Integrations <span class="text-muted">(Service-to-service authentication, external system connections.)</span>
-        </label>
-    </div>
-</div>
-
-                      <!-- Budget -->
-            <div class="form-group">
-                <label class="font-weight-bold">What is your budget preference?</label>
-                <div class="form-check">
-                    <input type="radio" th:field="*{budget}" value="low_budget" class="form-check-input" id="low_budget">
-                    <label for="low_budget" class="form-check-label">
-                        Cost-Optimized <span class="text-muted">(Prefers auto-scaling, pay-as-you-go, and shared resources.)</span>
-                    </label>
+        <!-- Form Container -->
+        <div class="form-container">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h2 class="card-header-title">Infrastructure Requirements</h2>
                 </div>
-                <div class="form-check">
-                    <input type="radio" th:field="*{budget}" value="high_budget" class="form-check-input" id="high_budget">
-                    <label for="high_budget" class="form-check-label">
-                        High Performance <span class="text-muted">(Uses dedicated resources, reserved instances, and premium support.)</span>
-                    </label>
+                <div class="card-body">
+                    <!-- Form - Maintaining original action and object binding -->
+                    <form th:action="@{/gorgiascloud/request-gorgias}" th:object="${form}" method="post" x-data="{
+                        primaryGoal: '',
+                        controlRequirement: '',
+                        highScalability: false,
+                        dataSensitivity: false,
+                        integrationRequirements: false,
+                        budget: ''
+                    }">
+                        
+                        <!-- Primary Goal -->
+                        <div class="form-group">
+                            <label class="form-group-title">What is your primary objective?</label>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': primaryGoal === 'runCustomApps' }"
+                                 @click="primaryGoal = 'runCustomApps'">
+                                <input type="radio" th:field="*{primaryGoal}" id="runCustomApps" value="runCustomApps" 
+                                       x-model="primaryGoal" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Full Control & Customization</div>
+                                    <p class="custom-radio-description">Best for VMs and containerized workloads that require complete control over the infrastructure and software stack.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': primaryGoal === 'consumeReadySoftware' }"
+                                 @click="primaryGoal = 'consumeReadySoftware'">
+                                <input type="radio" th:field="*{primaryGoal}" id="consumeReadySoftware" value="consumeReadySoftware" 
+                                       x-model="primaryGoal" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-box-open"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Minimal Setup</div>
+                                    <p class="custom-radio-description">Ideal for SaaS solutions with no infrastructure management needs, focusing on using ready-made software.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': primaryGoal === 'eventDrivenFunctions' }"
+                                 @click="primaryGoal = 'eventDrivenFunctions'">
+                                <input type="radio" th:field="*{primaryGoal}" id="eventDrivenFunctions" value="eventDrivenFunctions" 
+                                       x-model="primaryGoal" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Event-Driven Computing</div>
+                                    <p class="custom-radio-description">Optimized for serverless architectures that run code in response to events without managing infrastructure.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Infrastructure Control -->
+                        <div class="form-group">
+                            <label class="form-group-title">What level of infrastructure control do you require?</label>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': controlRequirement === 'fullControl' }"
+                                 @click="controlRequirement = 'fullControl'">
+                                <input type="radio" th:field="*{controlRequirement}" id="fullControl" value="fullControl" 
+                                       x-model="controlRequirement" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Full Management</div>
+                                    <p class="custom-radio-description">Best for IaaS solutions where you need complete control over virtual machines, storage, and networking.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': controlRequirement === 'limitedControl' }"
+                                 @click="controlRequirement = 'limitedControl'">
+                                <input type="radio" th:field="*{controlRequirement}" id="limitedControl" value="limitedControl" 
+                                       x-model="controlRequirement" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-sliders-h"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Managed Services</div>
+                                    <p class="custom-radio-description">For platforms like Kubernetes where you manage applications but infrastructure is partially managed for you.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': controlRequirement === 'noControl' }"
+                                 @click="controlRequirement = 'noControl'">
+                                <input type="radio" th:field="*{controlRequirement}" id="noControl" value="noControl" 
+                                       x-model="controlRequirement" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-magic"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Fully Managed Solution</div>
+                                    <p class="custom-radio-description">No infrastructure maintenance required, with all aspects of the platform managed by the provider.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Requirements -->
+                        <div class="form-group">
+                            <label class="form-group-title">Additional Requirements</label>
+                            
+                            <!-- Auto Scaling -->
+                            <div class="custom-checkbox-card" 
+                                 :class="{ 'selected': highScalability }"
+                                 @click="highScalability = !highScalability">
+                                <input type="checkbox" th:field="*{highScalability}" id="highScalability" 
+                                       x-model="highScalability" class="form-check-input">
+                                <div class="custom-checkbox-icon">
+                                    <i x-show="!highScalability" class="fas fa-expand-arrows-alt"></i>
+                                    <i x-show="highScalability" class="fas fa-check"></i>
+                                </div>
+                                <div class="custom-checkbox-content">
+                                    <div class="custom-checkbox-title">Enable Auto-Scaling</div>
+                                    <p class="custom-checkbox-description">Automatically adjust resources based on demand. Ideal for fluctuating workloads and traffic patterns.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Security & Compliance -->
+                            <div class="custom-checkbox-card" 
+                                 :class="{ 'selected': dataSensitivity }"
+                                 @click="dataSensitivity = !dataSensitivity">
+                                <input type="checkbox" th:field="*{dataSensitivity}" id="dataSensitivity" 
+                                       x-model="dataSensitivity" class="form-check-input">
+                                <div class="custom-checkbox-icon">
+                                    <i x-show="!dataSensitivity" class="fas fa-shield-alt"></i>
+                                    <i x-show="dataSensitivity" class="fas fa-check"></i>
+                                </div>
+                                <div class="custom-checkbox-content">
+                                    <div class="custom-checkbox-title">Enable Compliance</div>
+                                    <p class="custom-checkbox-description">Enhanced security features including encryption, access control, and compliance with regulatory standards.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- External Integrations -->
+                            <div class="custom-checkbox-card" 
+                                 :class="{ 'selected': integrationRequirements }"
+                                 @click="integrationRequirements = !integrationRequirements">
+                                <input type="checkbox" th:field="*{integrationRequirements}" id="customIntegrations" 
+                                       x-model="integrationRequirements" class="form-check-input">
+                                <div class="custom-checkbox-icon">
+                                    <i x-show="!integrationRequirements" class="fas fa-plug"></i>
+                                    <i x-show="integrationRequirements" class="fas fa-check"></i>
+                                </div>
+                                <div class="custom-checkbox-content">
+                                    <div class="custom-checkbox-title">Custom API Integrations</div>
+                                    <p class="custom-checkbox-description">Support for service-to-service authentication and connections to external systems.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Budget -->
+                        <div class="form-group">
+                            <label class="form-group-title">What is your budget preference?</label>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': budget === 'low_budget' }"
+                                 @click="budget = 'low_budget'">
+                                <input type="radio" th:field="*{budget}" id="low_budget" value="low_budget" 
+                                       x-model="budget" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">Cost-Optimized</div>
+                                    <p class="custom-radio-description">Prefers auto-scaling, pay-as-you-go pricing models, and shared resources to minimize costs.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="custom-radio-card" 
+                                 :class="{ 'selected': budget === 'high_budget' }"
+                                 @click="budget = 'high_budget'">
+                                <input type="radio" th:field="*{budget}" id="high_budget" value="high_budget" 
+                                       x-model="budget" class="form-check-input">
+                                <div class="custom-radio-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <div class="custom-radio-content">
+                                    <div class="custom-radio-title">High Performance</div>
+                                    <p class="custom-radio-description">Uses dedicated resources, reserved instances, and premium support for maximum performance.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="button-container">
+                            <a href="/" class="btn-custom btn-secondary-custom">
+                                <i class="fas fa-home"></i>
+                                Main Menu
+                            </a>
+                            <a href="/workflow/index" class="btn-custom btn-warning-custom">
+                                <i class="fas fa-arrow-left"></i>
+                                Go Back
+                            </a>
+                            <button type="submit" class="btn-custom btn-primary-custom">
+                                <i class="fas fa-check-circle"></i>
+                                Review & Continue
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-                      
-     <!-- Buttons -->
-     <div class="button-container">
-        <a href="/" class="btn btn-secondary-custom btn-custom">Main Menu</a>
-        <a href="/workflow/index" class="btn btn-warning-custom btn-custom">Go Back</a>
-        <button type="submit" class="btn btn-primary-custom btn-custom">Review & Continue</button>
+        </div>
     </div>
 
-</form>
-</div>
+    <!-- Footer -->
+    <footer>
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete<br>
+            <span class="opacity-75">Developed as part of a Thesis in Deployment Choice Automation</span>
+        </p>
+    </footer>
 
-<!-- Footer -->
-<div class="footer">
-<p>&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Choice Automation.</p>
-</div>
-
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

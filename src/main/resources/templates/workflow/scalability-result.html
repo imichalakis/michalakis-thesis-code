@@ -4,212 +4,837 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scalability & Performance Recommendation</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/result-style.css}">
-    <link rel="stylesheet" th:href="@{/css/buttons.css}">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --primary-light: #cfe2ff;
+            --secondary: #6c757d;
+            --success: #198754;
+            --warning: #fd7e14;
+            --danger: #dc3545;
+            --info: #0dcaf0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            
+            /* Scalability strategy colors */
+            --auto-color: #28a745;
+            --auto-bg: rgba(40, 167, 69, 0.08);
+            --auto-border: rgba(40, 167, 69, 0.5);
+            
+            --fixed-color: #6c757d;
+            --fixed-bg: rgba(108, 117, 125, 0.08);
+            --fixed-border: rgba(108, 117, 125, 0.5);
+            
+            --performance-color: #dc3545;
+            --performance-bg: rgba(220, 53, 69, 0.08);
+            --performance-border: rgba(220, 53, 69, 0.5);
+            
+            --cost-color: #ffc107;
+            --cost-bg: rgba(255, 193, 7, 0.08);
+            --cost-border: rgba(255, 193, 7, 0.5);
+            
+            --balanced-color: #17a2b8;
+            --balanced-bg: rgba(23, 162, 184, 0.08);
+            --balanced-border: rgba(23, 162, 184, 0.5);
+            
+            --border-radius-sm: 0.25rem;
+            --border-radius: 0.375rem;
+            --border-radius-lg: 0.5rem;
+            --border-radius-xl: 1rem;
+            
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            --box-shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+            
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f8fa;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            padding: 0.75rem 1rem;
+            box-shadow: var(--box-shadow-sm);
+            background-color: var(--primary);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            letter-spacing: -0.02em;
+        }
+        
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .workflow-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        @media (min-width: 992px) {
+            .workflow-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: var(--transition-base);
+            margin-bottom: 1.5rem;
+            background-color: #fff;
+        }
+        
+        .card:hover {
+            box-shadow: var(--box-shadow-lg);
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            background-color: #fff;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .card-header-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin: 0;
+            color: var(--dark);
+        }
+        
+        .bg-info-light {
+            background-color: rgba(13, 202, 240, 0.1);
+            color: var(--info);
+        }
+        
+        .bg-success-light {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: var(--success);
+        }
+        
+        .parameters-list {
+            padding: 0;
+            list-style: none;
+        }
+        
+        .parameter-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+        }
+        
+        .parameter-item:last-child {
+            border-bottom: none;
+        }
+        
+        .parameter-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: var(--gray-100);
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        
+        .parameter-content {
+            flex: 1;
+        }
+        
+        .parameter-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+        
+        .parameter-value {
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+        
+        .recommendation-box {
+            background: #f8f9fa;
+            padding: 30px 20px 20px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .recommendation-box:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .recommendation-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            line-height: 1.4;
+        }
+        
+        .reason-box {
+            background: #eef7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .reason-box ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        
+        .reason-box li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .reason-box strong {
+            display: block;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        /* Scalability strategy styling variants */
+        .auto-scaling {
+            border-left-color: var(--auto-color);
+        }
+        
+        .auto-scaling .recommendation-title {
+            color: var(--auto-color);
+        }
+        
+        .auto-scaling .reason-box {
+            background-color: var(--auto-bg);
+        }
+        
+        .fixed-allocation {
+            border-left-color: var(--fixed-color);
+        }
+        
+        .fixed-allocation .recommendation-title {
+            color: var(--fixed-color);
+        }
+        
+        .fixed-allocation .reason-box {
+            background-color: var(--fixed-bg);
+        }
+        
+        .high-performance {
+            border-left-color: var(--performance-color);
+        }
+        
+        .high-performance .recommendation-title {
+            color: var(--performance-color);
+        }
+        
+        .high-performance .reason-box {
+            background-color: var(--performance-bg);
+        }
+        
+        .cost-optimized {
+            border-left-color: var(--cost-color);
+        }
+        
+        .cost-optimized .recommendation-title {
+            color: var(--cost-color);
+        }
+        
+        .cost-optimized .reason-box {
+            background-color: var(--cost-bg);
+        }
+        
+        .balanced {
+            border-left-color: var(--balanced-color);
+        }
+        
+        .balanced .recommendation-title {
+            color: var(--balanced-color);
+        }
+        
+        .balanced .reason-box {
+            background-color: var(--balanced-bg);
+        }
+        
+        .solution-chip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-bottom-right-radius: var(--border-radius);
+            z-index: 1;
+        }
+        
+        .strategy-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 0.35rem 0.75rem;
+            border-bottom-left-radius: var(--border-radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        .strategy-badge i {
+            margin-right: 0.35rem;
+        }
+        
+        .badge-auto {
+            background-color: var(--auto-bg);
+            color: var(--auto-color);
+        }
+        
+        .badge-fixed {
+            background-color: var(--fixed-bg);
+            color: var(--fixed-color);
+        }
+        
+        .badge-performance {
+            background-color: var(--performance-bg);
+            color: var(--performance-color);
+        }
+        
+        .badge-cost {
+            background-color: var(--cost-bg);
+            color: var(--cost-color);
+        }
+        
+        .badge-balanced {
+            background-color: var(--balanced-bg);
+            color: var(--balanced-color);
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 2rem auto;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .btn-custom {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: none;
+            transition: var(--transition-base);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+        }
+        
+        .btn-custom i {
+            margin-right: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: 1px solid #0056b3;
+        }
+        
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #545b62;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: #ffc107;
+            color: black;
+            border: 1px solid #e0a800;
+        }
+        
+        .btn-warning-custom:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .progress-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: var(--gray-300);
+        }
+        
+        .progress-step.active:not(:last-child):after {
+            background-color: var(--primary);
+        }
+        
+        .step-indicator {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: var(--gray-300);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .progress-step.active .step-indicator {
+            background-color: var(--primary);
+        }
+        
+        .progress-step.completed .step-indicator {
+            background-color: var(--success);
+        }
+        
+        .step-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--success);
+        }
+        
+        .progress-bar-container {
+            height: 0.5rem;
+            background-color: var(--gray-200);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+        
+        footer {
+            background-color: #fff;
+            border-top: 1px solid var(--gray-200);
+            padding: 1.5rem 0;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--secondary);
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-custom {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .progress-steps {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-rocket"></i>
+                Deployment Strategy Automation
+            </a>
+        </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="container mt-5">
-        <!-- Page Title -->
-        <div class="text-center mb-4">
-            <h1 class="display-5">Scalability & Performance Decision</h1>
-            <p class="lead">Review the selected parameters and the recommended scalability configurations.</p>
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Scalability & Performance Decision</h1>
+            <p class="page-subtitle">Review the selected parameters and the recommended scalability configurations.</p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Start</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Urgency</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Infrastructure</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Location</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Resources</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Scalability</div>
+                </div>
+                <div class="progress-step active">
+                    <div class="step-indicator">7</div>
+                    <div class="step-label">Review</div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 98%"></div>
+            </div>
         </div>
 
-        <!-- Provided Parameters Section -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h4>Your Selected Parameters</h4>
+        <!-- Results Container -->
+        <div class="workflow-container">
+            <!-- Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon bg-info-light">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h2 class="card-header-title">Your Selected Parameters</h2>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="parameters-list">
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Expected Load</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${expectedLoad}">
+                                        <span th:case="'high'">High (Handles a large number of users and heavy workloads)</span>
+                                        <span th:case="'medium'">Medium (Requires moderate resource allocation for average usage)</span>
+                                        <span th:case="'low'">Low (Handles minimal workloads)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Peak Times</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${peakTimes}">
+                                        <span th:case="'rarely'">Rarely (Minimal demand spikes, stable traffic)</span>
+                                        <span th:case="'occasionally'">Occasionally (Some demand fluctuations)</span>
+                                        <span th:case="'frequently'">Frequently (Regular spikes in demand)</span>
+                                        <span th:case="'always'">Always (Consistently high demand, requires constant scalability)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-stopwatch"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Response Time SLA</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${responseTime}">
+                                        <span th:case="'high'">High SLA (Real-time performance required, minimal latency)</span>
+                                        <span th:case="'medium'">Medium SLA (Balanced response time, trade-off between speed and cost)</span>
+                                        <span th:case="'low'">Low SLA (Latency tolerance, cost-saving priority)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Cost Sensitivity</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${costSensitivity}">
+                                        <span th:case="'low'">Low (Cost is not a constraint, premium solutions preferred)</span>
+                                        <span th:case="'medium'">Medium (Balanced budget and performance requirements)</span>
+                                        <span th:case="'high'">High (Budget is constrained, cost-effective choices necessary)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <ul class="list-group">
-                <li class="list-group-item">
-                    <strong>Expected Load:</strong> 
-                    <span th:switch="${expectedLoad}">
-                        <span th:case="'high'">High (Handles a large number of users and heavy workloads)</span>
-                        <span th:case="'medium'">Medium (Requires moderate resource allocation for average usage)</span>
-                        <span th:case="'low'">Low (Handles minimal workloads)</span>
-                        <span th:case="*">Unknown</span>
-                    </span>
-                </li>
 
-                <li class="list-group-item">
-                    <strong>Peak Times:</strong> 
-                    <span th:switch="${peakTimes}">
-                        <span th:case="'rarely'">Rarely (Minimal demand spikes, stable traffic)</span>
-                        <span th:case="'occasionally'">Occasionally (Some demand fluctuations)</span>
-                        <span th:case="'frequently'">Frequently (Regular spikes in demand)</span>
-                        <span th:case="'always'">Always (Consistently high demand, requires constant scalability)</span>
-                        <span th:case="*">Unknown</span>
-                    </span>
-                </li>
+            <!-- Recommendations Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon bg-success-light">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2 class="card-header-title">Recommended Scalability Strategies</h2>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-3">Optimal Scalability Configuration</h5>
+                    <p class="mb-4">Based on your requirements, here are the best scalability strategies for your system:</p>
+                    
+                    <!-- Recommendations List (Only show if results are available) -->
+                    <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                        <!-- Loop through recommendations -->
+                        <div th:each="result, iterStat : ${resultsList}" class="recommendation-box"
+                             th:style="'animation-delay: ' + ${iterStat.count * 100} + 'ms'">
+                            
+                            <!-- Solution Label -->
+                            <div class="solution-chip">
+                                Solution <span th:text="${iterStat.count}"></span>
+                            </div>
+                            
+                            <!-- Strategy Type Badge - Dynamically determined by JavaScript -->
+                            <div class="strategy-badge">
+                                <!-- Badge will be set by JavaScript -->
+                            </div>
+                            
+                            <h3 class="recommendation-title">
+                                <span th:text="${result['naturalLanguageMainResult']}"></span>
+                            </h3>
 
-                <li class="list-group-item">
-                    <strong>Response Time SLA:</strong> 
-                    <span th:switch="${responseTime}">
-                        <span th:case="'high'">High SLA (Real-time performance required, minimal latency)</span>
-                        <span th:case="'medium'">Medium SLA (Balanced response time, trade-off between speed and cost)</span>
-                        <span th:case="'low'">Low SLA (Latency tolerance, cost-saving priority)</span>
-                        <span th:case="*">Unknown</span>
-                    </span>
-                </li>
-
-                <li class="list-group-item">
-                    <strong>Cost Sensitivity:</strong> 
-                    <span th:switch="${costSensitivity}">
-                        <span th:case="'low'">Low (Cost is not a constraint, premium solutions preferred)</span>
-                        <span th:case="'medium'">Medium (Balanced budget and performance requirements)</span>
-                        <span th:case="'high'">High (Budget is constrained, cost-effective choices necessary)</span>
-                        <span th:case="*">Unknown</span>
-                    </span>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Recommendations Section -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4>Recommended Scalability Strategies</h4>
-            </div>
-            <div class="card-body">
-                <h2>Scalability & Performance Results</h2>
-
-                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
-                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
-                        <h3 class="recommendation-title">Solution <span th:text="${iterStat.count}"></span>: 
-                            <span th:text="${result['naturalLanguageMainResult']}"></span>
-                        </h3>
-
-                        <div class="reason-box">
-                            <strong>Why this choice?</strong>
-                            <ul>
-                                <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
-                            </ul>
+                            <div class="reason-box">
+                                <strong>Why this choice?</strong>
+                                <ul>
+                                    <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
-                    <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+                    
+                    <!-- Empty state when no recommendations are available -->
+                    <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}" class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <p class="text-danger mb-0">No results found or an error occurred. Check the console logs for details.</p>
+                    </div>
                 </div>
             </div>
         </div>
-
+        
         <!-- Navigation Buttons -->
-     <!-- Navigation Buttons -->
-<div class="button-container">
-    <a href="/" class="btn btn-secondary-custom btn-custom">Back to Main Menu</a>
-    <a href="/workflow/scalability-performance" class="btn btn-warning-custom btn-custom">Go Back & Modify</a>
-    <a href="/workflow/combined-decision-result" class="btn btn-primary-custom btn-custom">View all decisions</a>
-</div>
+        <div class="button-container">
+            <a href="/" class="btn-custom btn-secondary-custom">
+                <i class="fas fa-home"></i>
+                Back to Main Menu
+            </a>
+            <a href="/workflow/scalability-performance" class="btn-custom btn-warning-custom">
+                <i class="fas fa-edit"></i>
+                Go Back & Modify
+            </a>
+            <a href="/workflow/combined-decision-result" class="btn-custom btn-primary-custom">
+                <i class="fas fa-list-check"></i>
+                View All Decisions
+            </a>
+        </div>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-    <!-- Custom Styling -->
-     <!-- Custom Styling -->
-     <style>
-        /* Base recommendation box styling */
-        .recommendation-box {
-            background: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        /* Title styling */
-        .recommendation-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-
-        /* Reason box styling */
-        .reason-box {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        /* Auto-scaling strategy styling */
-        .auto-scaling {
-            border-left: 5px solid #28a745; /* Green for auto-scaling */
-        }
-        .auto-scaling .recommendation-title {
-            color: #28a745;
-        }
-        .auto-scaling .reason-box {
-            background: #e9f7ef; /* Light green background */
-        }
-
-        /* Fixed allocation strategy styling */
-        .fixed-allocation {
-            border-left: 5px solid #6c757d; /* Gray for fixed allocation */
-        }
-        .fixed-allocation .recommendation-title {
-            color: #6c757d;
-        }
-        .fixed-allocation .reason-box {
-            background: #f2f2f2; /* Light gray background */
-        }
-
-        /* High-performance strategy styling */
-        .high-performance {
-            border-left: 5px solid #dc3545; /* Red for high performance */
-        }
-        .high-performance .recommendation-title {
-            color: #dc3545;
-        }
-        .high-performance .reason-box {
-            background: #fbeaec; /* Light red background */
-        }
-
-        /* Cost-optimized strategy styling */
-        .cost-optimized {
-            border-left: 5px solid #ffc107; /* Yellow for cost optimization */
-        }
-        .cost-optimized .recommendation-title {
-            color: #d39e00;
-        }
-        .cost-optimized .reason-box {
-            background: #fff9e6; /* Light yellow background */
-        }
-
-        /* Balanced strategy styling */
-        .balanced {
-            border-left: 5px solid #17a2b8; /* Cyan for balanced approach */
-        }
-        .balanced .recommendation-title {
-            color: #17a2b8;
-        }
-        .balanced .reason-box {
-            background: #e6f7fa; /* Light cyan background */
-        }
-    </style>
+    <!-- Footer -->
+    <footer>
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete<br>
+            <span class="opacity-75">Developed as part of a Thesis in Deployment Choice Automation</span>
+        </p>
+    </footer>
 
     <!-- Deduplication and styling script -->
     <script>
-        window.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             // Group scalability recommendations by their title
             const scalabilityRecommendations = {};
             const boxes = document.querySelectorAll('.recommendation-box');
             
+            // Skip if there are only 0 or 1 recommendations
+            if (boxes.length <= 1) {
+                // Still need to apply styling to the single box
+                if (boxes.length === 1) {
+                    const title = boxes[0].querySelector('.recommendation-title')?.textContent.trim() || '';
+                    const strategyType = determineStrategyType(title);
+                    
+                    applyScalabilityStyling(boxes[0], strategyType);
+                    addStrategyBadge(boxes[0], strategyType);
+                }
+                return;
+            }
+            
             // First pass: collect all recommendations and their reasons
             boxes.forEach(function(box) {
-                const titleElement = box.querySelector('h3 span:nth-child(2)');
+                const titleElement = box.querySelector('.recommendation-title');
                 if (!titleElement) return;
                 
                 const title = titleElement.textContent.trim();
@@ -222,7 +847,8 @@
                 if (!scalabilityRecommendations[title]) {
                     scalabilityRecommendations[title] = {
                         reasons: new Set(),
-                        originalBox: box
+                        originalBox: box,
+                        strategyType: determineStrategyType(title)
                     };
                 }
                 
@@ -242,14 +868,17 @@
                 const box = recommendation.originalBox.cloneNode(true);
                 box.style.display = 'block';
                 
-                // Update the option number
-                const countElement = box.querySelector('h3 span:first-child');
+                // Update the solution number
+                const countElement = box.querySelector('.solution-chip span');
                 if (countElement) {
-                    countElement.textContent = count++;
+                    countElement.textContent = count;
                 }
                 
                 // Apply styling based on scalability strategy type
-                applyScalabilityStyling(box, title.toLowerCase());
+                applyScalabilityStyling(box, recommendation.strategyType);
+                
+                // Add strategy type badge
+                addStrategyBadge(box, recommendation.strategyType);
                 
                 // Clear existing reasons
                 const reasonList = box.querySelector('.reason-box ul');
@@ -264,12 +893,62 @@
                     });
                 }
                 
+                // Add a note about consolidation if there were multiple identical recommendations
+                const originalBoxes = document.querySelectorAll('.recommendation-box');
+                let sameTypeCount = 0;
+                
+                originalBoxes.forEach(originalBox => {
+                    const title = originalBox.querySelector('.recommendation-title');
+                    if (title && title.textContent.trim() === recommendation.originalBox.querySelector('.recommendation-title').textContent.trim()) {
+                        sameTypeCount++;
+                    }
+                });
+                
+                if (sameTypeCount > 1) {
+                    const consolidationNote = document.createElement('div');
+                    consolidationNote.className = 'mt-3 text-muted';
+                    consolidationNote.style.fontSize = '0.875rem';
+                    consolidationNote.innerHTML = `<i class="fas fa-info-circle me-1"></i> Note: ${sameTypeCount} similar recommendations were consolidated.`;
+                    
+                    const reasonsSection = box.querySelector('.reason-box');
+                    if (reasonsSection) {
+                        reasonsSection.appendChild(consolidationNote);
+                    }
+                }
+                
+                // Set animation delay for staggered appearance
+                box.style.animationDelay = ((count - 1) * 100) + 'ms';
+                
                 // Add the consolidated box
                 recommendation.originalBox.parentNode.appendChild(box);
+                
+                count++;
+            }
+            
+            // Helper function to determine strategy type from title
+            function determineStrategyType(titleText) {
+                titleText = titleText.toLowerCase();
+                
+                if (titleText.includes('auto') || titleText.includes('dynamic') || titleText.includes('elastic')) {
+                    return 'auto';
+                } 
+                else if (titleText.includes('fixed') || titleText.includes('static') || titleText.includes('dedicated')) {
+                    return 'fixed';
+                }
+                else if (titleText.includes('high performance') || titleText.includes('real-time') || titleText.includes('low latency')) {
+                    return 'performance';
+                }
+                else if (titleText.includes('cost') || titleText.includes('budget') || titleText.includes('economical')) {
+                    return 'cost';
+                }
+                else {
+                    // Default to balanced if no specific type is detected
+                    return 'balanced';
+                }
             }
             
             // Helper function to apply specific styling based on scalability strategy
-            function applyScalabilityStyling(box, titleText) {
+            function applyScalabilityStyling(box, strategyType) {
                 // Remove any existing styling classes
                 box.classList.remove(
                     'auto-scaling', 
@@ -279,26 +958,83 @@
                     'balanced'
                 );
                 
-                // Apply appropriate styling class based on the title content
-                if (titleText.includes('auto') || titleText.includes('dynamic')) {
-                    box.classList.add('auto-scaling');
-                } 
-                else if (titleText.includes('fixed') || titleText.includes('static')) {
-                    box.classList.add('fixed-allocation');
+                // Apply appropriate styling class based on the strategy type
+                switch(strategyType) {
+                    case 'auto':
+                        box.classList.add('auto-scaling');
+                        break;
+                    case 'fixed':
+                        box.classList.add('fixed-allocation');
+                        break;
+                    case 'performance':
+                        box.classList.add('high-performance');
+                        break;
+                    case 'cost':
+                        box.classList.add('cost-optimized');
+                        break;
+                    case 'balanced':
+                        box.classList.add('balanced');
+                        break;
+                    default:
+                        box.classList.add('balanced');
                 }
-                else if (titleText.includes('high performance') || titleText.includes('real-time')) {
-                    box.classList.add('high-performance');
+            }
+            
+            // Helper function to add strategy type badge
+            function addStrategyBadge(box, strategyType) {
+                const badgeDiv = box.querySelector('.strategy-badge');
+                if (!badgeDiv) return;
+                
+                let icon, text;
+                
+                switch(strategyType) {
+                    case 'auto':
+                        badgeDiv.classList.add('badge-auto');
+                        icon = 'fa-chart-line';
+                        text = 'AUTO-SCALING';
+                        break;
+                    case 'fixed':
+                        badgeDiv.classList.add('badge-fixed');
+                        icon = 'fa-thumbtack';
+                        text = 'FIXED';
+                        break;
+                    case 'performance':
+                        badgeDiv.classList.add('badge-performance');
+                        icon = 'fa-bolt';
+                        text = 'HIGH PERF';
+                        break;
+                    case 'cost':
+                        badgeDiv.classList.add('badge-cost');
+                        icon = 'fa-piggy-bank';
+                        text = 'COST-OPT';
+                        break;
+                    case 'balanced':
+                        badgeDiv.classList.add('badge-balanced');
+                        icon = 'fa-balance-scale';
+                        text = 'BALANCED';
+                        break;
+                    default:
+                        badgeDiv.classList.add('badge-balanced');
+                        icon = 'fa-balance-scale';
+                        text = 'BALANCED';
                 }
-                else if (titleText.includes('cost') || titleText.includes('budget')) {
-                    box.classList.add('cost-optimized');
-                }
-                else {
-                    // Default to balanced if no specific type is detected
-                    box.classList.add('balanced');
-                }
+                
+                badgeDiv.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
+            }
+            
+            // Apply styling to single recommendations if there's only one or none
+            if (boxes.length === 1) {
+                const box = boxes[0];
+                const title = box.querySelector('.recommendation-title')?.textContent.trim() || '';
+                const strategyType = determineStrategyType(title);
+                
+                applyScalabilityStyling(box, strategyType);
+                addStrategyBadge(box, strategyType);
             }
         });
     </script>
 
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

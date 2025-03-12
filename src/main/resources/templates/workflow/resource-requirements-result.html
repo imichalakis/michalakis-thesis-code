@@ -4,302 +4,1046 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resource Requirements Result</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-      <!-- Custom Styles -->
-      <link rel="stylesheet" th:href="@{/css/result-style.css}">
-      <link rel="stylesheet" th:href="@{/css/buttons.css}">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --primary-light: #cfe2ff;
+            --secondary: #6c757d;
+            --success: #198754;
+            --warning: #fd7e14;
+            --danger: #dc3545;
+            --info: #0dcaf0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            
+            /* Resource type colors */
+            --compute-color: #6f42c1;
+            --compute-bg: rgba(111, 66, 193, 0.08);
+            --compute-border: rgba(111, 66, 193, 0.5);
+            
+            --memory-color: #fd7e14;
+            --memory-bg: rgba(253, 126, 20, 0.08);
+            --memory-border: rgba(253, 126, 20, 0.5);
+            
+            --realtime-color: #20c997;
+            --realtime-bg: rgba(32, 201, 151, 0.08);
+            --realtime-border: rgba(32, 201, 151, 0.5);
+            
+            --batch-color: #17a2b8;
+            --batch-bg: rgba(23, 162, 184, 0.08);
+            --batch-border: rgba(23, 162, 184, 0.5);
+            
+            --elastic-color: #28a745;
+            --elastic-bg: rgba(40, 167, 69, 0.08);
+            --elastic-border: rgba(40, 167, 69, 0.5);
+            
+            --fixed-color: #6c757d;
+            --fixed-bg: rgba(108, 117, 125, 0.08);
+            --fixed-border: rgba(108, 117, 125, 0.5);
+            
+            --border-radius-sm: 0.25rem;
+            --border-radius: 0.375rem;
+            --border-radius-lg: 0.5rem;
+            --border-radius-xl: 1rem;
+            
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            --box-shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+            
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f8fa;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            padding: 0.75rem 1rem;
+            box-shadow: var(--box-shadow-sm);
+            background-color: var(--primary);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            letter-spacing: -0.02em;
+        }
+        
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .workflow-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        @media (min-width: 992px) {
+            .workflow-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: var(--transition-base);
+            margin-bottom: 1.5rem;
+            background-color: #fff;
+        }
+        
+        .card:hover {
+            box-shadow: var(--box-shadow-lg);
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            background-color: #fff;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .card-header-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin: 0;
+            color: var(--dark);
+        }
+        
+        .bg-info-light {
+            background-color: rgba(13, 202, 240, 0.1);
+            color: var(--info);
+        }
+        
+        .bg-success-light {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: var(--success);
+        }
+        
+        .parameters-list {
+            padding: 0;
+            list-style: none;
+        }
+        
+        .parameter-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+        }
+        
+        .parameter-item:last-child {
+            border-bottom: none;
+        }
+        
+        .parameter-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: var(--gray-100);
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        
+        .parameter-content {
+            flex: 1;
+        }
+        
+        .parameter-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+        
+        .parameter-value {
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+        
+        .recommendation-box {
+            background: #f8f9fa;
+            padding: 30px 20px 20px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .recommendation-box:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .recommendation-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            line-height: 1.4;
+        }
+        
+        .reason-box {
+            background: #eef7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .reason-box ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        
+        .reason-box li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .reason-box strong {
+            display: block;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        /* Resource type styling variants */
+        .compute-optimized {
+            border-left-color: var(--compute-color);
+        }
+        
+        .compute-optimized .recommendation-title {
+            color: var(--compute-color);
+        }
+        
+        .compute-optimized .reason-box {
+            background-color: var(--compute-bg);
+        }
+        
+        .memory-optimized {
+            border-left-color: var(--memory-color);
+        }
+        
+        .memory-optimized .recommendation-title {
+            color: var(--memory-color);
+        }
+        
+        .memory-optimized .reason-box {
+            background-color: var(--memory-bg);
+        }
+        
+        .real-time {
+            border-left-color: var(--realtime-color);
+        }
+        
+        .real-time .recommendation-title {
+            color: var(--realtime-color);
+        }
+        
+        .real-time .reason-box {
+            background-color: var(--realtime-bg);
+        }
+        
+        .batch-processing {
+            border-left-color: var(--batch-color);
+        }
+        
+        .batch-processing .recommendation-title {
+            color: var(--batch-color);
+        }
+        
+        .batch-processing .reason-box {
+            background-color: var(--batch-bg);
+        }
+        
+        .elastic-scaling {
+            border-left-color: var(--elastic-color);
+        }
+        
+        .elastic-scaling .recommendation-title {
+            color: var(--elastic-color);
+        }
+        
+        .elastic-scaling .reason-box {
+            background-color: var(--elastic-bg);
+        }
+        
+        .fixed-allocation {
+            border-left-color: var(--fixed-color);
+        }
+        
+        .fixed-allocation .recommendation-title {
+            color: var(--fixed-color);
+        }
+        
+        .fixed-allocation .reason-box {
+            background-color: var(--fixed-bg);
+        }
+        
+        .solution-chip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-bottom-right-radius: var(--border-radius);
+            z-index: 1;
+        }
+        
+        .resource-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 0.35rem 0.75rem;
+            border-bottom-left-radius: var(--border-radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        .resource-badge i {
+            margin-right: 0.35rem;
+        }
+        
+        .badge-compute {
+            background-color: var(--compute-bg);
+            color: var(--compute-color);
+        }
+        
+        .badge-memory {
+            background-color: var(--memory-bg);
+            color: var(--memory-color);
+        }
+        
+        .badge-realtime {
+            background-color: var(--realtime-bg);
+            color: var(--realtime-color);
+        }
+        
+        .badge-batch {
+            background-color: var(--batch-bg);
+            color: var(--batch-color);
+        }
+        
+        .badge-elastic {
+            background-color: var(--elastic-bg);
+            color: var(--elastic-color);
+        }
+        
+        .badge-fixed {
+            background-color: var(--fixed-bg);
+            color: var(--fixed-color);
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 2rem auto;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .btn-custom {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: none;
+            transition: var(--transition-base);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+        }
+        
+        .btn-custom i {
+            margin-right: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: 1px solid #0056b3;
+        }
+        
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #545b62;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: #ffc107;
+            color: black;
+            border: 1px solid #e0a800;
+        }
+        
+        .btn-warning-custom:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .progress-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: var(--gray-300);
+        }
+        
+        .progress-step.active:not(:last-child):after {
+            background-color: var(--primary);
+        }
+        
+        .step-indicator {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: var(--gray-300);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .progress-step.active .step-indicator {
+            background-color: var(--primary);
+        }
+        
+        .progress-step.completed .step-indicator {
+            background-color: var(--success);
+        }
+        
+        .step-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--success);
+        }
+        
+        .progress-bar-container {
+            height: 0.5rem;
+            background-color: var(--gray-200);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+        
+        footer {
+            background-color: #fff;
+            border-top: 1px solid var(--gray-200);
+            padding: 1.5rem 0;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--secondary);
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-custom {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .progress-steps {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
-</nav>
-
-<!-- Main Container -->
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <h1 class="display-5">Resource Allocation Decision</h1>
-        <p class="lead">Review the selected parameters and the recommended resource configuration.</p>
-    </div>
-
-    <!-- Selected Parameters Section -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-info text-white">
-            <h4>Your Selected Parameters</h4>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-rocket"></i>
+                Deployment Strategy Automation
+            </a>
         </div>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <strong>Resource Priority:</strong> 
-                <span th:switch="${form.resourcePriority}">
-                    <span th:case="'compute'">Compute-Intensive (High CPU & RAM for fast processing)</span>
-                    <span th:case="'storage'">Storage-Intensive (Large storage capacity with lower CPU/RAM needs)</span>
-                    <span th:case="*">Unknown</span>
-                </span>
-            </li>
+    </nav>
 
-            <li class="list-group-item">
-                <strong>Performance Requirement:</strong> 
-                <span th:switch="${form.performanceRequirement}">
-                    <span th:case="'low_latency'">Low Latency (Fast response time for real-time applications)</span>
-                    <span th:case="'high_throughput'">High Throughput (Batch processing, analytics, high-volume data)</span>
-                    <span th:case="*">Unknown</span>
-                </span>
-            </li>
-
-            <li class="list-group-item">
-                <strong>Scalability Requirement:</strong> 
-                <span th:switch="${form.scalabilityRequirement}">
-                    <span th:case="'auto_scaling'">Auto-Scaling (Dynamically adjusts resources based on demand)</span>
-                    <span th:case="'fixed_allocation'">Fixed Allocation (Predictable workload with static resources)</span>
-                    <span th:case="*">Unknown</span>
-                </span>
-            </li>
-
-            <li class="list-group-item">
-                <strong>Processing Optimization:</strong> 
-                <span th:switch="${form.processingOptimization}">
-                    <span th:case="'memory_optimized'">Memory-Optimized (Large memory for caching & in-memory computing)</span>
-                    <span th:case="'cpu_optimized'">CPU-Optimized (Computational-heavy workloads, AI/ML, real-time tasks)</span>
-                    <span th:case="*">Unknown</span>
-                </span>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Recommended Resource Allocation -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
-            <h4>Recommended Resource Configuration</h4>
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Resource Allocation Decision</h1>
+            <p class="page-subtitle">Review the selected parameters and the recommended resource configuration.</p>
         </div>
-
-        <style>
-          /* Base recommendation box styling */
-.recommendation-box {
-    background: #f8f9fa;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    position: relative;
-}
-
-/* Title styling */
-.recommendation-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 12px;
-}
-
-/* Reason box styling */
-.reason-box {
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-    font-style: italic;
-}
-
-/* Resource type styling variants */
-.compute-optimized {
-    border-left: 5px solid #6f42c1; /* Purple for compute */
-}
-.compute-optimized .recommendation-title {
-    color: #6f42c1;
-}
-.compute-optimized .reason-box {
-    background: #f3f0fa; /* Light purple background */
-}
-
-.memory-optimized {
-    border-left: 5px solid #fd7e14; /* Orange for memory */
-}
-.memory-optimized .recommendation-title {
-    color: #fd7e14;
-}
-.memory-optimized .reason-box {
-    background: #fff3e6; /* Light orange background */
-}
-
-.real-time {
-    border-left: 5px solid #20c997; /* Teal for real-time */
-}
-.real-time .recommendation-title {
-    color: #20c997;
-}
-.real-time .reason-box {
-    background: #e6f9f5; /* Light teal background */
-}
-
-.batch-processing {
-    border-left: 5px solid #17a2b8; /* Cyan for batch processing */
-}
-.batch-processing .recommendation-title {
-    color: #17a2b8;
-}
-.batch-processing .reason-box {
-    background: #e6f7fa; /* Light cyan background */
-}
-
-.elastic-scaling {
-    border-left: 5px solid #28a745; /* Green for elastic/auto-scaling */
-}
-.elastic-scaling .recommendation-title {
-    color: #28a745;
-}
-.elastic-scaling .reason-box {
-    background: #e9f7ef; /* Light green background */
-}
-
-.fixed-allocation {
-    border-left: 5px solid #6c757d; /* Gray for fixed allocation */
-}
-.fixed-allocation .recommendation-title {
-    color: #6c757d;
-}
-.fixed-allocation .reason-box {
-    background: #f2f2f2; /* Light gray background */
-}
-        </style>
-<script>
-    window.addEventListener('DOMContentLoaded', function() {
-    // Group resource recommendations by their title
-    const resourceRecommendations = {};
-    const boxes = document.querySelectorAll('.recommendation-box');
-    
-    // First pass: collect all recommendations and their reasons
-    boxes.forEach(function(box) {
-        const titleElement = box.querySelector('h3 span:nth-child(2)');
-        if (!titleElement) return;
         
-        const title = titleElement.textContent.trim();
-        
-        // Get all reasons
-        const reasonItems = Array.from(box.querySelectorAll('.reason-box li'))
-            .map(li => li.textContent.trim());
-        
-        // Initialize this title group if it doesn't exist
-        if (!resourceRecommendations[title]) {
-            resourceRecommendations[title] = {
-                reasons: new Set(),
-                originalBox: box
-            };
-        }
-        
-        // Add all reasons to the set (Set automatically handles duplicates)
-        reasonItems.forEach(reason => {
-            resourceRecommendations[title].reasons.add(reason);
-        });
-        
-        // Hide all boxes initially - we'll show only the consolidated ones
-        box.style.display = 'none';
-    });
-    
-    // Second pass: create consolidated recommendations
-    let count = 1;
-    for (const title in resourceRecommendations) {
-        const recommendation = resourceRecommendations[title];
-        const box = recommendation.originalBox.cloneNode(true);
-        box.style.display = 'block';
-        
-        // Update the option number
-        const countElement = box.querySelector('h3 span:first-child');
-        if (countElement) {
-            countElement.textContent = count++;
-        }
-        
-        // Apply styling based on resource configuration type
-        applyResourceStyling(box, title.toLowerCase());
-        
-        // Clear existing reasons
-        const reasonList = box.querySelector('.reason-box ul');
-        if (reasonList) {
-            reasonList.innerHTML = '';
-            
-            // Add all unique reasons
-            Array.from(recommendation.reasons).sort().forEach(reason => {
-                const li = document.createElement('li');
-                li.textContent = reason;
-                reasonList.appendChild(li);
-            });
-        }
-        
-        // Add the consolidated box
-        recommendation.originalBox.parentNode.appendChild(box);
-    }
-    
-    // Helper function to apply specific styling based on resource type
-    function applyResourceStyling(box, titleText) {
-        // Remove any existing styling classes
-        box.classList.remove(
-            'compute-optimized', 
-            'memory-optimized', 
-            'real-time', 
-            'batch-processing',
-            'elastic-scaling',
-            'fixed-allocation'
-        );
-        
-        // Apply appropriate styling class based on the title content
-        if (titleText.includes('compute') || titleText.includes('cpu')) {
-            box.classList.add('compute-optimized');
-        } 
-        else if (titleText.includes('memory') || titleText.includes('cache')) {
-            box.classList.add('memory-optimized');
-        }
-        else if (titleText.includes('real-time') || titleText.includes('low-latency')) {
-            box.classList.add('real-time');
-        }
-        else if (titleText.includes('batch') || titleText.includes('throughput')) {
-            box.classList.add('batch-processing');
-        }
-        else if (titleText.includes('auto') || titleText.includes('elastic')) {
-            box.classList.add('elastic-scaling');
-        }
-        else if (titleText.includes('fixed') || titleText.includes('static')) {
-            box.classList.add('fixed-allocation');
-        }
-    }
-});
-</script>
-        <div class="card-body">
-            <h2>Recommended Resource Allocation</h2>
-            <p>Based on your requirements, here is the optimal resource configuration for your system:</p>
-
-            <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
-                <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
-                    <h3 class="recommendation-title">Solution <span th:text="${iterStat.count}"></span>: 
-                        <span th:text="${result['naturalLanguageMainResult']}"></span>
-                    </h3>
-
-                    <div class="reason-box">
-                        <strong>Why this choice?</strong>
-                        <ul>
-                            <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
-                        </ul>
+        <!-- Progress Indicator -->
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
                     </div>
+                    <div class="step-label">Start</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Urgency</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Infrastructure</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Location</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Resources</div>
+                </div>
+                <div class="progress-step active">
+                    <div class="step-indicator">6</div>
+                    <div class="step-label">Scalability</div>
+                </div>
+                <div class="progress-step active">
+                    <div class="step-indicator">7</div>
+                    <div class="step-label">Review</div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 95%"></div>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div class="workflow-container">
+            <!-- Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon bg-info-light">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h2 class="card-header-title">Your Selected Parameters</h2>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="parameters-list">
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Resource Priority</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${form.resourcePriority}">
+                                        <span th:case="'compute'">Compute-Intensive (High CPU & RAM for fast processing)</span>
+                                        <span th:case="'storage'">Storage-Intensive (Large storage capacity with lower CPU/RAM needs)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Performance Requirement</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${form.performanceRequirement}">
+                                        <span th:case="'low_latency'">Low Latency (Fast response time for real-time applications)</span>
+                                        <span th:case="'high_throughput'">High Throughput (Batch processing, analytics, high-volume data)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Scalability Requirement</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${form.scalabilityRequirement}">
+                                        <span th:case="'auto_scaling'">Auto-Scaling (Dynamically adjusts resources based on demand)</span>
+                                        <span th:case="'fixed_allocation'">Fixed Allocation (Predictable workload with static resources)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="parameter-item">
+                            <div class="parameter-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <div class="parameter-content">
+                                <div class="parameter-label">Processing Optimization</div>
+                                <div class="parameter-value">
+                                    <span th:switch="${form.processingOptimization}">
+                                        <span th:case="'memory_optimized'">Memory-Optimized (Large memory for caching & in-memory computing)</span>
+                                        <span th:case="'cpu_optimized'">CPU-Optimized (Computational-heavy workloads, AI/ML, real-time tasks)</span>
+                                        <span th:case="*">Unknown</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}">
-                <p class="text-danger">No results found or an error occurred. Check the console logs for details.</p>
+            <!-- Recommendations Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon bg-success-light">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h2 class="card-header-title">Recommended Resource Configuration</h2>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-3">Optimal Resource Allocation</h5>
+                    <p class="mb-4">Based on your requirements, here is the best resource configuration for your system:</p>
+                    
+                    <!-- Recommendations List (Only show if results are available) -->
+                    <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+                        <!-- Loop through recommendations -->
+                        <div th:each="result, iterStat : ${resultsList}" class="recommendation-box"
+                             th:style="'animation-delay: ' + ${iterStat.count * 100} + 'ms'">
+                            
+                            <!-- Solution Label -->
+                            <div class="solution-chip">
+                                Solution <span th:text="${iterStat.count}"></span>
+                            </div>
+                            
+                            <!-- Resource Type Badge - Dynamically determined by JavaScript -->
+                            <div class="resource-badge">
+                                <!-- Badge will be set by JavaScript -->
+                            </div>
+                            
+                            <h3 class="recommendation-title">
+                                <span th:text="${result['naturalLanguageMainResult']}"></span>
+                            </h3>
+
+                            <div class="reason-box">
+                                <strong>Why this choice?</strong>
+                                <ul>
+                                    <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty state when no recommendations are available -->
+                    <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}" class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <p class="text-danger mb-0">No results found or an error occurred. Check the console logs for details.</p>
+                    </div>
+                </div>
             </div>
+        </div>
+        
+        <!-- Navigation Buttons -->
+        <div class="button-container">
+            <a href="/" class="btn-custom btn-secondary-custom">
+                <i class="fas fa-home"></i>
+                Return to Main Menu
+            </a>
+            <a href="/workflow/resource-requirements" class="btn-custom btn-warning-custom">
+                <i class="fas fa-edit"></i>
+                Go Back & Modify Selection
+            </a>
+            <a href="/workflow/scalability-performance" class="btn-custom btn-primary-custom">
+                <i class="fas fa-arrow-right"></i>
+                Proceed to Plan Scalability
+            </a>
         </div>
     </div>
 
-    <!-- Navigation Buttons (Consistent with Global Button Styles) -->
-    <div class="button-container">
-        <a href="/" class="btn btn-secondary-custom btn-custom">Return to Main Menu</a>
-        <a href="/workflow/resource-requirements" class="btn btn-warning-custom btn-custom">Go Back & Modify Selection</a>
-        <a href="/workflow/scalability-performance" class="btn btn-primary-custom btn-custom">Proceed to Plan Scalability</a>
-    </div>
+    <!-- Footer -->
+    <footer>
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete<br>
+            <span class="opacity-75">Developed as part of a Thesis in Deployment Choice Automation</span>
+        </p>
+    </footer>
 
+   <script>
+                // First pass: collect all recommendations and their reasons
+                boxes.forEach(function(box) {
+                const titleElement = box.querySelector('.recommendation-title');
+                if (!titleElement) return;
+                
+                const title = titleElement.textContent.trim();
+                
+                // Get all reasons
+                const reasonItems = Array.from(box.querySelectorAll('.reason-box li'))
+                    .map(li => li.textContent.trim());
+                
+                // Initialize this title group if it doesn't exist
+                if (!resourceRecommendations[title]) {
+                    resourceRecommendations[title] = {
+                        reasons: new Set(),
+                        originalBox: box,
+                        resourceType: determineResourceType(title)
+                    };
+                }
+                
+                // Add all reasons to the set (Set automatically handles duplicates)
+                reasonItems.forEach(reason => {
+                    resourceRecommendations[title].reasons.add(reason);
+                });
+                
+                // Hide all boxes initially - we'll show only the consolidated ones
+                box.style.display = 'none';
+            });
+            
+            // Second pass: create consolidated recommendations
+            let count = 1;
+            for (const title in resourceRecommendations) {
+                const recommendation = resourceRecommendations[title];
+                const box = recommendation.originalBox.cloneNode(true);
+                box.style.display = 'block';
+                
+                // Update the solution number
+                const countElement = box.querySelector('.solution-chip span');
+                if (countElement) {
+                    countElement.textContent = count;
+                }
+                
+                // Apply styling based on resource configuration type
+                applyResourceStyling(box, recommendation.resourceType);
+                
+                // Add resource type badge
+                addResourceBadge(box, recommendation.resourceType);
+                
+                // Clear existing reasons
+                const reasonList = box.querySelector('.reason-box ul');
+                if (reasonList) {
+                    reasonList.innerHTML = '';
+                    
+                    // Add all unique reasons
+                    Array.from(recommendation.reasons).sort().forEach(reason => {
+                        const li = document.createElement('li');
+                        li.textContent = reason;
+                        reasonList.appendChild(li);
+                    });
+                }
+                
+                // Add a note about consolidation if there were multiple identical recommendations
+                const originalBoxes = document.querySelectorAll('.recommendation-box');
+                let sameTypeCount = 0;
+                
+                originalBoxes.forEach(originalBox => {
+                    const title = originalBox.querySelector('.recommendation-title');
+                    if (title && title.textContent.trim() === recommendation.originalBox.querySelector('.recommendation-title').textContent.trim()) {
+                        sameTypeCount++;
+                    }
+                });
+                
+                if (sameTypeCount > 1) {
+                    const consolidationNote = document.createElement('div');
+                    consolidationNote.className = 'mt-3 text-muted';
+                    consolidationNote.style.fontSize = '0.875rem';
+                    consolidationNote.innerHTML = `<i class="fas fa-info-circle me-1"></i> Note: ${sameTypeCount} similar recommendations were consolidated.`;
+                    
+                    const reasonsSection = box.querySelector('.reason-box');
+                    if (reasonsSection) {
+                        reasonsSection.appendChild(consolidationNote);
+                    }
+                }
+                
+                // Set animation delay for staggered appearance
+                box.style.animationDelay = ((count - 1) * 100) + 'ms';
+                
+                // Add the consolidated box
+                recommendation.originalBox.parentNode.appendChild(box);
+                
+                count++;
+            }
+            
+            // Helper function to determine resource type from title
+            function determineResourceType(titleText) {
+                titleText = titleText.toLowerCase();
+                
+                if (titleText.includes('compute') || titleText.includes('cpu') || titleText.includes('processor')) {
+                    return 'compute';
+                } 
+                else if (titleText.includes('memory') || titleText.includes('ram') || titleText.includes('cache')) {
+                    return 'memory';
+                }
+                else if (titleText.includes('real-time') || titleText.includes('low-latency') || titleText.includes('responsiveness')) {
+                    return 'realtime';
+                }
+                else if (titleText.includes('batch') || titleText.includes('throughput') || titleText.includes('bulk')) {
+                    return 'batch';
+                }
+                else if (titleText.includes('auto') || titleText.includes('elastic') || titleText.includes('dynamic')) {
+                    return 'elastic';
+                }
+                else if (titleText.includes('fixed') || titleText.includes('static') || titleText.includes('dedicated')) {
+                    return 'fixed';
+                }
+                
+                // Default to compute if no match
+                return 'compute';
+            }
+            
+            // Helper function to apply specific styling based on resource type
+            function applyResourceStyling(box, resourceType) {
+                // Remove any existing styling classes
+                box.classList.remove(
+                    'compute-optimized', 
+                    'memory-optimized', 
+                    'real-time', 
+                    'batch-processing',
+                    'elastic-scaling',
+                    'fixed-allocation'
+                );
+                
+                // Apply appropriate styling class based on the resource type
+                switch(resourceType) {
+                    case 'compute':
+                        box.classList.add('compute-optimized');
+                        break;
+                    case 'memory':
+                        box.classList.add('memory-optimized');
+                        break;
+                    case 'realtime':
+                        box.classList.add('real-time');
+                        break;
+                    case 'batch':
+                        box.classList.add('batch-processing');
+                        break;
+                    case 'elastic':
+                        box.classList.add('elastic-scaling');
+                        break;
+                    case 'fixed':
+                        box.classList.add('fixed-allocation');
+                        break;
+                    default:
+                        box.classList.add('compute-optimized');
+                }
+            }
+            
+            // Helper function to add resource type badge
+            function addResourceBadge(box, resourceType) {
+                const badgeDiv = box.querySelector('.resource-badge');
+                if (!badgeDiv) return;
+                
+                let icon, text;
+                
+                switch(resourceType) {
+                    case 'compute':
+                        badgeDiv.classList.add('badge-compute');
+                        icon = 'fa-microchip';
+                        text = 'COMPUTE';
+                        break;
+                    case 'memory':
+                        badgeDiv.classList.add('badge-memory');
+                        icon = 'fa-memory';
+                        text = 'MEMORY';
+                        break;
+                    case 'realtime':
+                        badgeDiv.classList.add('badge-realtime');
+                        icon = 'fa-bolt';
+                        text = 'REAL-TIME';
+                        break;
+                    case 'batch':
+                        badgeDiv.classList.add('badge-batch');
+                        icon = 'fa-tasks';
+                        text = 'BATCH';
+                        break;
+                    case 'elastic':
+                        badgeDiv.classList.add('badge-elastic');
+                        icon = 'fa-chart-line';
+                        text = 'ELASTIC';
+                        break;
+                    case 'fixed':
+                        badgeDiv.classList.add('badge-fixed');
+                        icon = 'fa-thumbtack';
+                        text = 'FIXED';
+                        break;
+                    default:
+                        badgeDiv.classList.add('badge-compute');
+                        icon = 'fa-microchip';
+                        text = 'COMPUTE';
+                }
+                
+                badgeDiv.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
+            }
+            
+            // Apply styling to single recommendations if there's only one or none
+            if (boxes.length === 1) {
+                const box = boxes[0];
+                const title = box.querySelector('.recommendation-title')?.textContent.trim() || '';
+                const resourceType = determineResourceType(title);
+                
+                applyResourceStyling(box, resourceType);
+                addResourceBadge(box, resourceType);
+            }
+        
+    </script>
 
-  
-
-<!-- Bootstrap JS and dependencies -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

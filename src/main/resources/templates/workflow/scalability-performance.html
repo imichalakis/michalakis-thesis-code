@@ -5,82 +5,747 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scalability & Performance Requirements</title>
 
-    <!-- Bootstrap & Custom CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/infrastructure-form-style.css}">
-    <link rel="stylesheet" th:href="@{/css/buttons.css}">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Alpine.js for reactivity -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --primary-light: #cfe2ff;
+            --secondary: #6c757d;
+            --success: #198754;
+            --warning: #fd7e14;
+            --danger: #dc3545;
+            --info: #0dcaf0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            
+            --border-radius-sm: 0.25rem;
+            --border-radius: 0.375rem;
+            --border-radius-lg: 0.5rem;
+            --border-radius-xl: 1rem;
+            
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            --box-shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+            
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f8fa;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            padding: 0.75rem 1rem;
+            box-shadow: var(--box-shadow-sm);
+            background-color: var(--primary);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            letter-spacing: -0.02em;
+        }
+        
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: var(--transition-base);
+            margin-bottom: 1.5rem;
+            background-color: #fff;
+        }
+        
+        .card:hover {
+            box-shadow: var(--box-shadow-lg);
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            background-color: #fff;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+            background-color: rgba(13, 110, 253, 0.1);
+            color: var(--primary);
+        }
+        
+        .card-header-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin: 0;
+            color: var(--dark);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--gray-700);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-label i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+        
+        .scalability-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            transition: var(--transition-base);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scalability-option:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .scalability-option.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .scalability-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .scalability-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: #fff;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-600);
+            transition: var(--transition-base);
+            flex-shrink: 0;
+            font-size: 1.125rem;
+        }
+        
+        .scalability-option.selected .scalability-icon {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        
+        .scalability-content {
+            flex: 1;
+        }
+        
+        .scalability-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--gray-800);
+            font-size: 0.9375rem;
+        }
+        
+        .scalability-description {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin: 0;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 2rem auto;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .btn-custom {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: none;
+            transition: var(--transition-base);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+        }
+        
+        .btn-custom i {
+            margin-right: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: 1px solid #0056b3;
+        }
+        
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #545b62;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: #ffc107;
+            color: black;
+            border: 1px solid #e0a800;
+        }
+        
+        .btn-warning-custom:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .progress-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: var(--gray-300);
+        }
+        
+        .progress-step.active:not(:last-child):after {
+            background-color: var(--primary);
+        }
+        
+        .step-indicator {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: var(--gray-300);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .progress-step.active .step-indicator {
+            background-color: var(--primary);
+        }
+        
+        .progress-step.completed .step-indicator {
+            background-color: var(--success);
+        }
+        
+        .step-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--success);
+        }
+        
+        .progress-bar-container {
+            height: 0.5rem;
+            background-color: var(--gray-200);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+        
+        footer {
+            background-color: #fff;
+            border-top: 1px solid var(--gray-200);
+            padding: 1.5rem 0;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--secondary);
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .button-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-custom {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .progress-steps {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-rocket"></i>
+                Deployment Strategy Automation
+            </a>
+        </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="form-container">
-        <h2 class="form-title">Scalability & Performance Requirements</h2>
-        <p class="form-subtitle">Define the scalability and performance parameters for your application to ensure optimal resource allocation.</p>
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Scalability & Performance Requirements</h1>
+            <p class="page-subtitle">Define the scalability and performance parameters for your application to ensure optimal resource allocation.</p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Start</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Urgency</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Infrastructure</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Location</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Resources</div>
+                </div>
+                <div class="progress-step active">
+                    <div class="step-indicator">6</div>
+                    <div class="step-label">Scalability</div>
+                </div>
+                <div class="progress-step ">
+                    <div class="step-indicator">7</div>
+                    <div class="step-label">Review</div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 95%"></div>
+            </div>
+        </div>
 
-        <!-- Form -->
-        <form th:action="@{/workflow/process-scalability}" th:object="${form}" method="post">
+        <!-- Form Container -->
+        <div class="form-container">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2 class="card-header-title">Performance Parameters</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Form with Alpine.js state management -->
+                    <form id="scalabilityForm" th:action="@{/workflow/process-scalability}" th:object="${form}" method="post" x-data="{
+                        expectedLoad: '',
+                        peakTimes: '',
+                        responseTime: '',
+                        costSensitivity: ''
+                    }">
+                        
+                        <!-- Expected Load -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-users"></i>
+                                What is the expected average workload or user traffic for your application?
+                            </label>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': expectedLoad === 'low' }"
+                                 @click="expectedLoad = 'low'">
+                                <input type="radio" th:field="*{expectedLoad}" value="low" id="load-low" 
+                                       x-model="expectedLoad">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Low Traffic</div>
+                                    <p class="scalability-description">Minimal user base or workload, suitable for internal applications or early-stage projects</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': expectedLoad === 'medium' }"
+                                 @click="expectedLoad = 'medium'">
+                                <input type="radio" th:field="*{expectedLoad}" value="medium" id="load-medium" 
+                                       x-model="expectedLoad">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Medium Traffic</div>
+                                    <p class="scalability-description">Moderate user base or workload, common for business applications and established services</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': expectedLoad === 'high' }"
+                                 @click="expectedLoad = 'high'">
+                                <input type="radio" th:field="*{expectedLoad}" value="high" id="load-high" 
+                                       x-model="expectedLoad">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-user-friends"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">High Traffic</div>
+                                    <p class="scalability-description">Heavy user base or workload, for consumer-facing applications or high-throughput systems</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Peak Times -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-chart-bar"></i>
+                                How frequently does your application experience spikes in workload or traffic?
+                            </label>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': peakTimes === 'rarely' }"
+                                 @click="peakTimes = 'rarely'">
+                                <input type="radio" th:field="*{peakTimes}" value="rarely" id="peak-rarely" 
+                                       x-model="peakTimes">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-minus"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Rarely</div>
+                                    <p class="scalability-description">Infrequent spikes in traffic or workload, predictable usage patterns</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': peakTimes === 'occasionally' }"
+                                 @click="peakTimes = 'occasionally'">
+                                <input type="radio" th:field="*{peakTimes}" value="occasionally" id="peak-occasionally" 
+                                       x-model="peakTimes">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-wave-square"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Occasionally</div>
+                                    <p class="scalability-description">Periodic spikes in traffic or workload, such as during business hours or events</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': peakTimes === 'frequently' }"
+                                 @click="peakTimes = 'frequently'">
+                                <input type="radio" th:field="*{peakTimes}" value="frequently" id="peak-frequently" 
+                                       x-model="peakTimes">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Frequently</div>
+                                    <p class="scalability-description">Regular spikes in traffic or workload, requiring dynamic resource allocation</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': peakTimes === 'always' }"
+                                 @click="peakTimes = 'always'">
+                                <input type="radio" th:field="*{peakTimes}" value="always" id="peak-always" 
+                                       x-model="peakTimes">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Always</div>
+                                    <p class="scalability-description">Continuous high demand with unpredictable patterns, requiring constant scalability</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Response Time SLA -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-stopwatch"></i>
+                                What is the required response time for your application to meet service-level agreements?
+                            </label>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': responseTime === 'low' }"
+                                 @click="responseTime = 'low'">
+                                <input type="radio" th:field="*{responseTime}" value="low" id="response-low" 
+                                       x-model="responseTime">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-hourglass-half"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Relaxed Response Time</div>
+                                    <p class="scalability-description">Response time is not critical, suitable for background processes or batch operations</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': responseTime === 'medium' }"
+                                 @click="responseTime = 'medium'">
+                                <input type="radio" th:field="*{responseTime}" value="medium" id="response-medium" 
+                                       x-model="responseTime">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Standard Response Time</div>
+                                    <p class="scalability-description">Moderate response time requirements, typical for most business applications</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': responseTime === 'high' }"
+                                 @click="responseTime = 'high'">
+                                <input type="radio" th:field="*{responseTime}" value="high" id="response-high" 
+                                       x-model="responseTime">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Strict Response Time</div>
+                                    <p class="scalability-description">Fast response time is critical, for real-time applications or user-facing services</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cost Sensitivity -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-coins"></i>
+                                How sensitive is your application to infrastructure or operational costs?
+                            </label>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': costSensitivity === 'low' }"
+                                 @click="costSensitivity = 'low'">
+                                <input type="radio" th:field="*{costSensitivity}" value="low" id="cost-low" 
+                                       x-model="costSensitivity">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Low Cost Sensitivity</div>
+                                    <p class="scalability-description">Cost is not a primary concern, performance and reliability take precedence</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': costSensitivity === 'medium' }"
+                                 @click="costSensitivity = 'medium'">
+                                <input type="radio" th:field="*{costSensitivity}" value="medium" id="cost-medium" 
+                                       x-model="costSensitivity">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">Balanced Approach</div>
+                                    <p class="scalability-description">Seeking balance between cost and performance, typical for most business applications</p>
+                                </div>
+                            </div>
+                            
+                            <div class="scalability-option" 
+                                 :class="{ 'selected': costSensitivity === 'high' }"
+                                 @click="costSensitivity = 'high'">
+                                <input type="radio" th:field="*{costSensitivity}" value="high" id="cost-high" 
+                                       x-model="costSensitivity">
+                                <div class="scalability-icon">
+                                    <i class="fas fa-piggy-bank"></i>
+                                </div>
+                                <div class="scalability-content">
+                                    <div class="scalability-title">High Cost Sensitivity</div>
+                                    <p class="scalability-description">Cost optimization is critical, seeking the most efficient resource utilization</p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
             
-            <!-- Expected Load -->
-            <div class="form-group">
-                <label>What is the expected average workload or user traffic for your application?</label>
-                <select th:field="*{expectedLoad}" class="form-control">
-                    <option value="low">Low (Minimal traffic)</option>
-                    <option value="medium">Medium (Moderate traffic)</option>
-                    <option value="high">High (Heavy traffic)</option>
-                </select>
-            </div>
-
-            <!-- Peak Times -->
-            <div class="form-group">
-                <label>How frequently does your application experience spikes in workload or traffic?</label>
-                <select th:field="*{peakTimes}" class="form-control">
-                    <option value="rarely">Rarely (Infrequent spikes)</option>
-                    <option value="occasionally">Occasionally (Periodic spikes)</option>
-                    <option value="frequently">Frequently (Regular spikes)</option>
-                    <option value="always">Always (Continuous high demand)</option>
-                </select>
-            </div>
-
-            <!-- Response Time SLA -->
-            <div class="form-group">
-                <label>What is the required response time for your application to meet service-level agreements?</label>
-                <select th:field="*{responseTime}" class="form-control">
-                    <option value="low">Low (Relaxed response time)</option>
-                    <option value="medium">Medium (Standard response time)</option>
-                    <option value="high">High (Strict response time requirements)</option>
-                </select>
-            </div>
-
-            <!-- Cost Sensitivity -->
-            <div class="form-group">
-                <label>How sensitive is your application to infrastructure or operational costs?</label>
-                <select th:field="*{costSensitivity}" class="form-control">
-                    <option value="low">Low (Cost is not a concern)</option>
-                    <option value="medium">Medium (Balanced cost and performance)</option>
-                    <option value="high">High (Cost optimization is critical)</option>
-                </select>
-            </div>
-
-            <!-- Buttons -->
+            <!-- Navigation Buttons -->
             <div class="button-container">
-                
-                <a href="/" class="btn btn-secondary-custom btn-custom">Back to Main Menu</a>
-                <a href="/workflow/resource-requirements" class="btn btn-warning-custom btn-custom">Go Back</a>
-                <button type="submit" class="btn btn-primary-custom btn-custom">Review & Continue</button>
+                <a href="/" class="btn-custom btn-secondary-custom">
+                    <i class="fas fa-home"></i>
+                    Back to Main Menu
+                </a>
+                <a href="/workflow/resource-requirements" class="btn-custom btn-warning-custom">
+                    <i class="fas fa-arrow-left"></i>
+                    Go Back
+                </a>
+                <button type="submit" form="scalabilityForm" class="btn-custom btn-primary-custom">
+                    <i class="fas fa-check-circle"></i>
+                    Review & Continue
+                </button>
             </div>
-
-        </form>
+        </div>
     </div>
 
     <!-- Footer -->
-    <div class="footer">
-        <p>&copy; 2024 Technical University of Crete. <br> Developed as part of a Thesis in Deployment Choice Automation.</p>
-    </div>
+    <footer>
+        <p class="mb-0">
+            &copy; 2024 Technical University of Crete<br>
+            <span class="opacity-75">Developed as part of a Thesis in Deployment Choice Automation</span>
+        </p>
+    </footer>
 
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
