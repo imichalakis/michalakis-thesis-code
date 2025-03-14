@@ -109,11 +109,7 @@
     z-index: 1; /* Ensure it's above other content */
 }
 
-.solution-number {
-    font-weight: 700;
-    font-size: 0.875rem;
-    color: var(--gray-800);
-}
+
 
 .solution-text {
     font-weight: 500;
@@ -363,17 +359,111 @@
             color: var(--gray-800);
         }
         
-        .recommendation-card {
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            margin-bottom: 1.25rem;
-            background-color: #fff;
-            border: 1px solid var(--gray-200);
-            transition: var(--transition-smooth);
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.5s forwards;
-        }
+        /* Recommendation card styling - Exactly like urgency page */
+.recommendation-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+/* Solution number container - Exactly like urgency page */
+.solution-number-container {
+    padding: 0.75rem 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.solution-number {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--gray-800);
+}
+
+.solution-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Main content area - Exactly like urgency page */
+.solution-main-content {
+    padding: 0.5rem 1rem 1rem;
+    position: relative;
+}
+
+.solution-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.4;
+    margin-right: 5rem; /* Make room for the badge */
+}
+
+/* Infrastructure type badge - Exactly like urgency page's badge */
+.infra-type-badge {
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: var(--normal-bg);
+    color: var(--normal-color);
+}
+
+.infra-type-badge i {
+    margin-right: 0.35rem;
+}
+
+/* Reasoning section - Exactly like urgency page */
+.choice-reason-section {
+    padding: 1rem;
+    background-color: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+}
+
+.choice-reason-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.choice-reason-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.choice-reason-item {
+    position: relative;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.choice-reason-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+}
         
         @keyframes fadeInUp {
             to {
@@ -708,12 +798,10 @@
     </style>
 </head>
 <body>
-
-    <!-- Navbar -->
-    <nav class="navbar">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                Deployment Strategy Automation
+                <i class="fas fa-cloud-upload-alt me-2"></i> DeployAI
             </a>
         </div>
     </nav>
@@ -809,64 +897,69 @@
                 </div>
             </div>
 
-            <!-- Recommendations Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-header-icon bg-success-light">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <h2 class="card-header-title">Urgency Recommendation</h2>
+          <!-- Recommendations Card -->
+<!-- Recommendations Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-header-icon bg-success-light">
+            <i class="fas fa-server"></i>
+        </div>
+        <h2 class="card-header-title">Recommended Infrastructure</h2>
+    </div>
+    <div class="card-body">
+        <!-- Recommendations List (Only show if results are available) -->
+        <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+            <!-- Loop through recommendations -->
+            <div th:each="result, iterStat : ${resultsList}" class="recommendation-card">
+                <!-- Solution Label - Exactly like urgency page -->
+                <div class="solution-number-container">
+                    <span class="solution-number" th:text="${iterStat.count}"></span>
+                    <span class="solution-text">SOLUTION</span>
                 </div>
-                <div class="card-body">
-                    <!-- Recommendations List (Only show if results are available) -->
-                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-card"
-     th:with="priorityLevel=${result['naturalLanguageMainResult'].contains('Urgent') ? 'urgent' : (result['naturalLanguageMainResult'].contains('High') ? 'high' : 'normal')}">
-    <!-- Card Header with Improved Layout -->
-    <div class="recommendation-header">
-        <!-- Solution Label (Repositioned) -->
-        <div class="solution-label">
-            <span class="solution-number" th:text="${iterStat.count}"></span>
-            <span class="solution-text">Solution</span>
+                
+                <!-- Main Content Area - Exactly like urgency page -->
+                <div class="solution-main-content">
+                    <!-- Title - Exactly like urgency page -->
+                    <h3 class="solution-title" th:text="${result['naturalLanguageMainResult']}"></h3>
+                    
+                    <!-- Infrastructure Type Badge - Styled exactly like urgency page's badge -->
+                    <div th:with="infraType=${result['naturalLanguageMainResult'].contains('IaaS') ? 'iaas' : 
+                              (result['naturalLanguageMainResult'].contains('PaaS') ? 'paas' : 
+                              (result['naturalLanguageMainResult'].contains('SaaS') ? 'saas' : 
+                              (result['naturalLanguageMainResult'].contains('Serverless') ? 'serverless' : 'other')))}"
+                         class="infra-type-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span th:text="${#strings.toUpperCase(infraType)}"></span>
+                    </div>
+                </div>
+                
+                <!-- Divider - Exactly like urgency page -->
+                <hr>
+                
+                <!-- Reasoning Section - Exactly like urgency page -->
+                <div class="choice-reason-section">
+                    <div class="choice-reason-heading">
+                        <i class="fas fa-info-circle"></i>
+                        WHY THIS CHOICE?
+                    </div>
+                    <ul class="choice-reason-list">
+                        <li th:each="fact : ${result['convertedFact']}" class="choice-reason-item">
+                            <span th:text="${fact}"></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
         
-        <div class="recommendation-content">
-            <!-- Title with Better Spacing -->
-            <h3 class="recommendation-title" th:text="${result['naturalLanguageMainResult'] != 'Unknown Strategy' ? result['naturalLanguageMainResult'] : 'Not Mapped Properly'}"></h3>
-            
-            <!-- Priority Badge (Better Positioned) -->
-            <div th:class="'priority-badge priority-' + ${priorityLevel}">
-                <i th:class="'fas ' + (${priorityLevel == 'urgent' ? 'fa-exclamation-circle' : (priorityLevel == 'high' ? 'fa-arrow-up' : 'fa-check-circle')})"></i>
-                <span th:text="${#strings.capitalize(priorityLevel)}"></span>
+        <!-- Empty state when no recommendations are available -->
+        <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}" class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
             </div>
+            <p class="text-danger mb-0">No recommendations available. Please review your selections.</p>
         </div>
-    </div>
-    
-    <!-- Reasoning Section with Better Separation -->
-    <div class="recommendation-reasons">
-        <div class="reason-heading">
-            <i class="fas fa-info-circle"></i>
-            Why this choice?
-        </div>
-        <ul class="reasons-list">
-            <li th:each="fact : ${result['convertedFact']}" class="reason-item">
-                <span th:if="${fact != null and fact != ''}" 
-                      th:text="${fact.startsWith('•') ? fact.substring(1).trim() : fact}"></span>
-                <span th:if="${fact == null or fact == ''}" class="text-muted">(Fact not mapped properly)</span>
-            </li>
-        </ul>
     </div>
 </div>
-                    </div>
-                    
-                    <!-- Empty state when no recommendations are available -->
-                    <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}" class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
-                        </div>
-                        <p class="text-danger mb-0">No recommendations available. Please review your selections.</p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Navigation Buttons -->
@@ -905,6 +998,98 @@
                 card.style.animationDelay = (index * 100) + 'ms';
             });
         });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // Add animation for recommendation cards
+    const cards = document.querySelectorAll('.recommendation-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = (index * 100) + 'ms';
+    });
+    
+    // Consolidate duplicate recommendations if needed
+    consolidateRecommendations();
+});
+
+function consolidateRecommendations() {
+    // Get all recommendation cards
+    const recommendationCards = document.querySelectorAll('.recommendation-card');
+    if (recommendationCards.length <= 1) return; // No need to consolidate if there's only one or zero recommendations
+    
+    // Create a map to group recommendations by title
+    const recommendationMap = {};
+    
+    // First pass: group recommendations by title
+    recommendationCards.forEach(card => {
+        const titleElement = card.querySelector('.recommendation-title');
+        const title = titleElement ? titleElement.textContent.trim() : '';
+        
+        if (!title) return;
+        
+        // Create an entry for this title if it doesn't exist
+        if (!recommendationMap[title]) {
+            recommendationMap[title] = {
+                cards: [],
+                reasons: new Set(),
+                infraType: card.getAttribute('data-infra-type') || 'other'
+            };
+        }
+        
+        // Add this card to the group
+        recommendationMap[title].cards.push(card);
+        
+        // Collect all unique reasons from this card
+        const reasonItems = card.querySelectorAll('.reason-item');
+        reasonItems.forEach(item => {
+            const reasonText = item.textContent.trim();
+            if (reasonText && !reasonText.includes('not mapped properly')) {
+                recommendationMap[title].reasons.add(reasonText);
+            }
+        });
+        
+        // Hide all cards initially - we'll show only the consolidated ones
+        card.style.display = 'none';
+    });
+    
+    // Second pass: create consolidated cards
+    let index = 1;
+    for (const title in recommendationMap) {
+        const group = recommendationMap[title];
+        
+        // Only process groups with multiple cards
+        if (group.cards.length <= 1) {
+            group.cards[0].style.display = 'block'; // Show the single card as is
+            continue;
+        }
+        
+        // Use the first card as a template for the consolidated card
+        const templateCard = group.cards[0].cloneNode(true);
+        templateCard.style.display = 'block';
+        
+        // Update the number
+        const numberElement = templateCard.querySelector('.solution-number');
+        if (numberElement) {
+            numberElement.textContent = index++;
+        }
+        
+        // Clear existing reasons
+        const reasonsList = templateCard.querySelector('.reasons-list');
+        if (reasonsList) {
+            reasonsList.innerHTML = '';
+            
+            // Add all unique reasons
+            group.reasons.forEach(reason => {
+                const li = document.createElement('li');
+                li.className = 'reason-item';
+                li.textContent = reason;
+                reasonsList.appendChild(li);
+            });
+        }
+        
+        // Add the consolidated card to the DOM
+        group.cards[0].parentNode.appendChild(templateCard);
+    }
+}
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

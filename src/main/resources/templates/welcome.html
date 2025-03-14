@@ -4,127 +4,1060 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deployment Choice Automation</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color system */
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --primary-light: #cfe2ff;
+            --secondary: #6c757d;
+            --success: #198754;
+            --warning: #fd7e14;
+            --danger: #dc3545;
+            --info: #0dcaf0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            
+            /* Neutral colors */
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+            
+            /* Design tokens */
+            --border-radius-sm: 0.25rem;
+            --border-radius: 0.375rem;
+            --border-radius-lg: 0.5rem;
+            --border-radius-xl: 1rem;
+            
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            --box-shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+            
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f8fa;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+        
+        /* Navbar styling */
+        .navbar {
+            padding: 0.75rem 1rem;
+            box-shadow: var(--box-shadow-sm);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        /* Tips Section Styling - Add to the style section */
+.tips-section {
+    margin: 3rem 0;
+}
+
+.tips-title {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.tips-title i {
+    color: var(--warning);
+}
+
+.tips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+}
+/* Help Button Styling - Add to the style section */
+.help-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--box-shadow);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    z-index: 1000;
+}
+
+.help-button:hover {
+    transform: translateY(-5px) rotate(15deg);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.help-section h5 {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.help-section ol {
+    padding-left: 1.5rem;
+}
+
+.help-section li {
+    margin-bottom: 0.75rem;
+}
+.tip-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 250px;
+    transition: var(--transition-smooth);
+    border-top: 4px solid var(--primary);
+}
+
+.tip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.tip-card:nth-child(2) {
+    border-top-color: var(--warning);
+}
+
+.tip-card:nth-child(3) {
+    border-top-color: var(--success);
+}
+
+.tip-icon {
+    color: var(--primary);
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.tip-card:nth-child(2) .tip-icon {
+    color: var(--warning);
+}
+
+.tip-card:nth-child(3) .tip-icon {
+    color: var(--success);
+}
+
+.tip-content h4 {
+    font-weight: 600;
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+}
+
+.tip-content p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .tips-container {
+        flex-direction: column;
+    }
+    
+    .tip-card {
+        width: 100%;
+    }
+}
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .connection-badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius);
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .connection-badge i {
+            font-size: 0.75rem;
+        }
+        
+        /* Alert styling */
+        .alert {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: var(--box-shadow-sm);
+        }
+        
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border-left: 4px solid #4caf50;
+        }
+        /* Dashboard Summary Styling - Add to the style section */
+.dashboard-summary {
+    margin: 2rem 0;
+}
+
+.dashboard-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    min-width: 200px;
+    flex: 1;
+    transition: var(--transition-smooth);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.dashboard-card-icon {
+    background: var(--primary-light);
+    color: var(--primary);
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.dashboard-card:nth-child(2) .dashboard-card-icon {
+    background: rgba(253, 126, 20, 0.1);
+    color: var(--warning);
+}
+
+.dashboard-card:nth-child(3) .dashboard-card-icon {
+    background: rgba(25, 135, 84, 0.1);
+    color: var(--success);
+}
+
+.dashboard-card-content h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--dark);
+}
+
+.dashboard-card-content p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-cards {
+        flex-direction: column;
+    }
+    
+    .dashboard-card {
+        width: 100%;
+    }
+}
+        /* Page header */
+        .page-header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            letter-spacing: -0.02em;
+        }
+        
+        .page-subtitle {
+            font-size: 1.125rem;
+            color: var(--secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Workflow container */
+        .workflow-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+        
+        /* Workflow step cards */
+        .workflow-step {
+            background-color: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            flex: 1;
+            min-width: 250px;
+            max-width: 350px;
+            transition: var(--transition-smooth);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .workflow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-lg);
+        }
+        
+        .workflow-step h5 {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .workflow-step p {
+            color: var(--gray-600);
+            font-size: 0.9375rem;
+            margin-bottom: 1.25rem;
+            flex-grow: 1;
+        }
+        
+        .workflow-step .btn {
+            margin-bottom: 1rem;
+            padding: 0.625rem 1rem;
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            transition: var(--transition-base);
+        }
+        
+        .workflow-step .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+        }
+        
+        .workflow-step .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+        }
+        
+        .workflow-step .btn-light {
+            background: white;
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .workflow-step .btn-light:hover {
+            background-color: var(--success);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(25, 135, 84, 0.2);
+        }
+        
+        .workflow-step .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--gray-700);
+        }
+        
+        .workflow-step .badge {
+            font-weight: 500;
+            padding: 0.35rem 0.65rem;
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .workflow-step:last-child {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .workflow-step:last-child p {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        /* Workflow connection lines */
+        .workflow-connection {
+            display: flex;
+            align-items: center;
+            color: var(--gray-400);
+            font-size: 1.25rem;
+        }
+        
+        /* Reset button styling */
+        .reset-container {
+            text-align: center;
+            margin: 2.5rem 0;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #fd7e14, #dc3545);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition-smooth);
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(220, 53, 69, 0.25);
+        }
+        
+        .reset-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        /* Modal styling */
+        .modal-content {
+            border: none;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow-lg);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            border-bottom: none;
+            padding: 1.5rem 1.5rem 0.75rem;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            border-top: none;
+            padding: 0.75rem 1.5rem 1.5rem;
+        }
+        
+        .modal .btn {
+            font-weight: 500;
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--border-radius);
+        }
+        
+        .modal .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #bd2130);
+            border: none;
+        }
+        
+        /* Footer styling */
+        footer {
+            background-color: white;
+            border-top: 1px solid var(--gray-200);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--gray-600);
+        }
+        
+        footer p {
+            margin-bottom: 0;
+            font-size: 0.9375rem;
+        }
+        
+        footer strong {
+            color: var(--gray-800);
+        }
+        /**
+ * Deployment Strategy Automation - Progress Indicator Styles
+ * This stylesheet contains all styles related to the progress tracking system
+ * 
+ * @author AI Assistant
+ * @version 1.0.0
+ */
+
+/* Dashboard Summary Styles */
+.dashboard-summary {
+    margin: 2rem 0;
+}
+
+.dashboard-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    min-width: 200px;
+    flex: 1;
+    transition: var(--transition-smooth);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.dashboard-card-icon {
+    background: var(--primary-light);
+    color: var(--primary);
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.dashboard-card:nth-child(2) .dashboard-card-icon {
+    background: rgba(253, 126, 20, 0.1);
+    color: var(--warning);
+}
+
+.dashboard-card:nth-child(3) .dashboard-card-icon {
+    background: rgba(25, 135, 84, 0.1);
+    color: var(--success);
+}
+
+.dashboard-card-content h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--dark);
+}
+
+.dashboard-card-content p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+/* Progress Tracker Styles */
+.progress-tracker {
+    margin-bottom: 2rem;
+}
+
+.progress-bar-wrapper {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.progress-percentage {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.progress-bar-container {
+    height: 0.75rem;
+    background-color: var(--gray-200);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-custom {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 1rem;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Progress bar animation effect */
+.progress-bar-custom::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-100%);
+}
+
+.progress-bar-custom.animating::after {
+    animation: shimmer 1.5s ease-in-out;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+/* Workflow Step Styles */
+.workflow-step {
+    transition: all 0.3s ease;
+}
+
+.workflow-step.step-completed {
+    border-left: 4px solid var(--success);
+}
+
+.workflow-step.step-completed .workflow-step-icon {
+    color: var(--success);
+}
+
+.workflow-step.step-completed:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(25, 135, 84, 0.1);
+}
+
+/* Status indicator styles */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge.bg-success {
+    background-color: var(--success) !important;
+    transition: all 0.3s ease;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning) !important;
+    transition: all 0.3s ease;
+}
+
+/* Animation for newly completed steps */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.badge.bg-success {
+    animation: pulse 1s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-cards {
+        flex-direction: column;
+    }
+    
+    .dashboard-card {
+        width: 100%;
+    }
+    
+    .progress-percentage {
+        font-size: 1.25rem;
+    }
+}
+
+/* Dark theme support */
+[data-theme="dark"] .dashboard-card,
+[data-theme="dark"] .progress-bar-container {
+    background-color: var(--gray-800);
+    color: var(--light);
+}
+
+[data-theme="dark"] .progress-bar-container {
+    background-color: var(--gray-700);
+}
+
+[data-theme="dark"] .dashboard-card-content h3 {
+    color: var(--light);
+}
+
+[data-theme="dark"] .progress-percentage {
+    color: var(--primary-light);
+}
+
+[data-theme="dark"] .workflow-step.step-completed {
+    border-left-color: var(--success);
+}
+
+/* Progress percentage color based on completion */
+.progress-percentage[data-progress="0"] {
+    color: var(--gray-600);
+}
+
+.progress-percentage[data-progress="20"] {
+    color: var(--danger);
+}
+
+.progress-percentage[data-progress="40"] {
+    color: var(--warning);
+}
+
+.progress-percentage[data-progress="60"] {
+    color: var(--info);
+}
+
+.progress-percentage[data-progress="80"] {
+    color: var(--primary);
+}
+/* Animated Background - Add to the style section */
+.background-animation {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.bg-shape {
+    position: absolute;
+    background: var(--primary-light);
+    border-radius: 50%;
+    opacity: 0.05;
+}
+
+.bg-shape:nth-child(1) {
+    width: 300px;
+    height: 300px;
+    top: -100px;
+    right: -50px;
+    animation: float 15s infinite alternate;
+}
+
+.bg-shape:nth-child(2) {
+    width: 200px;
+    height: 200px;
+    bottom: 10%;
+    left: 10%;
+    animation: float 20s infinite alternate-reverse;
+}
+
+.bg-shape:nth-child(3) {
+    width: 350px;
+    height: 350px;
+    top: 40%;
+    right: 10%;
+    animation: float 18s infinite alternate;
+}
+
+.bg-shape:nth-child(4) {
+    width: 250px;
+    height: 250px;
+    bottom: -50px;
+    right: 20%;
+    animation: float 12s infinite alternate-reverse;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    100% {
+        transform: translate(50px, 50px) rotate(10deg);
+    }
+}
+
+[data-theme="dark"] .bg-shape {
+    opacity: 0.1;
+}
+.progress-percentage[data-progress="100"] {
+    color: var(--success);
+}
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .workflow-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .workflow-step {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .workflow-connection {
+                transform: rotate(90deg);
+                margin: 0.5rem 0;
+            }
+            
+            .page-title {
+                font-size: 1.75rem;
+            }
+            
+            .page-subtitle {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Animation keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
 </head>
 <body>
-
+<!-- Animated Background - Add after the opening body tag -->
+<div class="background-animation">
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+</div>
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <a class="navbar-brand" href="/">Deployment Strategy Automation</a>
-    <div class="ml-auto">
-        <!-- Dynamic connection status with Gorgias Cloud -->
-        <span th:if="${userSession.connectionStatus}" class="badge badge-success">
-            Connected to Gorgias Cloud <i class="fas fa-check-circle"></i>
-        </span>
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-cloud-upload-alt me-2"></i> DeployAI
+        </a>
+        <div class="ms-auto">
+            <!-- Dynamic connection status with Gorgias Cloud -->
+            <div th:if="${userSession.connectionStatus}" class="connection-badge">
+                <i class="fas fa-circle-check"></i> Connected to Gorgias Cloud
+            </div>
+        </div>
     </div>
 </nav>
 
 <!-- Reset Success Message -->
-<div class="container mt-3">
-    <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${message}" id="resetSuccessAlert">
-        <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+<div class="container mt-4">
+    <div class="alert alert-success alert-dismissible fade show animate-fade-in" role="alert" th:if="${message}" id="resetSuccessAlert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-circle-check me-2"></i>
+            <span th:text="${message}" class="flex-grow-1"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     </div>
 </div>
+<!-- Dashboard Summary - Add after the alert and before the page header -->
+
 
 <!-- Main Container -->
-<div class="container mt-5">
-    <h2 class="display-5 text-center">Cloud Deployment Strategy Assistant</h2>
-    <p class="lead text-center">Follow the steps in order to define your cloud deployment strategy.</p>
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Cloud Deployment Strategy Assistant</h1>
+        <p class="page-subtitle">Follow these steps to define your optimal cloud deployment strategy</p>
+    </div>
 
     <div class="workflow-container">
         
         <!-- Step 1 -->
-        <div class="workflow-step">
-            <h5><i class="fas fa-exclamation-circle"></i> Set Urgency Level</h5>
-            <p>Specify urgency level and agency details.</p>
-            <a href="/workflow/index" class="btn btn-primary btn-block" data-toggle="tooltip" title="Define urgency">Define Urgency</a>
-            <div><strong>Status:</strong> 
-                <span th:text="${urgencyStatus}" th:class="${urgencyStatus == '✅ Completed' ? 'badge badge-success' : 'badge badge-warning'}">⏳ Pending</span>
+        <div class="workflow-step animate-fade-in" style="animation-delay: 0.1s;">
+            <h5><i class="fas fa-exclamation-circle text-warning"></i> Set Urgency Level</h5>
+            <p>Specify the urgency level and agency details for your deployment requirements.</p>
+            <a href="/workflow/index" class="btn btn-primary w-100" data-bs-toggle="tooltip" title="Define urgency">
+                <i class="fas fa-arrow-right me-2"></i> Define Urgency
+            </a>
+            <div class="status-indicator">
+                <strong>Status:</strong> 
+                <span th:text="${urgencyStatus}" 
+                      th:class="${urgencyStatus == '✅ Completed' ? 'badge bg-success' : 'badge bg-warning'}">
+                    ⏳ Pending
+                </span>
             </div>
         </div>
 
-        <div class="workflow-arrow">➜</div>
+        <div class="workflow-connection d-none d-md-flex">
+            <i class="fas fa-chevron-right"></i>
+        </div>
 
         <!-- Step 2 -->
-        <div class="workflow-step">
-            <h5><i class="fas fa-server"></i> Choose Infrastructure</h5>
-            <p>Select infrastructure needs.</p>
-            <a href="/workflow/infrbroadcat" class="btn btn-primary btn-block" data-toggle="tooltip" title="Specify infrastructure">Define Infrastructure</a>
-            <div><strong>Status:</strong> 
-                <span th:text="${infrastructureStatus}" th:class="${infrastructureStatus == '✅ Completed' ? 'badge badge-success' : 'badge badge-warning'}">⏳ Pending</span>
+        <div class="workflow-step animate-fade-in" style="animation-delay: 0.2s;">
+            <h5><i class="fas fa-server text-primary"></i> Choose Infrastructure</h5>
+            <p>Select the infrastructure requirements that best match your deployment needs.</p>
+            <a href="/workflow/infrbroadcat" class="btn btn-primary w-100" data-bs-toggle="tooltip" title="Specify infrastructure">
+                <i class="fas fa-arrow-right me-2"></i> Define Infrastructure
+            </a>
+            <div class="status-indicator">
+                <strong>Status:</strong> 
+                <span th:text="${infrastructureStatus}" 
+                      th:class="${infrastructureStatus == '✅ Completed' ? 'badge bg-success' : 'badge bg-warning'}">
+                    ⏳ Pending
+                </span>
             </div>
         </div>
 
-        <div class="workflow-arrow">➜</div>
+        <div class="workflow-connection d-none d-md-flex">
+            <i class="fas fa-chevron-right"></i>
+        </div>
 
         <!-- Step 3 -->
-        <div class="workflow-step">
-            <h5><i class="fas fa-map-marker-alt"></i> Select Data Location</h5>
-            <p>Define data type and cloud environment.</p>
-            <a href="/workflow/location" class="btn btn-primary btn-block" data-toggle="tooltip" title="Choose location">Define Location</a>
-            <div><strong>Status:</strong> 
-                <span th:text="${locationStatus}" th:class="${locationStatus == '✅ Completed' ? 'badge badge-success' : 'badge badge-warning'}">⏳ Pending</span>
+        <div class="workflow-step animate-fade-in" style="animation-delay: 0.3s;">
+            <h5><i class="fas fa-map-marker-alt text-danger"></i> Select Data Location</h5>
+            <p>Define the data type classification and required cloud environment location.</p>
+            <a href="/workflow/location" class="btn btn-primary w-100" data-bs-toggle="tooltip" title="Choose location">
+                <i class="fas fa-arrow-right me-2"></i> Define Location
+            </a>
+            <div class="status-indicator">
+                <strong>Status:</strong> 
+                <span th:text="${locationStatus}" 
+                      th:class="${locationStatus == '✅ Completed' ? 'badge bg-success' : 'badge bg-warning'}">
+                    ⏳ Pending
+                </span>
             </div>
         </div>
 
-        <div class="workflow-arrow">➜</div>
+        <div class="workflow-connection d-none d-md-flex">
+            <i class="fas fa-chevron-right"></i>
+        </div>
 
         <!-- Step 4 -->
-        <div class="workflow-step">
-            <h5><i class="fas fa-memory"></i> Define Resources</h5>
-            <p>Determine CPU, memory, and storage.</p>
-            <a href="/workflow/resource-requirements" class="btn btn-primary btn-block" data-toggle="tooltip" title="Specify computing resources">Define Requirements</a>
-            <div><strong>Status:</strong> 
-                <span th:text="${resourceStatus}" th:class="${resourceStatus == '✅ Completed' ? 'badge badge-success' : 'badge badge-warning'}">⏳ Pending</span>
+        <div class="workflow-step animate-fade-in" style="animation-delay: 0.4s;">
+            <h5><i class="fas fa-microchip text-info"></i> Define Resources</h5>
+            <p>Determine the CPU, memory, and storage requirements for your deployment.</p>
+            <a href="/workflow/resource-requirements" class="btn btn-primary w-100" data-bs-toggle="tooltip" title="Specify computing resources">
+                <i class="fas fa-arrow-right me-2"></i> Define Resources
+            </a>
+            <div class="status-indicator">
+                <strong>Status:</strong> 
+                <span th:text="${resourceStatus}" 
+                      th:class="${resourceStatus == '✅ Completed' ? 'badge bg-success' : 'badge bg-warning'}">
+                    ⏳ Pending
+                </span>
             </div>
         </div>
 
-        <div class="workflow-arrow">➜</div>
+        <div class="workflow-connection d-none d-md-flex">
+            <i class="fas fa-chevron-right"></i>
+        </div>
 
         <!-- Step 5 -->
-        <div class="workflow-step">
-            <h5><i class="fas fa-chart-line"></i> Plan Scalability</h5>
-            <p>Define scalability for peak loads.</p>
-            <a href="/workflow/scalability-performance" class="btn btn-primary btn-block" data-toggle="tooltip" title="Define scalability">Define Scalability</a>
-            <div><strong>Status:</strong> 
-                <span th:text="${scalabilityStatus}" th:class="${scalabilityStatus == '✅ Completed' ? 'badge badge-success' : 'badge badge-warning'}">⏳ Pending</span>
+        <div class="workflow-step animate-fade-in" style="animation-delay: 0.5s;">
+            <h5><i class="fas fa-chart-line text-primary"></i> Plan Scalability</h5>
+            <p>Define your scalability requirements to handle peak loads and traffic patterns.</p>
+            <a href="/workflow/scalability-performance" class="btn btn-primary w-100" data-bs-toggle="tooltip" title="Define scalability">
+                <i class="fas fa-arrow-right me-2"></i> Define Scalability
+            </a>
+            <div class="status-indicator">
+                <strong>Status:</strong> 
+                <span th:text="${scalabilityStatus}" 
+                      th:class="${scalabilityStatus == '✅ Completed' ? 'badge bg-success' : 'badge bg-warning'}">
+                    ⏳ Pending
+                </span>
             </div>
         </div>
 
-        <div class="workflow-arrow">➜</div>
+        <div class="workflow-connection d-none d-md-flex">
+            <i class="fas fa-chevron-right"></i>
+        </div>
 
         <!-- Final Step -->
-        <div class="workflow-step" style="background: #28a745; color: white;">
-            <h5><i class="fas fa-check-circle"></i> Final Decision</h5>
-            <p>Analyze all selections before finalizing.</p>
-            <a href="/workflow/combined-decision-result" class="btn btn-light btn-block" data-toggle="tooltip" title="Review final selections">View Final Decision</a>
+        <div class="workflow-step animate-fade-in" style="animation-delay: 0.6s;">
+            <h5><i class="fas fa-check-circle me-2"></i> Final Decision</h5>
+            <p>Review and analyze all your selections before finalizing your deployment strategy.</p>
+            <a href="/workflow/combined-decision-result" class="btn btn-light w-100" data-bs-toggle="tooltip" title="Review final selections">
+                <i class="fas fa-flag-checkered me-2"></i> View Final Decision
+            </a>
+        </div>
+    </div>
+    <!-- Tips Section - Add after the workflow container -->
+<!-- Tips Section - Strategic Workflow Guidance -->
+<!-- Tips Section with Updated Icons -->
+<div class="tips-section animate-fade-in" style="animation-delay: 0.7s;">
+    <div class="container">
+        <h3 class="tips-title">
+            <i class="fas fa-lightbulb"></i> Deployment Strategy Tips
+        </h3>
+        <div class="tips-container">
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="tip-content">
+                    <h4>Complete the Workflow Steps</h4>
+                    <p>Provide comprehensive input across all workflow stages to generate a highly tailored deployment strategy. The more detailed information you provide, the more precisely we can match solutions to your specific requirements.</p>
+                </div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="tip-content">
+                    <h4>Review Your Final Decision</h4>
+                    <p>After completing your inputs, carefully examine the recommended options that align with your specified parameters. This review stage ensures your deployment strategy accurately reflects your technical and business requirements.</p>
+                </div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-file-code"></i>
+                </div>
+                <div class="tip-content">
+                    <h4>Generate Your Deployment Assets</h4>
+                    <p>Once your strategy is finalized, access your complete deployment plan including infrastructure specifications, configuration files, and implementation guidelines tailored to your unique requirements.</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
 <!-- Reset Button (triggers modal) -->
 <div class="reset-container">
-    <button type="button" class="btn btn-warning reset-btn" data-toggle="modal" data-target="#resetConfirmModal">
-        <i class="fas fa-redo"></i> Reset Workflow
+    <button type="button" class="reset-btn" data-bs-toggle="modal" data-bs-target="#resetConfirmModal">
+        <i class="fas fa-rotate me-2"></i> Reset Workflow
     </button>
 </div>
 
 <!-- Reset Confirmation Modal -->
-<div class="modal fade" id="resetConfirmModal" tabindex="-1" role="dialog" aria-labelledby="resetConfirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="resetConfirmModal" tabindex="-1" aria-labelledby="resetConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
                 <h5 class="modal-title" id="resetConfirmModalLabel">
-                    <i class="fas fa-exclamation-triangle"></i> Confirm Workflow Reset
+                    <i class="fas fa-triangle-exclamation me-2"></i> Confirm Workflow Reset
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p class="lead">Are you sure you want to reset the entire workflow?</p>
@@ -136,51 +1069,107 @@
                         <li>Remove any generated recommendations</li>
                     </ul>
                 </div>
-                <p><strong>This action cannot be undone.</strong></p>
+                <p class="mb-0"><strong>This action cannot be undone.</strong></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancel
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-xmark me-2"></i> Cancel
                 </button>
                 <form id="resetForm" action="/workflow/reset-status" method="post">
                     <input type="hidden" name="confirmReset" value="true">
                     <button type="submit" class="btn btn-danger" id="confirmResetBtn">
-                        <i class="fas fa-trash-alt"></i> Yes, Reset Everything
+                        <i class="fas fa-trash-alt me-2"></i> Yes, Reset Everything
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+<!-- Floating Help Button - Add before closing body tag -->
+<div class="help-button" data-bs-toggle="modal" data-bs-target="#helpModal">
+    <i class="fas fa-question"></i>
+</div>
 
-<!-- Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-circle-info me-2"></i> Deployment Strategy Help
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h5>How to Use This Tool</h5>
+                    <p>The Deployment Strategy Automation tool helps you define the optimal deployment approach for your cloud applications by guiding you through a series of steps.</p>
+                    
+                    <h5 class="mt-4">Step-by-Step Process</h5>
+                    <ol>
+                        <li><strong>Set Urgency Level</strong> - Define how quickly your deployment needs to be completed</li>
+                        <li><strong>Choose Infrastructure</strong> - Select the type of infrastructure that best fits your needs</li>
+                        <li><strong>Select Data Location</strong> - Specify where your data should be stored</li>
+                        <li><strong>Define Resources</strong> - Determine the computing resources required</li>
+                        <li><strong>Plan Scalability</strong> - Set up how your application should scale</li>
+                        <li><strong>Review Final Decision</strong> - Get your customized deployment strategy</li>
+                    </ol>
+                    
+                    <h5 class="mt-4">Need Additional Help?</h5>
+                    <p>If you need further assistance, please contact our support team at <a href="mailto:imichalakis@tuc.gr">imichalakis@tuc.gr</a>.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got It</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <p>&copy; 2024 Technical University of Crete. All Rights Reserved.</p>
+        <p class="mt-2">Developed as part of a research thesis in <strong>Cloud Deployment Strategy Decision System Using Argumentation</strong>.</p>
+    </div>
+</footer>
 
-<!-- Reset Functionality -->
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JavaScript -->
 <script>
-    $(document).ready(function(){
-        // Enable tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-        
-        // Handle reset form submission with loading state
-        $('#resetForm').on('submit', function() {
-            const confirmBtn = $('#confirmResetBtn');
-            confirmBtn.prop('disabled', true);
-            confirmBtn.html('<i class="fas fa-spinner fa-spin"></i> Resetting...');
-            
-            // Clear browser storage
-            localStorage.clear();
-            sessionStorage.clear();
-            
-            // Allow form submission
-            return true;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
         });
         
+        // Handle reset form submission with loading state
+        const resetForm = document.getElementById('resetForm');
+        if (resetForm) {
+            resetForm.addEventListener('submit', function() {
+                const confirmBtn = document.getElementById('confirmResetBtn');
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Resetting...';
+                
+                // Clear browser storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Allow form submission
+                return true;
+            });
+        }
+        
         // Auto-dismiss success message after 5 seconds
-        setTimeout(function() {
-            $('#resetSuccessAlert').alert('close');
-        }, 5000);
+        const resetSuccessAlert = document.getElementById('resetSuccessAlert');
+        if (resetSuccessAlert) {
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(resetSuccessAlert);
+                bsAlert.close();
+            }, 5000);
+        }
         
         // Check if we need to clear client-side cache (after reset)
         const resetPerformed = /*[[${resetPerformed}]]*/ false;
@@ -188,58 +1177,312 @@
             console.log("Reset detected - clearing client-side state");
             
             // Clear any form data that might be cached by the browser
-            $('form').each(function() {
-                this.reset();
+            document.querySelectorAll('form').forEach(function(form) {
+                form.reset();
             });
             
             // Clear any custom data attributes
-            $('[data-original-value]').removeAttr('data-original-value');
+            document.querySelectorAll('[data-original-value]').forEach(function(el) {
+                el.removeAttribute('data-original-value');
+            });
             
             // Remove any dynamic classes
-            $('.selected, .active-selection, .completed').removeClass('selected active-selection completed');
+            document.querySelectorAll('.selected, .active-selection, .completed').forEach(function(el) {
+                el.classList.remove('selected', 'active-selection', 'completed');
+            });
         }
     });
 </script>
+<script>
+    /**
+ * Deployment Strategy Automation - Progress Indicator System
+ * This script handles tracking and visualizing user progress through the workflow
+ * It updates the UI based on completion status and synchronizes with server state
+ * 
+ * @author AI Assistant
+ * @version 1.0.0
+ */
 
-<!-- Footer -->
-<footer class="text-center py-4 mt-5" style="background-color: #f8f9fa;">
-    <p>&copy; 2024 Technical University of Crete. All Rights Reserved. <br>
-       Developed as part of a research thesis in <strong>Cloud Deployment Strategy Decision System Using Argumentation</strong>.
-    </p>
-</footer>
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the progress tracking system
+    initProgressSystem();
+});
 
-<style>
-    /* Enhance reset button styling */
-    .reset-container {
-        text-align: center;
-        margin-top: 30px;
+/**
+ * Initialize the progress tracking system
+ */
+function initProgressSystem() {
+    // Calculate initial progress
+    updateProgressDisplay();
+    
+    // Set up reset button functionality
+    setupResetButton();
+    
+    // Set up step completion tracking
+    trackStepCompletion();
+}
+
+/**
+ * Calculate the overall progress percentage based on completed steps
+ * Each of the 5 steps represents 20% of the total progress
+ * @returns {Object} Progress data including percentage and completed steps
+ */
+function calculateProgress() {
+    // Get all status indicators
+    const statusElements = document.querySelectorAll('.workflow-step .status-indicator span');
+    let completedSteps = 0;
+    const totalSteps = 5; // Total number of workflow steps
+    
+    // Count completed steps
+    statusElements.forEach(element => {
+        if (element.textContent.includes('✅ Completed')) {
+            completedSteps++;
+        }
+    });
+    
+    // Calculate percentage (each step is worth 20%)
+    const percentage = completedSteps * 20;
+    
+    return {
+        percentage,
+        completedSteps,
+        totalSteps
+    };
+}
+
+/**
+ * Update the progress display in the UI
+ */
+function updateProgressDisplay() {
+    const progress = calculateProgress();
+    
+    // Update dashboard summary card
+    const stepCounterElement = document.querySelector('.dashboard-card:first-child h3');
+    if (stepCounterElement) {
+        stepCounterElement.textContent = `${progress.completedSteps}/${progress.totalSteps}`;
     }
     
-    .reset-btn {
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
+    // Update progress bar
+    const progressBarElement = document.querySelector('.progress-bar-custom');
+    if (progressBarElement) {
+        progressBarElement.style.width = `${progress.percentage}%`;
+        
+        // Add animation class
+        progressBarElement.classList.add('animating');
+        setTimeout(() => {
+            progressBarElement.classList.remove('animating');
+        }, 1000);
     }
     
-    .reset-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    // Update percentage text
+    const percentageElement = document.querySelector('.progress-percentage');
+    if (percentageElement) {
+        percentageElement.textContent = `${progress.percentage}%`;
     }
     
-    /* Modal animation */
-    .modal.fade .modal-dialog {
-        transition: transform 0.3s ease-out;
-        transform: translate(0, -50px);
-    }
+    // Update workflow steps to show which are completed
+    updateWorkflowStepStyles();
+}
+
+/**
+ * Update the styling of workflow steps based on completion status
+ */
+function updateWorkflowStepStyles() {
+    const workflowSteps = document.querySelectorAll('.workflow-step');
     
-    .modal.show .modal-dialog {
-        transform: none;
+    workflowSteps.forEach(step => {
+        const statusBadge = step.querySelector('.status-indicator span');
+        if (statusBadge && statusBadge.textContent.includes('✅ Completed')) {
+            step.classList.add('step-completed');
+        } else {
+            step.classList.remove('step-completed');
+        }
+    });
+}
+
+/**
+ * Set up the reset button functionality
+ */
+function setupResetButton() {
+    const resetForm = document.getElementById('resetForm');
+    if (resetForm) {
+        resetForm.addEventListener('submit', function() {
+            // Reset progress in localStorage
+            localStorage.removeItem('workflowProgress');
+            
+            // Visual feedback for the reset button
+            const confirmBtn = document.getElementById('confirmResetBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Resetting...';
+            }
+        });
     }
+}
+
+/**
+ * Track step completion based on URL patterns and server data
+ */
+function trackStepCompletion() {
+    // Map of URL patterns to step identifiers
+    const urlPatternToStep = [
+        { pattern: '/workflow/urgency-result', step: 'urgency' },
+        { pattern: '/workflow/infrastructureReq-result', step: 'infrastructure' },
+        { pattern: '/workflow/location-result', step: 'location' },
+        { pattern: '/workflow/resource-result', step: 'resources' },
+        { pattern: '/workflow/scalability-result', step: 'scalability' }
+    ];
     
-    /* Success alert styling */
-    .alert-success {
-        border-left: 4px solid #28a745;
-    }
-</style>
+    // Check if current URL indicates a completed step
+    const currentPath = window.location.pathname;
+    
+    // Look for result pages in the URL
+    urlPatternToStep.forEach(mapping => {
+        if (currentPath.includes(mapping.pattern)) {
+            // Mark this step as completed in localStorage
+            markStepCompleted(mapping.step);
+            
+            // Sync with server
+            syncStepWithServer(mapping.step, true);
+        }
+    });
+    
+    // Load previously completed steps from localStorage
+    loadSavedProgress();
+}
+
+/**
+ * Mark a specific step as completed
+ * @param {string} stepName - The name of the step to mark as completed
+ */
+function markStepCompleted(stepName) {
+    // Get current progress from localStorage
+    let progress = JSON.parse(localStorage.getItem('workflowProgress')) || {};
+    
+    // Update the step status
+    progress[stepName] = true;
+    
+    // Save back to localStorage
+    localStorage.setItem('workflowProgress', JSON.stringify(progress));
+}
+
+/**
+ * Load saved progress from localStorage and update UI
+ */
+function loadSavedProgress() {
+    const progress = JSON.parse(localStorage.getItem('workflowProgress')) || {};
+    
+    // Map of step names to corresponding status element selectors
+    const stepToStatusElement = {
+        'urgency': '.workflow-step:nth-child(1) .status-indicator span',
+        'infrastructure': '.workflow-step:nth-child(3) .status-indicator span',
+        'location': '.workflow-step:nth-child(5) .status-indicator span',
+        'resources': '.workflow-step:nth-child(7) .status-indicator span',
+        'scalability': '.workflow-step:nth-child(9) .status-indicator span'
+    };
+    
+    // Update status indicators based on saved progress
+    Object.keys(progress).forEach(step => {
+        if (progress[step] && stepToStatusElement[step]) {
+            const statusElement = document.querySelector(stepToStatusElement[step]);
+            if (statusElement) {
+                statusElement.textContent = '✅ Completed';
+                statusElement.className = 'badge bg-success';
+            }
+        }
+    });
+    
+    // Update overall progress display
+    updateProgressDisplay();
+}
+
+/**
+ * Synchronize step completion status with the server
+ * @param {string} step - The step name
+ * @param {boolean} isCompleted - Whether the step is completed
+ */
+function syncStepWithServer(step, isCompleted) {
+    // Only proceed if fetch is available
+    if (typeof fetch !== 'function') return;
+    
+    fetch('/api/update-progress', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCSRFToken() // Get CSRF token from meta tag
+        },
+        body: JSON.stringify({
+            step: step,
+            completed: isCompleted
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Progress synced with server:', data);
+        
+        // If server has updated progress data, update the UI
+        if (data.updatedProgress) {
+            updateUIFromServerProgress(data.updatedProgress);
+        }
+    })
+    .catch(error => {
+        console.error('Error syncing progress with server:', error);
+        // Continue with local storage data if server sync fails
+    });
+}
+
+/**
+ * Update UI based on progress data from server
+ * @param {Object} serverProgress - Progress data from server
+ */
+function updateUIFromServerProgress(serverProgress) {
+    // Map of step names to corresponding status element selectors
+    const stepToStatusElement = {
+        'urgency': '.workflow-step:nth-child(1) .status-indicator span',
+        'infrastructure': '.workflow-step:nth-child(3) .status-indicator span',
+        'location': '.workflow-step:nth-child(5) .status-indicator span',
+        'resources': '.workflow-step:nth-child(7) .status-indicator span',
+        'scalability': '.workflow-step:nth-child(9) .status-indicator span'
+    };
+    
+    // Update status indicators based on server progress
+    Object.keys(serverProgress).forEach(step => {
+        if (stepToStatusElement[step]) {
+            const statusElement = document.querySelector(stepToStatusElement[step]);
+            if (statusElement) {
+                if (serverProgress[step]) {
+                    statusElement.textContent = '✅ Completed';
+                    statusElement.className = 'badge bg-success';
+                } else {
+                    statusElement.textContent = '⏳ Pending';
+                    statusElement.className = 'badge bg-warning';
+                }
+            }
+        }
+    });
+    
+    // Save the server progress to localStorage for consistency
+    localStorage.setItem('workflowProgress', JSON.stringify(serverProgress));
+    
+    // Update overall progress display
+    updateProgressDisplay();
+}
+
+/**
+ * Get CSRF token from meta tag
+ * @returns {string} CSRF token
+ */
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    return metaTag ? metaTag.getAttribute('content') : '';
+}
+</script>
 
 </body>
 </html>
