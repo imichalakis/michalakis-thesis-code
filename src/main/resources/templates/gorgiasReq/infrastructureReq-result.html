@@ -911,12 +911,10 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    // Group infrastructure recommendations by their title
+document.addEventListener('DOMContentLoaded', function() {
     const infrastructureRecommendations = {};
     const boxes = document.querySelectorAll('.recommendation-box');
     
-    // Skip if there are only 0 or 1 recommendations
     if (boxes.length <= 1) return;
     
     // First pass: collect all recommendations and their supporting facts
@@ -924,34 +922,34 @@
         const titleElement = box.querySelector('.recommendation-title span:nth-child(2)');
         if (!titleElement) return;
         
-        // Extract the title text
-        const fullTitle = titleElement.textContent.trim();
+        // Extract the exact solution title (without any number prefix)
+        const solutionTitle = titleElement.textContent.trim();
         
-        // Create a key based on the infrastructure type
-        const infraTypeMatch = fullTitle.match(/(IaaS|PaaS|SaaS|Serverless|Azure|On-Premise)/i);
-        const infraKey = infraTypeMatch ? infraTypeMatch[0].toLowerCase() : fullTitle;
+        // Use the complete solution title as the key instead of just the infrastructure type
+        const key = solutionTitle;
         
         // Get all supporting facts
         const factItems = Array.from(box.querySelectorAll('.reason-box li'))
             .map(li => li.textContent.trim())
             .filter(text => text && text.length > 0);
         
-        // Initialize this infrastructure group if it doesn't exist
-        if (!infrastructureRecommendations[infraKey]) {
-            infrastructureRecommendations[infraKey] = {
-                fullTitle: fullTitle,
+        // Initialize this solution group if it doesn't exist
+        if (!infrastructureRecommendations[key]) {
+            infrastructureRecommendations[key] = {
+                title: solutionTitle,
                 facts: new Set(),
                 originalBox: box,
-                infraType: infraKey
+                // Determine infrastructure type for styling
+                infraType: getInfrastructureType(solutionTitle)
             };
         }
         
-        // Add all facts to the set (Set automatically handles duplicates)
+        // Add all facts to the set
         factItems.forEach(fact => {
-            infrastructureRecommendations[infraKey].facts.add(fact);
+            infrastructureRecommendations[key].facts.add(fact);
         });
         
-        // Hide all boxes initially - we'll show only the consolidated ones
+        // Hide original box
         box.style.display = 'none';
     });
     
@@ -962,21 +960,19 @@
         const box = recommendation.originalBox.cloneNode(true);
         box.style.display = 'block';
         
-        // Update the solution number
-        const countElement = box.querySelector('.recommendation-title span:first-child');
-        if (countElement) {
-            countElement.textContent = count++;
+        // Update solution number
+        const titleSpan = box.querySelector('.recommendation-title span:first-child');
+        if (titleSpan) {
+            titleSpan.textContent = count++;
         }
         
-        // Apply visual styling based on infrastructure type
-        applyInfrastructureStyling(box, key);
+        // Apply styling based on infrastructure type
+        applyInfrastructureStyling(box, recommendation.infraType);
         
-        // Clear existing facts
+        // Update facts list
         const factBox = box.querySelector('.reason-box ul');
         if (factBox) {
             factBox.innerHTML = '';
-            
-            // Add all unique facts
             Array.from(recommendation.facts).forEach(fact => {
                 const li = document.createElement('li');
                 li.textContent = fact;
@@ -984,35 +980,42 @@
             });
         }
         
-        // Add the consolidated box
+        // Add consolidated box
         recommendation.originalBox.parentNode.appendChild(box);
     }
     
-    // Helper function to apply specific styling based on infrastructure type
-    function applyInfrastructureStyling(box, infraType) {
-        // Remove any existing styling classes
-        box.classList.remove('iaas-style', 'paas-style', 'saas-style', 'serverless-style', 'onpremise-style', 'azure-style');
+    // Helper function to determine infrastructure type
+    function getInfrastructureType(title) {
+        const types = {
+            'iaas': /(IaaS|Infrastructure as a Service)/i,
+            'paas': /(PaaS|Platform as a Service)/i,
+            'saas': /(SaaS|Software as a Service)/i,
+            'serverless': /Serverless/i,
+            'onpremise': /(On-Premise|On Premise)/i,
+            'azure': /Azure/i
+        };
         
-        // Apply appropriate styling class
-        if (infraType.includes('iaas')) {
-            box.classList.add('iaas-style');
-            box.style.borderLeftColor = '#6f42c1'; // Purple for IaaS
-        } else if (infraType.includes('paas')) {
-            box.classList.add('paas-style');
-            box.style.borderLeftColor = '#20c997'; // Teal for PaaS
-        } else if (infraType.includes('saas')) {
-            box.classList.add('saas-style');
-            box.style.borderLeftColor = '#fd7e14'; // Orange for SaaS
-        } else if (infraType.includes('serverless')) {
-            box.classList.add('serverless-style');
-            box.style.borderLeftColor = '#17a2b8'; // Cyan for Serverless
-        } else if (infraType.includes('onpremise') || infraType.includes('on-premise')) {
-            box.classList.add('onpremise-style');
-            box.style.borderLeftColor = '#6c757d'; // Gray for On-Premise
-        } else if (infraType.includes('azure')) {
-            box.classList.add('azure-style');
-            box.style.borderLeftColor = '#0078d4'; // Azure blue
+        for (const type in types) {
+            if (types[type].test(title)) return type;
         }
+        return 'default';
+    }
+    
+    // Helper function to apply styling
+    function applyInfrastructureStyling(box, infraType) {
+        const styles = {
+            'iaas': '#6f42c1',
+            'paas': '#20c997',
+            'saas': '#fd7e14',
+            'serverless': '#17a2b8',
+            'onpremise': '#6c757d',
+            'azure': '#0078d4'
+        };
+        
+        box.classList.remove('iaas-style', 'paas-style', 'saas-style', 
+                           'serverless-style', 'onpremise-style', 'azure-style');
+        box.classList.add(`${infraType}-style`);
+        box.style.borderLeftColor = styles[infraType] || '#6c757d';
     }
 });
 </script>
@@ -1027,3 +1030,5 @@
 
 </body>
 </html>
+
+  
