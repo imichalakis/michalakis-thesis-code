@@ -204,37 +204,53 @@ public List<ParsedResult> executeGorgiasQueryForYamlGen(WorkflowForm form, HttpS
     gorgiasQuery.setResultSize(5);
     gorgiasQuery.setQuery("yamlfile(X)");
 
-    GorgiasQueryResult result = null;
     try {
-        result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
+        GorgiasQueryResult result = apiInstance.executeQueryUsingPOST(gorgiasQuery);
         System.out.println("Query Result: " + result);
+
+        if (result != null && result.isHasResult() && !result.getResult().isEmpty()) {
+            // Get the first result
+            QueryResult queryResult = result.getResult().get(0);
+            
+            // Extract the YAML file decision
+            String yamlDecision = queryResult.getVariables().get("X");
+            
+            // Convert to human-readable format
+            String humanReadableDecision = mapMainResultToNaturalLanguage(yamlDecision, form);
+
+            // Extract supporting facts
+            List<String> supportingFacts = extractSupportingFacts(queryResult.getHumanExplanation());
+            
+            // If no supporting facts found, add default reasoning
+            if (supportingFacts == null || supportingFacts.isEmpty()) {
+                supportingFacts = Collections.singletonList(
+                    "This is the default recommendation based on standard best practices for web applications."
+                );
+            }
+
+            // Create the results list for session storage
+            List<Map<String, Object>> resultsList = new ArrayList<>();
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("naturalLanguageMainResult", "yamlfile(" + yamlDecision + ")");
+            resultMap.put("humanReadableDecision", humanReadableDecision);
+            resultMap.put("convertedFact", supportingFacts);
+            resultsList.add(resultMap);
+
+            // Store in session
+            session.setAttribute("resultsList", resultsList);
+            System.out.println("✅ Results List Stored in Session: " + resultsList);
+
+            return parseGorgiasQueryResult(result);
+        } else {
+            System.out.println("❌ No valid results from Gorgias query");
+            return Collections.emptyList();
+        }
     } catch (ApiException e) {
-        System.out.println("Result is null due to an exception.");
+        System.out.println("❌ Error executing Gorgias query: " + e.getMessage());
         e.printStackTrace();
+        return Collections.emptyList();
     }
-
-    List<ParsedResult> parsedResults = parseGorgiasQueryResult(result);
-
-    // Convert parsed results into a list of maps for Thymeleaf
-    List<Map<String, Object>> resultsList = new ArrayList<>();
-    for (ParsedResult parsedResult : parsedResults) {
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("naturalLanguageMainResult", parsedResult.getMainResult());
-        resultMap.put("convertedFact", parsedResult.getSupportingFacts());
-        resultsList.add(resultMap);
-    }
-
-    // ❗ Ensure resultsList is NOT empty before saving
-    if (!resultsList.isEmpty()) {
-        session.setAttribute("resultsList", resultsList);
-        System.out.println("✅ Results List Stored in Session: " + resultsList);
-    } else {
-        System.out.println("❌ No valid results found for storage in session.");
-    }
-
-    return parsedResults;
 }
-
     
     private List<String> generateFactsForGorgias(WorkflowForm form) {
         List<String> facts = new ArrayList<>();
@@ -1162,7 +1178,7 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
                 return "Urgent Priority: Critical deployment required within 72 hours. Immediate resource allocation necessary. All standard procedures may be expedited to meet this critical timeline.";
             case "normal":
                
-                return "Normal Priority: Regular deployment timeline of up to 60 days. Standard resource allocation appropriate. All normal procedures and quality checks to be followed without modification.";
+                return "Normal Priority: Regular deployment timeline. Standard resource allocation appropriate. All normal procedures and quality checks to be followed without modification.";
             case "high":
                
                 return "High Priority: Accelerated deployment required within 10 days. Prompt resource allocation recommended. Standard procedures should be followed with expedited processing.";
@@ -1219,9 +1235,10 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
     case "azure_app_service_autoscaling":
         return "Azure App Service (Auto-scaling): Fully managed web hosting platform with dynamic scaling based on traffic patterns and resource utilization";
         
-    case "azure_app_service_standard":
-        return "Azure App Service (Standard): Managed web hosting with fixed resource allocation for applications with consistent traffic patterns";
-        
+        case "azure app service standard":
+        case "azure_app_service_standard":
+        case "Azure App Service (Standard)":
+            return "Azure App Service (Standard): Managed web hosting with fixed resource allocation for applications with consistent traffic patterns";
     case "azure_app_service_premium":
         return "Azure App Service (Premium): Enhanced web hosting with dedicated compute resources for high-performance web applications with strict latency requirements";
         

@@ -67,7 +67,27 @@
 .tips-section {
     margin: 3rem 0;
 }
+.workflow-step:last-child {
+    transition: all 0.3s ease;
+}
 
+.workflow-step:last-child .btn {
+    transition: all 0.3s ease;
+}
+
+/* Remove any disabled states */
+.workflow-step:last-child .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Ensure text remains readable in both states */
+.workflow-step:last-child p {
+    transition: color 0.3s ease;
+}
+
+.workflow-step:last-child h5 i {
+    transition: color 0.3s ease;
+}
 .tips-title {
     text-align: center;
     font-weight: 600;
@@ -847,6 +867,101 @@
         .animate-fade-in {
             animation: fadeIn 0.5s ease forwards;
         }
+        /* Azure Reference Section Styling */
+.azure-reference-section {
+    padding: 3rem 0;
+    background-color: #f8f9fa;
+    border-top: 1px solid var(--gray-200);
+}
+
+.reference-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    padding: 2rem;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    border-top: 4px solid #0078d4; /* Microsoft Azure blue */
+}
+
+.reference-header {
+    margin-bottom: 1.5rem;
+}
+
+.reference-header i {
+    color: #0078d4;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.reference-header h4 {
+    color: var(--dark);
+    font-weight: 600;
+    margin: 0;
+}
+
+.reference-content p {
+    color: var(--gray-600);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.reference-link {
+    display: inline-flex;
+    align-items: center;
+    color: #0078d4;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #0078d4;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.reference-link:hover {
+    background: #0078d4;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 120, 212, 0.2);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .azure-reference-section {
+    background-color: var(--gray-800);
+}
+
+[data-theme="dark"] .reference-card {
+    background-color: var(--gray-900);
+}
+
+[data-theme="dark"] .reference-header h4 {
+    color: var(--light);
+}
+
+[data-theme="dark"] .reference-content p {
+    color: var(--gray-400);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .azure-reference-section {
+        padding: 2rem 0;
+    }
+
+    .reference-card {
+        padding: 1.5rem;
+        margin: 0 1rem;
+    }
+
+    .reference-header i {
+        font-size: 1.5rem;
+    }
+
+    .reference-header h4 {
+        font-size: 1.25rem;
+    }
+}
     </style>
 </head>
 <body>
@@ -1126,6 +1241,27 @@
     </div>
 </div>
 <!-- Footer -->
+ <!-- Azure Architecture Reference Section -->
+<div class="azure-reference-section">
+    <div class="container">
+        <div class="reference-card">
+            <div class="reference-header">
+                <i class="fab fa-microsoft me-2"></i>
+                <h4>Based on Microsoft Azure Architecture Guide</h4>
+            </div>
+            <div class="reference-content">
+                <p>This workflow decision system is based on the Azure Architecture Guide's compute decision tree, which provides a structured approach to choosing compute services.</p>
+                <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree" 
+                   class="reference-link" 
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                    <i class="fas fa-external-link-alt me-2"></i>
+                    View Azure Compute Decision Tree Documentation
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 <footer>
     <div class="container">
         <p>&copy; 2024 Technical University of Crete. All Rights Reserved.</p>
@@ -1192,6 +1328,33 @@
             });
         }
     });
+</script>
+<script>
+    function areAllStepsCompleted() {
+    const statusElements = document.querySelectorAll('.workflow-step .status-indicator span');
+    return Array.from(statusElements).every(element => 
+        element.textContent.includes('✅ Completed')
+    );
+}
+</script>
+<script>
+function updateFinalDecisionStep() {
+    const finalDecisionStep = document.querySelector('.workflow-step:last-child');
+    
+    if (areAllStepsCompleted()) {
+        // When all steps are complete, change to green gradient
+        finalDecisionStep.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+        finalDecisionStep.style.color = 'white';
+        finalDecisionStep.querySelector('p').style.color = 'rgba(255, 255, 255, 0.85)';
+        finalDecisionStep.querySelector('h5 i').style.color = 'white';
+    } else {
+        // Default state - keep it accessible but with normal styling
+        finalDecisionStep.style.background = 'white';
+        finalDecisionStep.style.color = '#212529';
+        finalDecisionStep.querySelector('p').style.color = 'var(--gray-600)';
+        finalDecisionStep.querySelector('h5 i').style.color = 'inherit';
+    }
+}
 </script>
 <script>
     /**
@@ -1283,6 +1446,8 @@ function updateProgressDisplay() {
     
     // Update workflow steps to show which are completed
     updateWorkflowStepStyles();
+    updateFinalDecisionStep();
+
 }
 
 /**

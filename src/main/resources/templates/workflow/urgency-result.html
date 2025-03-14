@@ -1011,85 +1011,6 @@
     consolidateRecommendations();
 });
 
-function consolidateRecommendations() {
-    // Get all recommendation cards
-    const recommendationCards = document.querySelectorAll('.recommendation-card');
-    if (recommendationCards.length <= 1) return; // No need to consolidate if there's only one or zero recommendations
-    
-    // Create a map to group recommendations by title
-    const recommendationMap = {};
-    
-    // First pass: group recommendations by title
-    recommendationCards.forEach(card => {
-        const titleElement = card.querySelector('.recommendation-title');
-        const title = titleElement ? titleElement.textContent.trim() : '';
-        
-        if (!title) return;
-        
-        // Create an entry for this title if it doesn't exist
-        if (!recommendationMap[title]) {
-            recommendationMap[title] = {
-                cards: [],
-                reasons: new Set(),
-                infraType: card.getAttribute('data-infra-type') || 'other'
-            };
-        }
-        
-        // Add this card to the group
-        recommendationMap[title].cards.push(card);
-        
-        // Collect all unique reasons from this card
-        const reasonItems = card.querySelectorAll('.reason-item');
-        reasonItems.forEach(item => {
-            const reasonText = item.textContent.trim();
-            if (reasonText && !reasonText.includes('not mapped properly')) {
-                recommendationMap[title].reasons.add(reasonText);
-            }
-        });
-        
-        // Hide all cards initially - we'll show only the consolidated ones
-        card.style.display = 'none';
-    });
-    
-    // Second pass: create consolidated cards
-    let index = 1;
-    for (const title in recommendationMap) {
-        const group = recommendationMap[title];
-        
-        // Only process groups with multiple cards
-        if (group.cards.length <= 1) {
-            group.cards[0].style.display = 'block'; // Show the single card as is
-            continue;
-        }
-        
-        // Use the first card as a template for the consolidated card
-        const templateCard = group.cards[0].cloneNode(true);
-        templateCard.style.display = 'block';
-        
-        // Update the number
-        const numberElement = templateCard.querySelector('.solution-number');
-        if (numberElement) {
-            numberElement.textContent = index++;
-        }
-        
-        // Clear existing reasons
-        const reasonsList = templateCard.querySelector('.reasons-list');
-        if (reasonsList) {
-            reasonsList.innerHTML = '';
-            
-            // Add all unique reasons
-            group.reasons.forEach(reason => {
-                const li = document.createElement('li');
-                li.className = 'reason-item';
-                li.textContent = reason;
-                reasonsList.appendChild(li);
-            });
-        }
-        
-        // Add the consolidated card to the DOM
-        group.cards[0].parentNode.appendChild(templateCard);
-    }
-}
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1103,88 +1024,130 @@ function consolidateRecommendations() {
             });
         });
     
+      
+    </script>
+    <script>
         function consolidateRecommendations() {
-            // Get all recommendation cards
-            const recommendationCards = document.querySelectorAll('.recommendation-card');
-            if (recommendationCards.length <= 1) return; // No need to consolidate if there's only one or zero recommendations
-            
-            // Create a map to group recommendations by title
-            const recommendationMap = {};
-            
-            // First pass: group recommendations by title
-            recommendationCards.forEach(card => {
-                const titleElement = card.querySelector('.recommendation-title');
-                const title = titleElement ? titleElement.textContent.trim() : '';
-                
-                if (!title) return;
-                
-                // Create an entry for this title if it doesn't exist
-                if (!recommendationMap[title]) {
-                    recommendationMap[title] = {
-                        cards: [],
-                        reasons: new Set(),
-                        priority: card.getAttribute('data-priority') || 'normal'
-                    };
-                }
-                
-                // Add this card to the group
-                recommendationMap[title].cards.push(card);
-                
-                // Collect all unique reasons from this card
-                const reasonItems = card.querySelectorAll('.reason-item');
-                reasonItems.forEach(item => {
-                    const reasonText = item.textContent.trim();
-                    if (reasonText && !reasonText.includes('not mapped properly')) {
-                        recommendationMap[title].reasons.add(reasonText);
-                    }
-                });
-                
-                // Hide all cards initially - we'll show only the consolidated ones
-                card.style.display = 'none';
-            });
-            
-            // Second pass: create consolidated cards
-            let index = 1;
-            for (const title in recommendationMap) {
-                const group = recommendationMap[title];
-                
-                // Only process groups with multiple cards
-                if (group.cards.length <= 1) {
-                    group.cards[0].style.display = 'block'; // Show the single card as is
-                    continue;
-                }
-                
-                // Use the first card as a template for the consolidated card
-                const templateCard = group.cards[0].cloneNode(true);
-                templateCard.style.display = 'block';
-                
-                // Update the number
-                const numberElement = templateCard.querySelector('.recommendation-number');
-                if (numberElement) {
-                    numberElement.textContent = index++;
-                }
-                
-                // Clear existing reasons
-                const reasonsList = templateCard.querySelector('.reasons-list');
-                if (reasonsList) {
-                    reasonsList.innerHTML = '';
-                    
-                    // Add all unique reasons
-                    group.reasons.forEach(reason => {
-                        const li = document.createElement('li');
-                        li.className = 'reason-item';
-                        li.textContent = reason;
-                        reasonsList.appendChild(li);
-                    });
-                }
-                
-                // Add a note about consolidation if there were multiple identical recommendations
-             
-                
-                // Add the consolidated card to the DOM
-                group.cards[0].parentNode.appendChild(templateCard);
+    // Get all recommendation cards
+    const recommendationCards = document.querySelectorAll('.recommendation-card');
+    if (recommendationCards.length <= 1) return; // No need to consolidate if there's only one or zero recommendations
+    
+    // Create a map to group recommendations by title
+    const recommendationMap = {};
+    
+    // First pass: group recommendations by title
+    recommendationCards.forEach(card => {
+        // Get the recommendation title - this is different between the two card styles
+        let title = '';
+        
+        // Try to find the title in the recommendation-title class (used in one part of the page)
+        const titleElement = card.querySelector('.recommendation-title');
+        if (titleElement) {
+            title = titleElement.textContent.trim();
+        } else {
+            // Try to find the title in the solution-title class (used in the other part of the page)
+            const solutionTitleElement = card.querySelector('.solution-title');
+            if (solutionTitleElement) {
+                title = solutionTitleElement.textContent.trim();
             }
         }
+        
+        if (!title) return;
+        
+        // Create an entry for this title if it doesn't exist
+        if (!recommendationMap[title]) {
+            recommendationMap[title] = {
+                cards: [],
+                reasons: new Set(),
+                // Support both data attributes and classes for priority/type
+                priority: card.getAttribute('data-priority') || 'normal',
+                infraType: card.querySelector('.infra-type-badge span') ? 
+                           card.querySelector('.infra-type-badge span').textContent.trim().toLowerCase() : 'other'
+            };
+        }
+        
+        // Add this card to the group
+        recommendationMap[title].cards.push(card);
+        
+        // Collect all unique reasons from this card
+        // Try both reason-item and choice-reason-item classes
+        const reasonItems = card.querySelectorAll('.reason-item, .choice-reason-item');
+        reasonItems.forEach(item => {
+            const reasonText = item.textContent.trim();
+            if (reasonText && !reasonText.includes('not mapped properly')) {
+                recommendationMap[title].reasons.add(reasonText);
+            }
+        });
+    });
+    
+    // Remove all original cards from their parent
+    const cardContainer = recommendationCards[0].parentElement;
+    recommendationCards.forEach(card => {
+        card.remove();
+    });
+    
+    // Second pass: create consolidated cards
+    let index = 1;
+    for (const title in recommendationMap) {
+        const group = recommendationMap[title];
+        const templateCard = group.cards[0].cloneNode(true);
+        
+        // Update the number - handle both styles
+        const solutionNumber = templateCard.querySelector('.solution-number');
+        if (solutionNumber) {
+            solutionNumber.textContent = index;
+        }
+        
+        const recommendationNumber = templateCard.querySelector('.recommendation-number');
+        if (recommendationNumber) {
+            recommendationNumber.textContent = index;
+        }
+        
+        // Clear and populate reasons - handle both styles
+        const reasonsList = templateCard.querySelector('.reasons-list, .choice-reason-list');
+        if (reasonsList) {
+            reasonsList.innerHTML = '';
+            
+            // Add all unique reasons
+            Array.from(group.reasons).forEach(reason => {
+                const li = document.createElement('li');
+                li.className = reasonsList.classList.contains('reasons-list') ? 'reason-item' : 'choice-reason-item';
+                li.textContent = reason;
+                reasonsList.appendChild(li);
+            });
+            
+           
+        }
+        
+        // Add the consolidated card to the DOM
+        cardContainer.appendChild(templateCard);
+        
+        index++;
+    }
+    
+    // Apply animation to the new cards
+    const newCards = cardContainer.querySelectorAll('.recommendation-card');
+    newCards.forEach((card, idx) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.animation = `fadeInUp 0.5s forwards ${idx * 100}ms`;
+    });
+}
+    </script>
+    <script>
+    
+// Make sure this runs after the page is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    consolidateRecommendations();
+    
+    // Add animation for recommendation cards that are visible
+    const visibleCards = document.querySelectorAll('.recommendation-card[style*="display: block"]');
+    visibleCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.animation = `fadeInUp 0.5s forwards ${index * 100}ms`;
+    });
+});
     </script>
 </body>
 </html>
