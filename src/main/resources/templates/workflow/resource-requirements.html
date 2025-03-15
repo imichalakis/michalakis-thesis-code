@@ -14,8 +14,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Alpine.js for reactivity -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     
     <style>
         :root {
@@ -63,7 +62,35 @@
             box-shadow: var(--box-shadow-sm);
             background-color: var(--primary);
         }
+         /* Update resource option styles for better clickability */
+         .resource-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            transition: var(--transition-base);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
         
+        .resource-option:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .resource-option.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .resource-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
         .navbar-brand {
             font-weight: 600;
             font-size: 1.25rem;
@@ -490,13 +517,8 @@
                     <h2 class="card-header-title">Resource Priorities</h2>
                 </div>
                 <div class="card-body">
-                    <!-- Form with Alpine.js state management -->
-                    <form id="resourceForm" th:action="@{/workflow/process-resource-requirements}" th:object="${form}" method="post" x-data="{
-                        resourcePriority: '',
-                        performanceRequirement: '',
-                        scalabilityRequirement: '',
-                        processingOptimization: ''
-                    }">
+                    <!-- Form with vanilla JS -->
+                    <form id="resourceForm" th:action="@{/workflow/process-resource-requirements}" th:object="${form}" method="post">
                         
                         <!-- Compute vs Storage -->
                         <div class="form-group">
@@ -505,11 +527,9 @@
                                 What does your application prioritize?
                             </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': resourcePriority === 'compute' }"
-                                 @click="resourcePriority = 'compute'">
-                                <input type="radio" th:field="*{resourcePriority}" value="compute" id="compute" 
-                                       x-model="resourcePriority">
+                            <label class="resource-option" for="compute" id="computeOption">
+                                <input type="radio" th:field="*{resourcePriority}" value="compute" id="compute" name="resourcePriority"
+                                       onclick="selectOption('resourcePriority', 'compute')">
                                 <div class="resource-icon">
                                     <i class="fas fa-bolt"></i>
                                 </div>
@@ -517,13 +537,11 @@
                                     <div class="resource-title">Compute-Intensive</div>
                                     <p class="resource-description">High CPU & RAM for fast processing, ideal for computation-heavy applications</p>
                                 </div>
-                            </div>
+                            </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': resourcePriority === 'storage' }"
-                                 @click="resourcePriority = 'storage'">
-                                <input type="radio" th:field="*{resourcePriority}" value="storage" id="storage" 
-                                       x-model="resourcePriority">
+                            <label class="resource-option" for="storage" id="storageOption">
+                                <input type="radio" th:field="*{resourcePriority}" value="storage" id="storage" name="resourcePriority"
+                                       onclick="selectOption('resourcePriority', 'storage')">
                                 <div class="resource-icon">
                                     <i class="fas fa-database"></i>
                                 </div>
@@ -531,7 +549,7 @@
                                     <div class="resource-title">Storage-Intensive</div>
                                     <p class="resource-description">Large storage capacity with lower CPU/RAM requirements, ideal for data-heavy applications</p>
                                 </div>
-                            </div>
+                            </label>
                         </div>
 
                         <!-- Latency vs Throughput -->
@@ -541,11 +559,9 @@
                                 What is the performance requirement for data access?
                             </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': performanceRequirement === 'low_latency' }"
-                                 @click="performanceRequirement = 'low_latency'">
-                                <input type="radio" th:field="*{performanceRequirement}" value="low_latency" id="low_latency" 
-                                       x-model="performanceRequirement">
+                            <label class="resource-option" for="low_latency" id="low_latencyOption">
+                                <input type="radio" th:field="*{performanceRequirement}" value="low_latency" id="low_latency" name="performanceRequirement"
+                                       onclick="selectOption('performanceRequirement', 'low_latency')">
                                 <div class="resource-icon">
                                     <i class="fas fa-stopwatch"></i>
                                 </div>
@@ -553,13 +569,11 @@
                                     <div class="resource-title">Low Latency</div>
                                     <p class="resource-description">Fast response time for real-time applications and interactive services</p>
                                 </div>
-                            </div>
+                            </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': performanceRequirement === 'high_throughput' }"
-                                 @click="performanceRequirement = 'high_throughput'">
-                                <input type="radio" th:field="*{performanceRequirement}" value="high_throughput" id="high_throughput" 
-                                       x-model="performanceRequirement">
+                            <label class="resource-option" for="high_throughput" id="high_throughputOption">
+                                <input type="radio" th:field="*{performanceRequirement}" value="high_throughput" id="high_throughput" name="performanceRequirement"
+                                       onclick="selectOption('performanceRequirement', 'high_throughput')">
                                 <div class="resource-icon">
                                     <i class="fas fa-exchange-alt"></i>
                                 </div>
@@ -567,7 +581,7 @@
                                     <div class="resource-title">High Throughput</div>
                                     <p class="resource-description">Batch processing, analytics, and high-volume data transfer capabilities</p>
                                 </div>
-                            </div>
+                            </label>
                         </div>
 
                         <!-- Scalability vs Fixed Resources -->
@@ -577,11 +591,9 @@
                                 Does your application need to scale dynamically?
                             </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': scalabilityRequirement === 'auto_scaling' }"
-                                 @click="scalabilityRequirement = 'auto_scaling'">
-                                <input type="radio" th:field="*{scalabilityRequirement}" value="auto_scaling" id="auto_scaling" 
-                                       x-model="scalabilityRequirement">
+                            <label class="resource-option" for="auto_scaling" id="auto_scalingOption">
+                                <input type="radio" th:field="*{scalabilityRequirement}" value="auto_scaling" id="auto_scaling" name="scalabilityRequirement"
+                                       onclick="selectOption('scalabilityRequirement', 'auto_scaling')">
                                 <div class="resource-icon">
                                     <i class="fas fa-chart-line"></i>
                                 </div>
@@ -589,13 +601,11 @@
                                     <div class="resource-title">Auto-Scaling</div>
                                     <p class="resource-description">Dynamically allocates resources based on demand, adapting to traffic fluctuations</p>
                                 </div>
-                            </div>
+                            </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': scalabilityRequirement === 'fixed_allocation' }"
-                                 @click="scalabilityRequirement = 'fixed_allocation'">
-                                <input type="radio" th:field="*{scalabilityRequirement}" value="fixed_allocation" id="fixed_allocation" 
-                                       x-model="scalabilityRequirement">
+                            <label class="resource-option" for="fixed_allocation" id="fixed_allocationOption">
+                                <input type="radio" th:field="*{scalabilityRequirement}" value="fixed_allocation" id="fixed_allocation" name="scalabilityRequirement"
+                                       onclick="selectOption('scalabilityRequirement', 'fixed_allocation')">
                                 <div class="resource-icon">
                                     <i class="fas fa-thumbtack"></i>
                                 </div>
@@ -603,7 +613,7 @@
                                     <div class="resource-title">Fixed Allocation</div>
                                     <p class="resource-description">Predictable workload with static resource limits, more cost-effective for stable loads</p>
                                 </div>
-                            </div>
+                            </label>
                         </div>
 
                         <!-- Memory vs CPU Priority -->
@@ -613,11 +623,9 @@
                                 What type of processing does your application require?
                             </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': processingOptimization === 'memory_optimized' }"
-                                 @click="processingOptimization = 'memory_optimized'">
-                                <input type="radio" th:field="*{processingOptimization}" value="memory_optimized" id="memory_optimized" 
-                                       x-model="processingOptimization">
+                            <label class="resource-option" for="memory_optimized" id="memory_optimizedOption">
+                                <input type="radio" th:field="*{processingOptimization}" value="memory_optimized" id="memory_optimized" name="processingOptimization"
+                                       onclick="selectOption('processingOptimization', 'memory_optimized')">
                                 <div class="resource-icon">
                                     <i class="fas fa-memory"></i>
                                 </div>
@@ -625,13 +633,11 @@
                                     <div class="resource-title">Memory-Optimized</div>
                                     <p class="resource-description">Large memory allocation for caching and in-memory computing needs</p>
                                 </div>
-                            </div>
+                            </label>
                             
-                            <div class="resource-option" 
-                                 :class="{ 'selected': processingOptimization === 'cpu_optimized' }"
-                                 @click="processingOptimization = 'cpu_optimized'">
-                                <input type="radio" th:field="*{processingOptimization}" value="cpu_optimized" id="cpu_optimized" 
-                                       x-model="processingOptimization">
+                            <label class="resource-option" for="cpu_optimized" id="cpu_optimizedOption">
+                                <input type="radio" th:field="*{processingOptimization}" value="cpu_optimized" id="cpu_optimized" name="processingOptimization"
+                                       onclick="selectOption('processingOptimization', 'cpu_optimized')">
                                 <div class="resource-icon">
                                     <i class="fas fa-cogs"></i>
                                 </div>
@@ -639,7 +645,7 @@
                                     <div class="resource-title">CPU-Optimized</div>
                                     <p class="resource-description">Heavy computational tasks, AI/ML workloads, or real-time processing</p>
                                 </div>
-                            </div>
+                            </label>
                         </div>
                     </form>
                 </div>
@@ -673,5 +679,43 @@
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for form handling -->
+    <script>
+        // Function to handle radio option selection
+        function selectOption(groupName, optionValue) {
+            // Remove 'selected' class from all options in the group
+            document.querySelectorAll(`input[name="${groupName}"]`).forEach(radio => {
+                radio.closest('.resource-option').classList.remove('selected');
+            });
+            
+            // Add 'selected' class to the chosen option
+            document.getElementById(optionValue + 'Option').classList.add('selected');
+        }
+        
+        // Initialize form on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up initial state for each radio group
+            const radioGroups = ['resourcePriority', 'performanceRequirement', 'scalabilityRequirement', 'processingOptimization'];
+            
+            radioGroups.forEach(group => {
+                const checkedOption = document.querySelector(`input[name="${group}"]:checked`);
+                if (checkedOption) {
+                    // Add selected class to the checked option's container
+                    checkedOption.closest('.resource-option').classList.add('selected');
+                }
+                
+                // Make all options in the group clickable
+                document.querySelectorAll(`input[name="${group}"]`).forEach(radio => {
+                    radio.closest('.resource-option').addEventListener('click', function(e) {
+                        // Only handle clicks on the container, not the radio itself (to avoid double triggers)
+                        if (e.target.tagName !== 'INPUT') {
+                            radio.click();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>

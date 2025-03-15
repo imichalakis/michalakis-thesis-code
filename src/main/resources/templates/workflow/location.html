@@ -14,8 +14,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Alpine.js for reactivity -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+   
     
     <style>
         :root {
@@ -450,7 +449,34 @@
             border-radius: 1rem;
             transition: width 0.3s ease;
         }
+         /* Update custom checkbox card */
+         .custom-checkbox-card {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            transition: var(--transition-base);
+            cursor: pointer;
+            position: relative;
+        }
         
+        .custom-checkbox-card:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .custom-checkbox-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .custom-checkbox-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
         footer {
             background-color: #fff;
             border-top: 1px solid var(--gray-200);
@@ -549,9 +575,7 @@
                 </div>
                 <div class="card-body">
                     <!-- Form -->
-                    <form id="locationForm" th:action="@{/workflow/process-location}" th:object="${form}" method="post" x-data="{
-                        connectivity: false
-                    }">
+                    <form id="locationForm" th:action="@{/workflow/process-location}" th:object="${form}" method="post">
                         
                         <!-- Data Type -->
                         <div class="form-group">
@@ -559,7 +583,7 @@
                                 <i class="fas fa-database"></i>
                                 What type of data will this system handle?
                             </label>
-                            <select th:field="*{dataType}" id="dataType" class="form-select">
+                            <select th:field="*{dataType}" id="dataType" name="dataType" class="form-select">
                                 <option value="personal">Personal Data (e.g., user accounts, customer details)</option>
                                 <option value="nonpersonal">Non-Personal Data (e.g., logs, public statistics)</option>
                                 <option value="medical">Medical Data (e.g., patient records, clinical data)</option>
@@ -570,27 +594,27 @@
                             <small class="form-text text-muted">Selecting "Critical" may require additional security measures.</small>
                         </div>
 
-                        <!-- Connectivity Requirements -->
-                        <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-plug"></i>
-                                Does this system need to connect to A.A.D.E. infrastructure?
-                            </label>
-                            <div class="custom-checkbox-card" 
-                                 :class="{ 'selected': connectivity }"
-                                 @click="connectivity = !connectivity">
-                                <input type="checkbox" th:field="*{connectivity}" value="true" id="connectivityCheckbox" 
-                                       x-model="connectivity">
-                                <div class="custom-checkbox-icon">
-                                    <i x-show="!connectivity" class="fas fa-plug"></i>
-                                    <i x-show="connectivity" class="fas fa-check"></i>
-                                </div>
-                                <div class="custom-checkbox-content">
-                                    <div class="custom-checkbox-title">Yes, this system requires an A.A.D.E. connection</div>
-                                    <p class="custom-checkbox-description">A.A.D.E. infrastructure is used for tax and financial system integration.</p>
-                                </div>
-                            </div>
-                        </div>
+                  <!-- Connectivity Requirements -->
+<div class="form-group">
+    <label class="form-label">
+        <i class="fas fa-plug"></i>
+        Does this system need to connect to A.A.D.E. infrastructure?
+    </label>
+    
+    <!-- Simplified custom checkbox card with better clickability -->
+    <div class="custom-checkbox-card" id="connectivityCardContainer" onclick="toggleConnectivity()">
+        <input type="checkbox" th:field="*{connectivity}" value="true" id="connectivityCheckbox" name="connectivity" 
+               style="position: absolute; opacity: 0; width: 1px; height: 1px;">
+        <div class="custom-checkbox-icon checkbox-icon">
+            <i class="fas fa-plug" id="uncheckedConnectivityIcon"></i>
+            <i class="fas fa-check" id="checkedConnectivityIcon" style="display: none;"></i>
+        </div>
+        <div class="custom-checkbox-content">
+            <div class="custom-checkbox-title">Yes, this system requires an A.A.D.E. connection</div>
+            <p class="custom-checkbox-description">A.A.D.E. infrastructure is used for tax and financial system integration.</p>
+        </div>
+    </div>
+</div>
 
                         <!-- Budget -->
                         <div class="form-group">
@@ -598,7 +622,7 @@
                                 <i class="fas fa-coins"></i>
                                 What is the budget allocation for this project?
                             </label>
-                            <select th:field="*{budgetLimitation}" id="budgetLimitation" class="form-select">
+                            <select th:field="*{budgetLimitation}" id="budgetLimitation" name="budgetLimitation" class="form-select">
                                 <option value="low">Low Budget (Cost efficiency, shared resources)</option>
                                 <option value="high">High Budget (Dedicated infrastructure, high performance)</option>
                                 <option value="unknown">I am not sure</option>
@@ -611,7 +635,7 @@
                                 <i class="fas fa-tachometer-alt"></i>
                                 Expected latency performance?
                             </label>
-                            <select th:field="*{latencyRequirement}" id="latencyRequirement" class="form-select">
+                            <select th:field="*{latencyRequirement}" id="latencyRequirement" name="latencyRequirement" class="form-select">
                                 <option value="strict">Strict (Low Latency, real-time response)</option>
                                 <option value="flexible">Flexible (Latency is not critical)</option>
                                 <option value="unknown">I am not sure</option>
@@ -624,7 +648,7 @@
                                 <i class="fas fa-expand-arrows-alt"></i>
                                 Scalability Requirements?
                             </label>
-                            <select th:field="*{scalabilityRequirement}" id="scalabilityRequirement" class="form-select">
+                            <select th:field="*{scalabilityRequirement}" id="scalabilityRequirement" name="scalabilityRequirement" class="form-select">
                                 <option value="high">High Scalability (Auto-scaling, dynamic allocation)</option>
                                 <option value="medium">Medium Scalability (Some scaling capabilities)</option>
                                 <option value="low">Low Scalability (Fixed resources)</option>
@@ -638,7 +662,7 @@
                                 <i class="fas fa-shield-alt"></i>
                                 Compliance Level?
                             </label>
-                            <select th:field="*{complianceRequirement}" id="complianceRequirement" class="form-select">
+                            <select th:field="*{complianceRequirement}" id="complianceRequirement" name="complianceRequirement" class="form-select">
                                 <option value="strict">Strict (GDPR, ISO 27001, etc.)</option>
                                 <option value="general">General Compliance (Standard security policies)</option>
                                 <option value="unknown">I am not sure</option>
@@ -651,7 +675,7 @@
                                 <i class="fas fa-life-ring"></i>
                                 Disaster Recovery Support?
                             </label>
-                            <select th:field="*{disasterRecoveryNeeds}" id="disasterRecoveryNeeds" class="form-select">
+                            <select th:field="*{disasterRecoveryNeeds}" id="disasterRecoveryNeeds" name="disasterRecoveryNeeds" class="form-select">
                                 <option value="high">High (Multi-region redundancy, failover)</option>
                                 <option value="medium">Medium (Backups, quick recovery)</option>
                                 <option value="low">Low (Basic recovery, minimal backup)</option>
@@ -665,7 +689,7 @@
                                 <i class="fas fa-globe"></i>
                                 Preferred Deployment Location?
                             </label>
-                            <select th:field="*{deploymentLocation}" id="deploymentLocation" class="form-select">
+                            <select th:field="*{deploymentLocation}" id="deploymentLocation" name="deploymentLocation" class="form-select">
                                 <option value="azure">Azure (Public Cloud - Scalable and Managed)</option>
                                 <option value="onPremise">On-Premise (Private data center)</option>
                                 <option value="unknown">I am not sure</option>
@@ -703,5 +727,80 @@
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Function to handle checkbox card toggling
+        function toggleCheckboxCard(checkboxInput) {
+            const card = checkboxInput.closest('.custom-checkbox-card');
+            const checkedIcon = card.querySelector('.checked-icon');
+            const uncheckedIcon = card.querySelector('.unchecked-icon');
+            
+            if (checkboxInput.checked) {
+                card.classList.add('selected');
+                checkedIcon.style.display = 'inline-block';
+                uncheckedIcon.style.display = 'none';
+            } else {
+                card.classList.remove('selected');
+                checkedIcon.style.display = 'none';
+                uncheckedIcon.style.display = 'inline-block';
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize checkbox card
+            const connectivityCheckbox = document.getElementById('connectivityCheckbox');
+            if (connectivityCheckbox) {
+                toggleCheckboxCard(connectivityCheckbox);
+                
+                // Make the entire card clickable
+                connectivityCheckbox.closest('.custom-checkbox-card').addEventListener('click', function(e) {
+                    // Prevent double-triggering if clicking on the input
+                    if (e.target.tagName !== 'INPUT') {
+                        connectivityCheckbox.checked = !connectivityCheckbox.checked;
+                        toggleCheckboxCard(connectivityCheckbox);
+                    }
+                });
+            }
+        });
+    </script>
+    <script>
+        // Direct function to toggle connectivity checkbox
+function toggleConnectivity() {
+    const checkbox = document.getElementById('connectivityCheckbox');
+    const card = document.getElementById('connectivityCardContainer');
+    const checkedIcon = document.getElementById('checkedConnectivityIcon');
+    const uncheckedIcon = document.getElementById('uncheckedConnectivityIcon');
+    
+    // Toggle the checkbox
+    checkbox.checked = !checkbox.checked;
+    
+    // Update the UI
+    if (checkbox.checked) {
+        card.classList.add('selected');
+        checkedIcon.style.display = 'inline-block';
+        uncheckedIcon.style.display = 'none';
+    } else {
+        card.classList.remove('selected');
+        checkedIcon.style.display = 'none';
+        uncheckedIcon.style.display = 'inline-block';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('connectivityCheckbox');
+    if (checkbox && checkbox.checked) {
+        const card = document.getElementById('connectivityCardContainer');
+        const checkedIcon = document.getElementById('checkedConnectivityIcon');
+        const uncheckedIcon = document.getElementById('uncheckedConnectivityIcon');
+        
+        card.classList.add('selected');
+        checkedIcon.style.display = 'inline-block';
+        uncheckedIcon.style.display = 'none';
+    }
+});
+    </script>
 </body>
 </html>

@@ -509,6 +509,16 @@
             </div>
         </div>
 
+     <!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- [head section remains the same] -->
+
+<body>
+    <!-- [navbar and header remain the same] -->
+
+    <div class="container py-4">
+        <!-- [Page Header and Progress Indicator remain the same] -->
+
         <!-- Form Container -->
         <div class="form-container">
             <div class="card">
@@ -519,22 +529,16 @@
                     <h2 class="card-header-title">Deployment Urgency</h2>
                 </div>
                 <div class="card-body">
-                    <!-- Form - Maintaining original action and object binding -->
-                    <form th:action="@{/workflow/process-urgency}" th:object="${form}" method="post" x-data="{
-                        requestType: '',
-                        contractWithContractor: '',
-                        startDate: ''
-                    }">
+                    <!-- Form - Using plain JavaScript instead of Alpine.js -->
+                    <form th:action="@{/workflow/process-urgency}" th:object="${form}" method="post">
                         
                         <!-- Organization Selection -->
                         <div class="form-group">
                             <label>Which organization is submitting this request?</label>
                             
-                            <div class="custom-radio-card" 
-                                 :class="{ 'selected': requestType === 'ops' }"
-                                 @click="requestType = 'ops'">
-                                <input type="radio" th:field="*{requestType}" id="opsRequest" value="ops" 
-                                       x-model="requestType" class="form-check-input">
+                            <label class="custom-radio-card" for="opsRequest">
+                                <input type="radio" th:field="*{requestType}" id="opsRequest" name="requestType" value="ops" 
+                                       onclick="selectCard(this)">
                                 <div class="custom-radio-icon">
                                     <i class="fas fa-building"></i>
                                 </div>
@@ -542,13 +546,11 @@
                                     <div class="custom-radio-title">Ministry of Digital Governance</div>
                                     <p class="custom-radio-description">Central government entity responsible for digital transformation</p>
                                 </div>
-                            </div>
+                            </label>
                             
-                            <div class="custom-radio-card" 
-                                 :class="{ 'selected': requestType === 'other' }"
-                                 @click="requestType = 'other'">
-                                <input type="radio" th:field="*{requestType}" id="otherRequest" value="other" 
-                                       x-model="requestType" class="form-check-input">
+                            <label class="custom-radio-card" for="otherRequest">
+                                <input type="radio" th:field="*{requestType}" id="otherRequest" name="requestType" value="other" 
+                                       onclick="selectCard(this)">
                                 <div class="custom-radio-icon">
                                     <i class="fas fa-landmark"></i>
                                 </div>
@@ -556,18 +558,16 @@
                                     <div class="custom-radio-title">Other Public Sector Entity</div>
                                     <p class="custom-radio-description">Local government, independent authority, or other public organization</p>
                                 </div>
-                            </div>
+                            </label>
                         </div>
 
                         <!-- Contract Selection -->
                         <div class="form-group">
                             <label>Does your agency have an existing contract requiring immediate deployment?</label>
                             
-                            <div class="custom-radio-card" 
-                                 :class="{ 'selected': contractWithContractor === 'yes' }"
-                                 @click="contractWithContractor = 'yes'">
-                                <input type="radio" th:field="*{contractWithContractor}" id="contractYes" value="yes" 
-                                       x-model="contractWithContractor" class="form-check-input">
+                            <label class="custom-radio-card" for="contractYes">
+                                <input type="radio" th:field="*{contractWithContractor}" id="contractYes" name="contractWithContractor" value="yes" 
+                                       onclick="selectCard(this)">
                                 <div class="custom-radio-icon">
                                     <i class="fas fa-file-contract"></i>
                                 </div>
@@ -575,13 +575,11 @@
                                     <div class="custom-radio-title">Yes</div>
                                     <p class="custom-radio-description">There is an existing contract that requires timely deployment</p>
                                 </div>
-                            </div>
+                            </label>
                             
-                            <div class="custom-radio-card" 
-                                 :class="{ 'selected': contractWithContractor === 'no' }"
-                                 @click="contractWithContractor = 'no'">
-                                <input type="radio" th:field="*{contractWithContractor}" id="contractNo" value="no" 
-                                       x-model="contractWithContractor" class="form-check-input">
+                            <label class="custom-radio-card" for="contractNo">
+                                <input type="radio" th:field="*{contractWithContractor}" id="contractNo" name="contractWithContractor" value="no" 
+                                       onclick="selectCard(this)">
                                 <div class="custom-radio-icon">
                                     <i class="fas fa-times-circle"></i>
                                 </div>
@@ -589,15 +587,14 @@
                                     <div class="custom-radio-title">No</div>
                                     <p class="custom-radio-description">There is no existing contract requiring immediate deployment</p>
                                 </div>
-                            </div>
+                            </label>
                         </div>
 
                         <!-- Planned Start Date -->
                         <div class="form-group">
                             <label for="startDate">Planned deployment start date:</label>
                             <div class="date-picker-container">
-                                <input type="date" th:field="*{startDate}" id="startDate" class="form-control" 
-                                       x-model="startDate">
+                                <input type="date" th:field="*{startDate}" id="startDate" name="startDate" class="form-control">
                                 <div class="date-picker-icon">
                                     <i class="fas fa-calendar-alt"></i>
                                 </div>
@@ -621,13 +618,39 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <p class="mb-0">
-            &copy; 2024 Technical University of Crete<br>
-            <span class="opacity-75">Developed as part of a Thesis in Deployment Choice Automation</span>
-        </p>
-    </footer>
+    <!-- Footer remains the same -->
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for radio card selection -->
+    <script>
+        function selectCard(radioInput) {
+            // First, remove 'selected' class from all cards in the same group
+            const name = radioInput.getAttribute('name');
+            const cards = document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+                input.closest('.custom-radio-card').classList.remove('selected');
+            });
+            
+            // Add 'selected' class to the clicked card
+            radioInput.closest('.custom-radio-card').classList.add('selected');
+        }
+        
+        // Initialize cards on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.custom-radio-card input[type="radio"]').forEach(input => {
+                if (input.checked) {
+                    input.closest('.custom-radio-card').classList.add('selected');
+                }
+                
+                // Make the entire card clickable
+                input.closest('.custom-radio-card').addEventListener('click', function() {
+                    input.click();
+                });
+            });
+        });
+    </script>
+
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

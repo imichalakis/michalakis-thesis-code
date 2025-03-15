@@ -1467,8 +1467,10 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
      * Deduplicate scalability results based on the main decision (auto_scaling or fixed_allocation)
      */
     private List<ParsedResult> deduplicateScalabilityResults(List<ParsedResult> results) {
-        Map<String, ParsedResult> uniqueResults = new LinkedHashMap<>();
+        Map<String, Set<String>> factsByDecision = new LinkedHashMap<>();
+        Map<String, String> originalResultByDecision = new LinkedHashMap<>();
         
+        // First pass: collect all facts for each unique decision
         for (ParsedResult result : results) {
             // Extract the base decision (auto_scaling or fixed_allocation)
             String mainResult = result.getMainResult();
@@ -1479,43 +1481,53 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
                 baseDecision = mainResult.substring(mainResult.indexOf('(') + 1, mainResult.indexOf(')'));
             }
             
-            // Only keep the first result for each base decision type
-            if (!uniqueResults.containsKey(baseDecision)) {
-                // Find the most specific supporting fact for this decision
-                List<String> bestFacts = findBestSupportingFacts(result.getSupportingFacts(), baseDecision);
-                uniqueResults.put(baseDecision, new ParsedResult(mainResult, bestFacts));
+            // Store the original result format
+            if (!originalResultByDecision.containsKey(baseDecision)) {
+                originalResultByDecision.put(baseDecision, mainResult);
+            }
+            
+            // Initialize facts set if needed
+            if (!factsByDecision.containsKey(baseDecision)) {
+                factsByDecision.put(baseDecision, new LinkedHashSet<>());
+            }
+            
+            // Add all facts for this decision
+            if (result.getSupportingFacts() != null) {
+                factsByDecision.get(baseDecision).addAll(result.getSupportingFacts());
             }
         }
         
-        return new ArrayList<>(uniqueResults.values());
+        // Second pass: create consolidated results
+        List<ParsedResult> consolidatedResults = new ArrayList<>();
+        for (String decision : factsByDecision.keySet()) {
+            String originalResult = originalResultByDecision.get(decision);
+            List<String> allFacts = new ArrayList<>(factsByDecision.get(decision));
+            
+            // Create a new ParsedResult with the combined facts
+            consolidatedResults.add(new ParsedResult(originalResult, allFacts));
+        }
+        
+        return consolidatedResults;
     }
     
     /**
      * Find the most specific supporting facts for a scalability decision
      */
-    private List<String> findBestSupportingFacts(List<String> facts, String decision) {
-        // Prioritize facts based on relevance to the decision
-        List<String> bestFacts = new ArrayList<>();
-        
-        // Look for facts specifically about the chosen strategy
-        for (String fact : facts) {
-            if (decision.equals("auto_scaling") && 
-                (fact.contains("frequent") || fact.contains("spike") || fact.contains("high"))) {
-                bestFacts.add(fact);
-            } else if (decision.equals("fixed_allocation") && 
-                      (fact.contains("predictable") || fact.contains("balanced") || fact.contains("low"))) {
-                bestFacts.add(fact);
-            }
-        }
-        
-        // If no specific facts found, use any available facts
-        if (bestFacts.isEmpty() && !facts.isEmpty()) {
-            bestFacts.add(facts.get(0));
-        }
-        
-        return bestFacts;
+    /**
+ * Find all supporting facts for a scalability decision without filtering
+ */
+private List<String> findBestSupportingFacts(List<String> facts, String decision) {
+    // Return all facts instead of filtering them
+    if (facts == null || facts.isEmpty()) {
+        // Create a default explanation if no facts are available
+        List<String> defaultFacts = new ArrayList<>();
+        defaultFacts.add("This is the recommended approach based on your provided parameters.");
+        return defaultFacts;
     }
-        
+    
+    // Return all the facts without filtering
+    return new ArrayList<>(facts);
+}
 
 // public List<ParsedResult> executeGorgiasQueryForScalability(WorkflowForm form) {
 //     long startTime = System.currentTimeMillis();

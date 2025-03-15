@@ -13,8 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import javax.servlet.http.HttpSession;
-
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import com.myproj.firstproj.model.ParsedResult;
@@ -29,7 +27,6 @@ import io.swagger.client.model.GorgiasQueryResult;
 import io.swagger.client.model.QueryResult;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -62,7 +59,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1930,180 +1926,65 @@ public ResponseEntity<Resource> downloadYaml(HttpSession session) {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> resultsList = (List<Map<String, Object>>) session.getAttribute("resultsList");
         
-        System.out.println("DEBUG: Retrieved resultsList from session: " + resultsList);
-        
         if (resultsList == null || resultsList.isEmpty()) {
             System.out.println("❌ ERROR: No results found in session.");
-            return handleError("No results found in session.", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(null);
         }
         
-        // Get the first result's mainResult
-        Map<String, Object> firstResult = resultsList.get(0);
-        String mainResult = (String) firstResult.get("naturalLanguageMainResult");
-        System.out.println("DEBUG: Main result from session: " + mainResult);
+        // Get the first result's mainResult (which contains our decision)
+        String mainResult = (String) resultsList.get(0).get("naturalLanguageMainResult");
+        System.out.println("📝 Main result from session: " + mainResult);
         
         if (mainResult == null || mainResult.isEmpty()) {
-            // Try the human readable version
-            mainResult = (String) firstResult.get("humanReadableDecision");
-            System.out.println("DEBUG: Using human readable decision instead: " + mainResult);
+            System.out.println("❌ ERROR: No main result found in session.");
+            return ResponseEntity.badRequest().body(null);
         }
         
-        if (mainResult == null || mainResult.isEmpty()) {
-            System.out.println("❌ ERROR: No valid decision found in session.");
-            return handleError("No deployment type specified.", HttpStatus.BAD_REQUEST);
+        // Extract the deployment type from yamlfile(azure_vm_high_performance) format
+        String deploymentType = null;
+        if (mainResult.startsWith("yamlfile(") && mainResult.endsWith(")")) {
+            deploymentType = mainResult.substring(9, mainResult.length() - 1);
+            System.out.println("🔑 Extracted deployment type: " + deploymentType);
+        } else {
+            System.out.println("⚠️ WARNING: Main result is not in expected format: " + mainResult);
+            deploymentType = mainResult; // Use as-is and let the mapping function handle it
         }
         
-        // Extract and validate deployment type
-        String deploymentType = extractDeploymentType(mainResult);
-        System.out.println("DEBUG: Extracted deployment type: " + deploymentType);
-        
-        if (deploymentType == null || deploymentType.trim().isEmpty()) {
-            return handleError("Invalid deployment type.", HttpStatus.BAD_REQUEST);
-        }
-        
-        // Get YAML filename and validate
+        // Map decision to YAML file name
         String yamlFileName = mapYamlDecisionToFile(deploymentType);
-        System.out.println("DEBUG: Mapped to YAML file: " + yamlFileName);
+        System.out.println("🧐 Attempting to load file: " + yamlFileName);
         
-        // Attempt to load the YAML resource
-        Resource yamlResource = loadYamlResource(yamlFileName);
-        if (yamlResource == null) {
-            return handleError("Configuration file not found: " + yamlFileName, HttpStatus.NOT_FOUND);
+        // Load file from classpath (Works inside JAR and Docker)
+        ClassPathResource resource = new ClassPathResource("yaml/" + yamlFileName);
+        
+        if (!resource.exists()) {
+            System.out.println("❌ ERROR: YAML file not found -> " + yamlFileName);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+        
+        // Read as InputStream (Required for JAR & Docker)
+        InputStreamResource inputStreamResource = new InputStreamResource(resource.getInputStream());
+        
+        System.out.println("✅ YAML File Found: " + yamlFileName);
         
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/yaml"))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + yamlFileName + "\"")
-                .body(yamlResource);
-                
-    } catch (Exception e) {
-        System.out.println("❌ ERROR: " + e.getMessage());
+                .body(inputStreamResource);
+        
+    } catch (IOException e) {
+        System.out.println("❌ ERROR: Could not read file: " + e.getMessage());
         e.printStackTrace();
-        return handleError("Internal server error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-}
-
-private ResponseEntity<Resource> handleError(String message, HttpStatus status) {
-    try {
-        String errorYaml = String.format(
-            "error:\n" +
-            "  message: \"%s\"\n" +
-            "  status: %d\n" +
-            "  timestamp: \"%s\"\n" +
-            "  path: \"/workflow/download-yaml\"",
-            message,
-            status.value(),
-            LocalDateTime.now()
-        );
-        
-        return ResponseEntity
-            .status(status)
-            .contentType(MediaType.parseMediaType("application/yaml"))
-            .body(new ByteArrayResource(errorYaml.getBytes(StandardCharsets.UTF_8)));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     } catch (Exception e) {
-        // Fallback error response if everything else fails
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .contentType(MediaType.TEXT_PLAIN)
-            .body(new ByteArrayResource("Internal Server Error".getBytes(StandardCharsets.UTF_8)));
-    }
-}
-
-private Resource loadYamlResource(String yamlFileName) {
-    try {
-        // First try to load from yaml directory
-        ClassPathResource resource = new ClassPathResource("yaml/" + yamlFileName);
-        System.out.println("📁 Attempting to load from yaml/: " + resource.getPath());
-        
-        if (resource.exists() && resource.isReadable()) {
-            return new InputStreamResource(resource.getInputStream());
-        }
-        
-        // If not found in yaml/, try root resources directory
-        resource = new ClassPathResource(yamlFileName);
-        System.out.println("📁 Attempting to load from root: " + resource.getPath());
-        
-        if (resource.exists() && resource.isReadable()) {
-            return new InputStreamResource(resource.getInputStream());
-        }
-        
-        // If still not found, try loading default.yaml
-        resource = new ClassPathResource("yaml/default.yaml");
-        System.out.println("📁 Attempting to load default: " + resource.getPath());
-        
-        if (resource.exists() && resource.isReadable()) {
-            // Return default YAML with error message
-            String defaultYaml = String.format(
-                "error:\n" +
-                "  message: \"Requested configuration '%s' not found. Using default configuration.\"\n" +
-                "  timestamp: \"%s\"\n\n" +
-                "default_configuration:\n" +
-                "  type: \"Azure App Service\"\n" +
-                "  tier: \"Standard\"\n" +
-                "  description: \"Default web hosting configuration\"",
-                yamlFileName,
-                LocalDateTime.now()
-            );
-            return new ByteArrayResource(defaultYaml.getBytes(StandardCharsets.UTF_8));
-        }
-        
-        // If no YAML file can be found at all, return error YAML
-        String errorYaml = String.format(
-            "error:\n" +
-            "  message: \"No configuration file found (including default)\"\n" +
-            "  requested_file: \"%s\"\n" +
-            "  timestamp: \"%s\"\n" +
-            "  paths_checked: [\"yaml/%s\", \"%s\", \"yaml/default.yaml\"]",
-            yamlFileName,
-            LocalDateTime.now(),
-            yamlFileName,
-            yamlFileName
-        );
-        return new ByteArrayResource(errorYaml.getBytes(StandardCharsets.UTF_8));
-        
-    } catch (Exception e) {
-        System.out.println("❌ Error loading YAML resource: " + e.getMessage());
+        System.out.println("❌ ERROR: Unexpected exception: " + e.getMessage());
         e.printStackTrace();
-        
-        // Return error YAML instead of null
-        String errorYaml = String.format(
-            "error:\n" +
-            "  message: \"Error loading configuration file\"\n" +
-            "  error: \"%s\"\n" +
-            "  timestamp: \"%s\"",
-            e.getMessage(),
-            LocalDateTime.now()
-        );
-        return new ByteArrayResource(errorYaml.getBytes(StandardCharsets.UTF_8));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 }
 
-private String extractDeploymentType(String mainResult) {
-    try {
-        if (mainResult == null) return null;
-        
-        // Handle Azure App Service (Standard) case specifically
-        if (mainResult.contains("Azure App Service (Standard)")) {
-            return "azure_app_service_standard";
-        }
-        
-        // Handle yamlfile format
-        if (mainResult.startsWith("yamlfile(") && mainResult.endsWith(")")) {
-            String extracted = mainResult.substring(9, mainResult.length() - 1).trim();
-            return extracted.isEmpty() ? null : extracted;
-        }
-        
-        // Convert spaces to underscores and remove special characters
-        return mainResult.trim()
-            .toLowerCase()
-            .replaceAll("[^a-z0-9\\s_]", "")
-            .replaceAll("\\s+", "_");
-            
-    } catch (Exception e) {
-        System.out.println("❌ Error extracting deployment type: " + e.getMessage());
-        return null;
-    }
-}
+    
+    
     
     // private String mapYamlDecisionToFile(String decision) {
     //     switch (decision.toLowerCase()) {
@@ -2152,8 +2033,6 @@ private String mapYamlDecisionToFile(String decision) {
         // Web hosting
         case "azure_app_service":
             return "azure_app_service.yaml";
-        case "azure_app_service_standard":
-            return "azure_app_service_standard.yaml";
         case "azure_app_service_autoscaling":
             return "azure_app_service_autoscaling.yaml";
             
