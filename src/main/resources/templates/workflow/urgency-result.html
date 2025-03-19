@@ -145,8 +145,8 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    flex-shrink: 0;
-    margin-top: 0.25rem;
+    align-self: flex-end; /* Align to the right */
+    margin-top: 10px;
 }
 
 .priority-urgent {
@@ -904,7 +904,7 @@
         <div class="card-header-icon bg-success-light">
             <i class="fas fa-server"></i>
         </div>
-        <h2 class="card-header-title">Recommended Infrastructure</h2>
+        <h2 class="card-header-title">Recommended Urgency</h2>
     </div>
     <div class="card-body">
         <!-- Recommendations List (Only show if results are available) -->
@@ -917,21 +917,21 @@
                     <span class="solution-text">SOLUTION</span>
                 </div>
                 
-                <!-- Main Content Area - Exactly like urgency page -->
-                <div class="solution-main-content">
-                    <!-- Title - Exactly like urgency page -->
-                    <h3 class="solution-title" th:text="${result['naturalLanguageMainResult']}"></h3>
-                    
-                    <!-- Infrastructure Type Badge - Styled exactly like urgency page's badge -->
-                    <div th:with="infraType=${result['naturalLanguageMainResult'].contains('IaaS') ? 'iaas' : 
-                              (result['naturalLanguageMainResult'].contains('PaaS') ? 'paas' : 
-                              (result['naturalLanguageMainResult'].contains('SaaS') ? 'saas' : 
-                              (result['naturalLanguageMainResult'].contains('Serverless') ? 'serverless' : 'other')))}"
-                         class="infra-type-badge">
-                        <i class="fas fa-check-circle"></i>
-                        <span th:text="${#strings.toUpperCase(infraType)}"></span>
-                    </div>
-                </div>
+               <!-- Main Content Area with properly positioned priority badge -->
+<div class="solution-main-content">
+    <!-- Title - Exactly like urgency page -->
+    <h3 class="solution-title" th:text="${result['naturalLanguageMainResult']}"></h3>
+    
+    <!-- Priority Badge - Below the title and aligned right -->
+    <div th:with="priority=${result['naturalLanguageMainResult'].contains('Critical') || result['naturalLanguageMainResult'].contains('72 hours') ? 'urgent' : 
+              (result['naturalLanguageMainResult'].contains('Accelerated') || result['naturalLanguageMainResult'].contains('10 days') ? 'high' : 'normal')}"
+         th:class="'priority-badge priority-' + ${priority}" style="align-self: flex-end; margin-top: 10px;">
+        <i th:if="${priority == 'urgent'}" class="fas fa-exclamation-circle"></i>
+        <i th:if="${priority == 'high'}" class="fas fa-arrow-up"></i>
+        <i th:if="${priority == 'normal'}" class="fas fa-check-circle"></i>
+        <span th:text="${#strings.toUpperCase(priority)}"></span>
+    </div>
+</div>
                 
                 <!-- Divider - Exactly like urgency page -->
                 <hr>

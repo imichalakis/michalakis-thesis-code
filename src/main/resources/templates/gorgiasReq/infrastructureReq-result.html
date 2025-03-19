@@ -248,7 +248,45 @@
     color: #555;
     margin-bottom: 15px;
 }
+/* Consistent styling for choice reason section */
+.choice-reason-section {
+    padding: 1rem;
+    background-color: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+}
 
+.choice-reason-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.choice-reason-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.choice-reason-item {
+    position: relative;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.choice-reason-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+}
 .reason-box {
     background: #eef7ff;
     padding: 15px;
@@ -392,18 +430,21 @@
             box-shadow: var(--box-shadow);
         }
         
-        .solution-chip {
-            position: absolute;
-            top: 0;
-            left: 0;
-            background-color: var(--gray-100);
-            color: var(--gray-700);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-bottom-right-radius: var(--border-radius);
-            z-index: 1;
-        }
+        /* Solution main content styling to match urgency page */
+.solution-main-content {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 0.5rem 1rem 1rem;
+}
+
+.solution-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
         
         .infrastructure-badge {
             position: absolute;
@@ -424,35 +465,36 @@
             margin-right: 0.35rem;
         }
         
-        .badge-iaas {
-            background-color: var(--iaas-bg);
-            color: var(--iaas-color);
-        }
-        
-        .badge-paas {
-            background-color: var(--paas-bg);
-            color: var(--paas-color);
-        }
-        
-        .badge-saas {
-            background-color: var(--saas-bg);
-            color: var(--saas-color);
-        }
-        
-        .badge-serverless {
-            background-color: var(--serverless-bg);
-            color: var(--serverless-color);
-        }
-        
-        .badge-onpremise {
-            background-color: var(--onpremise-bg);
-            color: var(--onpremise-color);
-        }
-        
-        .badge-azure {
-            background-color: var(--azure-bg);
-            color: var(--azure-color);
-        }
+       /* Infrastructure badge styles matching urgency page styling */
+.badge-iaas {
+    background-color: var(--iaas-bg);
+    color: var(--iaas-color);
+}
+
+.badge-paas {
+    background-color: var(--paas-bg);
+    color: var(--paas-color);
+}
+
+.badge-saas {
+    background-color: var(--saas-bg);
+    color: var(--saas-color);
+}
+
+.badge-serverless {
+    background-color: var(--serverless-bg);
+    color: var(--serverless-color);
+}
+
+.badge-onpremise {
+    background-color: var(--onpremise-bg);
+    color: var(--onpremise-color);
+}
+
+.badge-azure {
+    background-color: var(--azure-bg);
+    color: var(--azure-color);
+}
         
         .recommendation-header {
             padding: 1.75rem 1.5rem 1.5rem;
@@ -853,44 +895,75 @@
             </div>
         </div>
 
-        <!-- Recommendations Card -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-header-icon bg-success-light">
-                    <i class="fas fa-server"></i>
-                </div>
-                <h2 class="card-header-title">Recommended Infrastructure</h2>
-            </div>
-            <div class="card-body">
-                <h5 class="mb-3">Suggested Infrastructure Options</h5>
-                <p class="mb-4">Based on your requirements, here are the best infrastructure options for your system:</p>
-                
-                <!-- Recommendations List (Only show if results are available) -->
-                <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
-                    <!-- Loop through recommendations -->
-                    <div th:each="result, iterStat : ${resultsList}" class="recommendation-box">
-                        <h3 class="recommendation-title">Solution <span th:text="${iterStat.count}"></span>: 
-                            <span th:text="${result['naturalLanguageMainResult']}"></span>
-                        </h3>
-
-                        <div class="reason-box">
-                            <strong>Why this choice?</strong>
-                            <ul>
-                                <li th:each="fact : ${result['convertedFact']}" th:text="${fact}"></li>
-                            </ul>
-                        </div>
-                    </div>
+ <!-- Recommendations Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-header-icon bg-success-light">
+            <i class="fas fa-server"></i>
+        </div>
+        <h2 class="card-header-title">Recommended Infrastructure</h2>
+    </div>
+    <div class="card-body">
+        <!-- Recommendations List (Only show if results are available) -->
+        <div th:if="${resultsList != null and not #lists.isEmpty(resultsList)}">
+            <!-- Loop through recommendations -->
+            <div th:each="result, iterStat : ${resultsList}" class="recommendation-card">
+                <!-- Solution Label -->
+                <div class="solution-number-container">
+                    <span class="solution-number" th:text="${iterStat.count}"></span>
+                    <span class="solution-text">SOLUTION</span>
                 </div>
                 
-                <!-- Empty state when no recommendations are available -->
-                <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}" class="text-center py-5">
-                    <div class="mb-3">
-                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
+                <!-- Main Content Area -->
+                <div class="solution-main-content" style="position: relative; padding-top: 1.5rem;">
+                    <!-- Infrastructure Type Badge - Positioned at the top right corner -->
+                    <div th:with="infraType=${result['naturalLanguageMainResult'].contains('IaaS') ? 'iaas' : 
+                              (result['naturalLanguageMainResult'].contains('PaaS') ? 'paas' : 
+                              (result['naturalLanguageMainResult'].contains('SaaS') ? 'saas' : 
+                              (result['naturalLanguageMainResult'].contains('Serverless') ? 'serverless' : 
+                              (result['naturalLanguageMainResult'].contains('Azure') ? 'azure' : 
+                              (result['naturalLanguageMainResult'].contains('On-Premise') ? 'onpremise' : 'other')))))}"
+                         th:class="'badge-' + ${infraType}"
+                         style="position: absolute; top: 0.5rem; right: 1rem; display: inline-flex; align-items: center; padding: 0.35rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <i th:if="${infraType == 'serverless'}" class="fas fa-bolt me-1"></i>
+                        <i th:if="${infraType == 'paas'}" class="fas fa-layer-group me-1"></i>
+                        <i th:if="${infraType == 'iaas'}" class="fas fa-server me-1"></i>
+                        <i th:if="${infraType == 'saas'}" class="fas fa-cloud me-1"></i>
+                        <i th:if="${infraType == 'azure' || infraType == 'onpremise' || infraType == 'other'}" class="fas fa-cog me-1"></i>
+                        <span th:text="${#strings.toUpperCase(infraType)}"></span>
                     </div>
-                    <p class="text-danger mb-0">No recommendations available. Please review your selections.</p>
+                    
+                    <!-- Title - Now with proper spacing below the badge -->
+                    <h3 class="solution-title" style="margin-top: 0.5rem; padding-right: 100px;" th:text="${result['naturalLanguageMainResult']}"></h3>
+                </div>
+                
+                <!-- Divider -->
+                <hr>
+                
+                <!-- Reasoning Section -->
+                <div class="choice-reason-section">
+                    <div class="choice-reason-heading">
+                        <i class="fas fa-info-circle"></i>
+                        WHY THIS CHOICE?
+                    </div>
+                    <ul class="choice-reason-list">
+                        <li th:each="fact : ${result['convertedFact']}" class="choice-reason-item">
+                            <span th:text="${fact}"></span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
+        
+        <!-- Empty state when no recommendations are available -->
+        <div th:if="${resultsList == null or #lists.isEmpty(resultsList)}" class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
+            </div>
+            <p class="text-danger mb-0">No recommendations available. Please review your selections.</p>
+        </div>
+    </div>
+</div>
     </div>
     
     <!-- Navigation Buttons - properly placed outside workflow-container but inside main container -->
@@ -911,114 +984,123 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const infrastructureRecommendations = {};
-    const boxes = document.querySelectorAll('.recommendation-box');
-    
-    if (boxes.length <= 1) return;
-    
-    // First pass: collect all recommendations and their supporting facts
-    boxes.forEach(function(box) {
-        const titleElement = box.querySelector('.recommendation-title span:nth-child(2)');
-        if (!titleElement) return;
-        
-        // Extract the exact solution title (without any number prefix)
-        const solutionTitle = titleElement.textContent.trim();
-        
-        // Use the complete solution title as the key instead of just the infrastructure type
-        const key = solutionTitle;
-        
-        // Get all supporting facts
-        const factItems = Array.from(box.querySelectorAll('.reason-box li'))
-            .map(li => li.textContent.trim())
-            .filter(text => text && text.length > 0);
-        
-        // Initialize this solution group if it doesn't exist
-        if (!infrastructureRecommendations[key]) {
-            infrastructureRecommendations[key] = {
-                title: solutionTitle,
-                facts: new Set(),
-                originalBox: box,
-                // Determine infrastructure type for styling
-                infraType: getInfrastructureType(solutionTitle)
-            };
-        }
-        
-        // Add all facts to the set
-        factItems.forEach(fact => {
-            infrastructureRecommendations[key].facts.add(fact);
-        });
-        
-        // Hide original box
-        box.style.display = 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Call the consolidation function when the page loads
+        consolidateRecommendations();
     });
     
-    // Second pass: create consolidated recommendations
-    let count = 1;
-    for (const key in infrastructureRecommendations) {
-        const recommendation = infrastructureRecommendations[key];
-        const box = recommendation.originalBox.cloneNode(true);
-        box.style.display = 'block';
+    function consolidateRecommendations() {
+        // Get all recommendation cards
+        const recommendationCards = document.querySelectorAll('.recommendation-card');
+        if (recommendationCards.length <= 1) return; // No need to consolidate if there's only one or zero recommendations
         
-        // Update solution number
-        const titleSpan = box.querySelector('.recommendation-title span:first-child');
-        if (titleSpan) {
-            titleSpan.textContent = count++;
-        }
+        // Create a map to group recommendations by title
+        const recommendationMap = {};
         
-        // Apply styling based on infrastructure type
-        applyInfrastructureStyling(box, recommendation.infraType);
-        
-        // Update facts list
-        const factBox = box.querySelector('.reason-box ul');
-        if (factBox) {
-            factBox.innerHTML = '';
-            Array.from(recommendation.facts).forEach(fact => {
-                const li = document.createElement('li');
-                li.textContent = fact;
-                factBox.appendChild(li);
+        // First pass: group recommendations by title
+        recommendationCards.forEach(card => {
+            // Get the recommendation title
+            const titleElement = card.querySelector('.solution-title');
+            if (!titleElement) return;
+            
+            const title = titleElement.textContent.trim();
+            if (!title) return;
+            
+            // Create an entry for this title if it doesn't exist
+            if (!recommendationMap[title]) {
+                // Determine infrastructure type from title text
+                let infraType = 'other';
+                if (title.includes('IaaS')) infraType = 'iaas';
+                else if (title.includes('PaaS')) infraType = 'paas';
+                else if (title.includes('SaaS')) infraType = 'saas';
+                else if (title.includes('Serverless')) infraType = 'serverless';
+                else if (title.includes('Azure')) infraType = 'azure';
+                else if (title.includes('On-Premise')) infraType = 'onpremise';
+                
+                recommendationMap[title] = {
+                    cards: [],
+                    reasons: new Set(),
+                    infraType: infraType
+                };
+            }
+            
+            // Add this card to the group
+            recommendationMap[title].cards.push(card);
+            
+            // Collect all unique reasons from this card
+            const reasonItems = card.querySelectorAll('.choice-reason-item');
+            reasonItems.forEach(item => {
+                const reasonText = item.textContent.trim();
+                if (reasonText) {
+                    recommendationMap[title].reasons.add(reasonText);
+                }
             });
+        });
+        
+        // Remove all original cards from their parent
+        const cardContainer = recommendationCards[0].parentElement;
+        recommendationCards.forEach(card => {
+            card.remove();
+        });
+        
+        // Second pass: create consolidated cards
+        let index = 1;
+        for (const title in recommendationMap) {
+            const group = recommendationMap[title];
+            const templateCard = group.cards[0].cloneNode(true);
+            
+            // Update the number
+            const solutionNumber = templateCard.querySelector('.solution-number');
+            if (solutionNumber) {
+                solutionNumber.textContent = index;
+            }
+            
+            // Update the badge style and icon
+            const badgeElement = templateCard.querySelector('[class^="badge-"]');
+            if (badgeElement) {
+                badgeElement.className = `badge-${group.infraType}`;
+                
+                // Update the icon based on infrastructure type
+                const iconElement = badgeElement.querySelector('i');
+                if (iconElement) {
+                    iconElement.className = 'fas me-1';
+                    if (group.infraType === 'serverless') iconElement.className += ' fa-bolt';
+                    else if (group.infraType === 'paas') iconElement.className += ' fa-layer-group';
+                    else if (group.infraType === 'iaas') iconElement.className += ' fa-server';
+                    else if (group.infraType === 'saas') iconElement.className += ' fa-cloud';
+                    else iconElement.className += ' fa-cog';
+                }
+            }
+            
+            // Clear and populate reasons
+            const reasonsList = templateCard.querySelector('.choice-reason-list');
+            if (reasonsList) {
+                reasonsList.innerHTML = '';
+                
+                // Add all unique reasons
+                Array.from(group.reasons).forEach(reason => {
+                    const li = document.createElement('li');
+                    li.className = 'choice-reason-item';
+                    li.textContent = reason;
+                    reasonsList.appendChild(li);
+                });
+            }
+            
+            // Add the consolidated card to the DOM
+            cardContainer.appendChild(templateCard);
+            
+            index++;
         }
         
-        // Add consolidated box
-        recommendation.originalBox.parentNode.appendChild(box);
+        // Apply animation to the new cards
+        const newCards = cardContainer.querySelectorAll('.recommendation-card');
+        newCards.forEach((card, idx) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.animation = `fadeInUp 0.5s forwards ${idx * 100}ms`;
+        });
     }
-    
-    // Helper function to determine infrastructure type
-    function getInfrastructureType(title) {
-        const types = {
-            'iaas': /(IaaS|Infrastructure as a Service)/i,
-            'paas': /(PaaS|Platform as a Service)/i,
-            'saas': /(SaaS|Software as a Service)/i,
-            'serverless': /Serverless/i,
-            'onpremise': /(On-Premise|On Premise)/i,
-            'azure': /Azure/i
-        };
-        
-        for (const type in types) {
-            if (types[type].test(title)) return type;
-        }
-        return 'default';
-    }
-    
-    // Helper function to apply styling
-    function applyInfrastructureStyling(box, infraType) {
-        const styles = {
-            'iaas': '#6f42c1',
-            'paas': '#20c997',
-            'saas': '#fd7e14',
-            'serverless': '#17a2b8',
-            'onpremise': '#6c757d',
-            'azure': '#0078d4'
-        };
-        
-        box.classList.remove('iaas-style', 'paas-style', 'saas-style', 
-                           'serverless-style', 'onpremise-style', 'azure-style');
-        box.classList.add(`${infraType}-style`);
-        box.style.borderLeftColor = styles[infraType] || '#6c757d';
-    }
-});
-</script>
+    </script>
 
   <!-- Footer -->
   <footer>
