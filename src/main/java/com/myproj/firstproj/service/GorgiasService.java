@@ -581,11 +581,57 @@ public List<ParsedResult> parseGorgiasQueryResult(GorgiasQueryResult gorgiasQuer
                 // Extract supporting facts
                 List<String> supportingFacts = extractSupportingFacts(simplifiedExplanation);
                 // Convert and add parsed result
-                parsedResults.add(new ParsedResult(mainResult, supportingFacts));
+                String comparativeReason = extractComparativeReason(humanExplanation);
+                parsedResults.add(new ParsedResult(mainResult, supportingFacts, comparativeReason));
             }
         }
     }
     return parsedResults;
+}
+private String extractComparativeReason(String humanExplanation) {
+    if (humanExplanation == null) {
+        System.out.println("❌ humanExplanation is null");
+        return null;
+    }
+
+    if (!humanExplanation.contains("Stronger than the reason")) {
+        System.out.println("🔎 Explanation does NOT contain comparative reasoning:\n" + humanExplanation);
+        return null;
+    }
+
+    System.out.println("✅ Comparative section detected in:\n" + humanExplanation);
+
+    int reasonStart = humanExplanation.indexOf("This reason is :");
+    if (reasonStart == -1) {
+        System.out.println("❌ Could not find 'This reason is :' block.");
+        return null;
+    }
+
+    String reasonBlock = humanExplanation.substring(reasonStart).trim();
+    reasonBlock = reasonBlock.replaceAll("[\\n\\r]+", " ").replaceAll("\\s+", " ").trim();
+
+    System.out.println("🔧 Cleaned reasonBlock: " + reasonBlock);
+
+    Pattern pattern = Pattern.compile("Stronger than the reason of \\\"(.+?)\\\" supporting \\\"(.+?)\\\" when (.*?)\\.", Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(reasonBlock);
+
+    StringBuilder explanations = new StringBuilder();
+    while (matcher.find()) {
+        String weakerFact = matcher.group(1);
+        String weakerConclusion = matcher.group(2);
+        String condition = matcher.group(3);
+
+        explanations.append(String.format(
+            "“High urgency” is stronger than “%s” which was also supported by %s because of %s. ",
+            mapConclusion(weakerConclusion),
+            weakerFact,
+            condition.replace("\"", "")
+        ));
+    }
+
+    String result = explanations.toString().trim();
+    System.out.println("🧠 Built explanation: " + result);
+    return result.isEmpty() ? null : result;
 }
 
         
@@ -601,39 +647,104 @@ public List<ParsedResult> parseGorgiasQueryResult(GorgiasQueryResult gorgiasQuer
             return null;
         }
         
+        public String formatComparativeReason(String rawComparative, Map<String, String> factMappings) {
+            if (rawComparative == null || rawComparative.isEmpty()) return null;
+        
+            // Normalize spacing
+            String cleaned = rawComparative.replaceAll("\\s+", " ").trim();
+        
+            // Extract parts using regex
+            Pattern pattern = Pattern.compile("- Stronger than the reason of \\\"(.+?)\\\" supporting \\\"(.+?)\\\" when (.*?)(?=- Stronger|$)", Pattern.DOTALL);
+
+
+            Matcher matcher = pattern.matcher(cleaned);
+        
+            if (matcher.find()) {
+                String weakerFact = matcher.group(1);
+                String weakerConclusion = matcher.group(2);
+                String conditions = matcher.group(3);
+        
+                // Break down the "when ..." part into individual conditions
+                List<String> humanConditions = new ArrayList<>();
+                Matcher conditionMatcher = Pattern.compile("\\\"(.*?)\\\"").matcher(conditions);
+                while (conditionMatcher.find()) {
+                    String rawFact = conditionMatcher.group(1);
+                    String mapped = factMappings.getOrDefault(rawFact.toLowerCase(), rawFact);
+                    humanConditions.add(mapped);
+                }
+        
+                return String.format(
+                    "“%s” is considered stronger than “%s” which was also supported by %s because of %s.",
+                    "High urgency", // TODO: optionally infer from queryResult.getVariables()
+                    mapConclusion(weakerConclusion),
+                    factMappings.getOrDefault(weakerFact.toLowerCase(), weakerFact),
+                    String.join(" and ", humanConditions)
+                );
+            }
+        
+            return rawComparative;
+        }
+        
+        private String mapConclusion(String prologTerm) {
+            if (prologTerm.contains("urgency(high)")) return "High Priority";
+            if (prologTerm.contains("urgency(normal)")) return "Normal Priority";
+            if (prologTerm.contains("urgency(urgent)")) return "Urgent Priority";
+            return prologTerm;
+        }
+        
         // Helper method to extract supporting facts
       /**
  * Enhanced method to extract supporting facts including compound facts with 'and' conjunctions
  */
 private List<String> extractSupportingFacts(String humanExplanation) {
     List<String> facts = new ArrayList<>();
+    Map<String, Object> result = new HashMap<>();
+
+    String comparativeReason = null;
     if (humanExplanation == null || humanExplanation.isEmpty()) {
         return facts;
     }
 
     try {
-        // Extract the section containing the main supporting facts
+        int statementStart = humanExplanation.indexOf("The statement ");
         int factsStart = humanExplanation.indexOf("is supported by:");
-        if (factsStart == -1) return facts;
-        
-        // Find where the main facts section ends (before any "This reason is" part)
         int reasonStart = humanExplanation.indexOf("This reason is :");
+
         String factsSection;
-        
+
+        // Extract the urgency(X) from the statement
+        String urgency = null;
+        if (statementStart != -1 && factsStart != -1) {
+            String statementPart = humanExplanation.substring(statementStart, factsStart);
+            Matcher urgencyMatcher = Pattern.compile("\"(urgency\\([^)]+\\))\"").matcher(statementPart);
+            if (urgencyMatcher.find()) {
+                urgency = urgencyMatcher.group(1); // e.g., urgency(high)
+                System.out.println("? Detected urgency level: " + urgency);
+            }
+        }
+
         if (reasonStart != -1) {
-            // If there's a "This reason is" section, get only the main facts before it
+            // Extract main facts and comparative reasoning
             factsSection = humanExplanation.substring(factsStart + "is supported by:".length(), reasonStart).trim();
+            comparativeReason = humanExplanation.substring(reasonStart + "This reason is :".length()).trim();
+
+            if (urgency != null) {
+                comparativeReason = "\"" + urgency + "\" " + comparativeReason;
+            }
+
+            WorkflowForm.addComparativeExplanation(comparativeReason);
+
         } else {
-            // Otherwise, get everything after "is supported by:"
+            // Fallback if no comparative reasoning present
             factsSection = humanExplanation.substring(factsStart + "is supported by:".length()).trim();
         }
-        
+
         System.out.println("Main facts section: " + factsSection);
-        
-        // Extract quoted facts from the main facts section only
+
+        // Extract quoted facts from the facts section
         Pattern quotePattern = Pattern.compile("\"([^\"]+)\"");
         Matcher quoteMatcher = quotePattern.matcher(factsSection);
-        
+
         while (quoteMatcher.find()) {
             String fact = quoteMatcher.group(1).trim();
             if (!fact.isEmpty()) {
@@ -641,15 +752,16 @@ private List<String> extractSupportingFacts(String humanExplanation) {
                 System.out.println("Found main fact: " + fact);
             }
         }
-        
+
         System.out.println("All extracted facts: " + facts);
     } catch (Exception e) {
         System.err.println("Error extracting facts: " + e.getMessage());
         e.printStackTrace();
     }
-    
+
     return facts;
 }
+
         /**
  * Enhanced method to convert facts to natural language
  * This handles both individual facts and compound fact strings
@@ -734,7 +846,7 @@ public List<ParsedResult> deduplicateAndCleanResults(List<ParsedResult> parsedRe
         
         // Only add if we haven't seen this conclusion before
         if (!uniqueResults.containsKey(resultKey)) {
-            uniqueResults.put(resultKey, new ParsedResult(mainResult, cleanedFacts));
+            uniqueResults.put(resultKey, new ParsedResult(mainResult, cleanedFacts, ""));
         }
     }
     
@@ -812,7 +924,7 @@ private String convertSingleFactToNaturalLanguage(String fact) {
         
         
 
-private void populateMappings(Map<String, String> factMappings) {
+public void populateMappings(Map<String, String> factMappings) {
     // Here populate the map with all simple mappings from your current method
     factMappings.put("agency_category(centralgovernment)", "This request comes from a Central Government agency.");
     factMappings.put("agency_category(localgovernment)", "This request originates from a Local Government body.");
@@ -1504,7 +1616,7 @@ private String convertSimpleFactToNaturalLanguage(String fact) {
             List<String> allFacts = new ArrayList<>(factsByDecision.get(decision));
             
             // Create a new ParsedResult with the combined facts
-            consolidatedResults.add(new ParsedResult(originalResult, allFacts));
+            consolidatedResults.add(new ParsedResult(originalResult, allFacts, ""));
         }
         
         return consolidatedResults;

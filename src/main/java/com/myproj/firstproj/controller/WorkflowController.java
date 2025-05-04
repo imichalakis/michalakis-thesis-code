@@ -20,6 +20,7 @@ import com.myproj.firstproj.model.WorkflowForm;
 import com.myproj.firstproj.service.GorgiasService;
 import com.myproj.firstproj.service.WorkflowService;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Collections;
@@ -49,6 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.yaml.snakeyaml.DumperOptions;
@@ -765,7 +768,7 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
     @PostMapping("/process-urgency")
     public String processUrgency(@ModelAttribute("form") WorkflowForm form, HttpSession session, Model model) {
         System.out.println("🚀 Executing Gorgias Query for Urgency...");
-    
+        WorkflowForm.clearComparativeExplanations();  // Make sure this method exists
         // Store input values in model
         prepareModelWithFormData(model, form);
     
@@ -779,9 +782,104 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
         } else {
             handleNoResultsFound(session, model);
         }
-    
+        System.out.println("Before deduplicate comparatives " + WorkflowForm.getComparativeExplanations());
+        List<String> deduplicatedComparatives = deduplicateComparativeExplanations(WorkflowForm.getComparativeExplanations());
+        System.out.println("Before convertComparativesToHumanReadable " + deduplicatedComparatives);
+        List<String> finalComparatives = convertComparativesToHumanReadable(deduplicatedComparatives);
+        System.out.println("after convertComparativesToHumanReadable"+ finalComparatives);
+        model.addAttribute("comparativeList", finalComparatives);
         return "workflow/urgency-result";
     }
+    private List<String> deduplicateComparativeExplanations(List<String> rawList) {
+        Set<String> cleaned = new LinkedHashSet<>();
+
+    for (String entry : rawList) {
+        if (entry == null || entry.trim().isEmpty()) continue;
+
+        // Normalize all whitespace
+        String normalized = entry.replaceAll("\\s+", " ").trim();
+
+        // Split if multiple reasons are in one string (use hyphen prefix pattern)
+        String[] parts = normalized.split("(?=-\\s*Stronger than the reason)");
+
+        for (String part : parts) {
+            String trimmed = part.trim().replaceAll("^[\"']+|[\"']+$", ""); // remove leading/trailing quotes
+            if (!trimmed.isEmpty()) {
+                cleaned.add(trimmed);
+            }
+        }
+        
+    }
+
+    return new ArrayList<>(cleaned);
+    }
+    
+    private List<String> convertComparativesToHumanReadable(List<String> comparativeList) {
+        Map<String, String> factToNaturalMap = new HashMap<>();
+        factToNaturalMap.put("request_type(other)", "the request is from another ministry or organization");
+        factToNaturalMap.put("request_type(ops)", "the request is related to the Ministry of Digital Governance");
+        factToNaturalMap.put("contract_with_contractor(yes)", "an active contract exists with an external contractor");
+        factToNaturalMap.put("contract_with_contractor(no)", "there is no current contract with any external contractor");
+        factToNaturalMap.put("highbasedondate", "based on the date there is high request for deployment");
+        factToNaturalMap.put("urgentbasedondate", "based on the date there is urgent request for deployment");
+        factToNaturalMap.put("normalbasedondate", "based on the date there is normal request for deployment");
+        factToNaturalMap.put("urgency(normal)", "Normal priority");
+        factToNaturalMap.put("urgency(urgent)", "Urgent priority");
+        factToNaturalMap.put("urgency(high)", "High priority");
+    
+        List<String> output = new ArrayList<>();
+        String lastPriority = null;
+    
+        for (int i = 0; i < comparativeList.size(); i++) {
+            String current = comparativeList.get(i).trim();
+    
+            if (current.startsWith("urgency(")) {
+                lastPriority = factToNaturalMap.getOrDefault(current, current);
+            } else if (current.contains("Stronger than")) {
+                Matcher matcher = Pattern.compile("\"([^\"]+)\"").matcher(current);
+                List<String> facts = new ArrayList<>();
+                String weakerPriority = null;
+    
+                while (matcher.find()) {
+                    String fact = matcher.group(1).trim();
+                    if (fact.startsWith("urgency(")) {
+                        weakerPriority = factToNaturalMap.getOrDefault(fact, fact);
+                    } else {
+                        String mapped = factToNaturalMap.getOrDefault(fact, fact);
+                        if (!facts.contains(mapped)) {
+                            facts.add(mapped);
+                        }
+                    }
+                }
+    
+                if (lastPriority != null && weakerPriority != null && !facts.isEmpty()) {
+                    StringBuilder phrase = new StringBuilder();
+                    phrase.append(lastPriority)
+                          .append(" is stronger than ")
+                          .append(weakerPriority)
+                          .append(" also supported by the fact that ");
+                    for (int j = 0; j < facts.size(); j++) {
+                        phrase.append(facts.get(j));
+                        if (j < facts.size() - 2) {
+                            phrase.append(", ");
+                        } else if (j == facts.size() - 2) {
+                            phrase.append(" and ");
+                        }
+                    }
+                    phrase.append(".");
+                    output.add(phrase.toString());
+                } else {
+                    output.add(current); // fallback
+                }
+            }
+        }
+    
+        return output;
+    }
+    
+    
+    
+    
     /**
  * Deduplicate parsed results based on both main result and supporting facts
  */
@@ -808,7 +906,7 @@ public List<ParsedResult> deduplicateResults(List<ParsedResult> parsedResults) {
                     .filter(fact -> !fact.isEmpty())
                     .collect(Collectors.toList());
             
-            uniqueResults.put(compositeKey, new ParsedResult(mainResult, cleanedFacts));
+            uniqueResults.put(compositeKey, new ParsedResult(mainResult, cleanedFacts ,""));
         }
     }
     

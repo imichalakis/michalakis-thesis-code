@@ -1,5 +1,8 @@
 package com.myproj.firstproj.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Id;
 
 public class WorkflowForm {
@@ -76,6 +79,26 @@ private String processingOptimization; // Memory vs. CPU Priority
  private String resourceForFinal;
  private String processingOptimizationForFinal;
  private String yamlGenerationDecision;
+ private static List<String> comparativeExplanations = new ArrayList<>();
+ private static List<String> urgencyLevels = new ArrayList<>();
+
+ public static void addUrgencyLevel(String level) {
+     urgencyLevels.add(level);
+ }
+ 
+ public static List<String> getUrgencyLevels() {
+     return urgencyLevels;
+ }
+ public static void clearComparativeExplanations() {
+    comparativeExplanations.clear();
+}
+ public static void addComparativeExplanation(String explanation) {
+     comparativeExplanations.add(explanation);
+ }
+ 
+ public static List<String> getComparativeExplanations() {
+     return comparativeExplanations;
+ }
 
  public String getYamlGenerationDecision() {
      return yamlGenerationDecision;

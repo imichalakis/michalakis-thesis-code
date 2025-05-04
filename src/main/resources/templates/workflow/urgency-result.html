@@ -941,13 +941,15 @@
                     <div class="choice-reason-heading">
                         <i class="fas fa-info-circle"></i>
                         WHY THIS CHOICE?
+                        <!-- Additional Reasoning for Comparative Explanations -->
                     </div>
                     <ul class="choice-reason-list">
                         <li th:each="fact : ${result['convertedFact']}" class="choice-reason-item">
                             <span th:text="${fact}"></span>
                         </li>
                     </ul>
-                </div>
+                    
+                </div>    
             </div>
         </div>
         
@@ -1149,5 +1151,53 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
     </script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+            let comparativeList = /*[[${comparativeList}]]*/ [];
+        /*]]>*/
+        </script>
+     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!Array.isArray(comparativeList)) return;
+        
+            // Preprocess: map by starting fragment
+            const longestStatements = {};
+            comparativeList.forEach(statement => {
+                const key = statement.slice(0, 60); // use first 60 chars as grouping key
+                if (!longestStatements[key] || statement.length > longestStatements[key].length) {
+                    longestStatements[key] = statement;
+                }
+            });
+        
+            Object.values(longestStatements).forEach(statement => {
+                let priority = '';
+                if (statement.startsWith('High')) priority = 'high';
+                else if (statement.startsWith('Normal')) priority = 'normal';
+                else if (statement.startsWith('Urgent')) priority = 'urgent';
+        
+                document.querySelectorAll('.recommendation-card').forEach(card => {
+                    const badge = card.querySelector('.priority-badge');
+                    if (!badge) return;
+        
+                    const badgeText = badge.textContent.trim().toLowerCase();
+                    if (badgeText === priority) {
+                        const list = card.querySelector('.choice-reason-list, .reasons-list');
+                        if (list) {
+                            const existingItems = Array.from(list.children).map(li => li.textContent.trim());
+                            if (!existingItems.some(item => item.includes(statement.slice(0, 60)))) {
+                                const li = document.createElement('li');
+                                li.className = list.classList.contains('choice-reason-list') ? 'choice-reason-item' : 'reason-item';
+                                li.textContent = statement;
+                                list.appendChild(li);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+        </script>
+        
+        
+        
 </body>
 </html>
