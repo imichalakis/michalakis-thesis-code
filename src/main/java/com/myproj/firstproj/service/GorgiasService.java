@@ -63,18 +63,26 @@ public class GorgiasService{
      * A helper class to represent the parsed result.
      */
     
-    @PostConstruct
-    public void init() {
-        apiInstance = new ExecuteGorgiasQueryControllerApi();
-        apiInstance.getApiClient().setUsername("imichalakis");
-        apiInstance.getApiClient().setPassword("528528gm@@");
-        apiInstance.getApiClient().setBasePath("http://aiasvm1.amcl.tuc.gr:8085");
-    }
-    @Autowired
-    public GorgiasService(RestTemplate restTemplate, @Value("${gorgias.api.basepath}") String basePath) {
-        this.restTemplate = restTemplate;
-        this.basePath = basePath;
-    }
+    
+     @Autowired
+     public GorgiasService(
+         RestTemplate restTemplate,
+         @Value("${gorgias.api.username}") String username,
+         @Value("${gorgias.api.password}") String password,
+         @Value("${gorgias.api.basepath}") String basePath
+     ) {
+         this.restTemplate = restTemplate;
+         this.basePath = basePath;
+     
+         // Move API initialization here
+         apiInstance = new ExecuteGorgiasQueryControllerApi();
+         apiInstance.getApiClient().setUsername(username);
+         apiInstance.getApiClient().setPassword(password);
+         apiInstance.getApiClient().setBasePath(basePath);
+     }
+     
+ 
+ 
 
     
 
