@@ -820,9 +820,10 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
         factToNaturalMap.put("request_type(ops)", "the request is related to the Ministry of Digital Governance");
         factToNaturalMap.put("contract_with_contractor(yes)", "an active contract exists with an external contractor");
         factToNaturalMap.put("contract_with_contractor(no)", "there is no current contract with any external contractor");
-        factToNaturalMap.put("highbasedondate", "based on the date there is high request for deployment");
-        factToNaturalMap.put("urgentbasedondate", "based on the date there is urgent request for deployment");
-        factToNaturalMap.put("normalbasedondate", "based on the date there is normal request for deployment");
+        factToNaturalMap.put("highbasedondate", "the deployment date is approaching soon, indicating a high priority");
+        factToNaturalMap.put("urgentbasedondate", "the deployment is urgently needed based on how close the date is");
+        factToNaturalMap.put("normalbasedondate", "the deployment request appears to be on a normal schedule based on the date");
+
         factToNaturalMap.put("urgency(normal)", "Normal priority");
         factToNaturalMap.put("urgency(urgent)", "Urgent priority");
         factToNaturalMap.put("urgency(high)", "High priority");

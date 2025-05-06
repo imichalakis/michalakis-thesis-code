@@ -1102,12 +1102,10 @@ factMappings.put("runcustomapps", "The main objective is to deploy and manage cu
     // Connectivity Requirements
     factMappings.put("connectivity(true)", "The system requires a direct connection to A.A.D.E. infrastructure for tax or government services.");
     factMappings.put("connectivity(false)", "The system operates independently without direct connectivity to A.A.D.E.");
-    factMappings.put("urgentbasedondate", "Based on the date there is immidiate-urgent request for deployment ");
-    factMappings.put("normalbasedondate", "Based on the date there is a normal-urgency request for deployment ");
-   // factMappings.put("request_type(other)", "It's a request type from Other Public Sectors - Not from Ministry Of Digital Governance");
-   // factMappings.put("request_type(ops)", "It's a request type from Ministry Of Digital Governance");
+    factMappings.put("highbasedondate", "The deployment date is approaching soon, indicating a high priority.");
+    factMappings.put("urgentbasedondate", "The deployment is urgently needed based on how close the date is.");
+    factMappings.put("normalbasedondate", "The deployment request appears to be on a normal schedule based on the date.");
 
-    factMappings.put("highbasedondate", "Based on the date there is high request for deployment");
      factMappings.put("iaas", "Infrastructure as a Service: Provides virtual machines and network infrastructure with maximum control.");
     factMappings.put("paas", "Platform as a Service: Managed application hosting environment with reduced management overhead.");
     factMappings.put("serverless", "Serverless Computing: Event-driven architecture that automatically scales and charges only for execution time.");
