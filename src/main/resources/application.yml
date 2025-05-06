@@ -24,12 +24,11 @@ spring:
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
-    username: sa
-    password: password
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    
 gorgias:
   api:
-    username: imichalakis
-    password: 528528gm@@
+    username: ${GORGIAS_USER}
+    password: ${GORGIAS_PASS}
     basepath: http://aiasvm1.amcl.tuc.gr:8085
