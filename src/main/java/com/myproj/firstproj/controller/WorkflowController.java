@@ -820,7 +820,7 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
         factToNaturalMap.put("request_type(ops)", "the request is related to the Ministry of Digital Governance");
         factToNaturalMap.put("contract_with_contractor(yes)", "an active contract exists with an external contractor");
         factToNaturalMap.put("contract_with_contractor(no)", "there is no current contract with any external contractor");
-        factToNaturalMap.put("highbasedondate", "the deployment date is approaching soon, indicating a high priority");
+        factToNaturalMap.put("highbasedondate", "the deployment date is approaching soon");
         factToNaturalMap.put("urgentbasedondate", "the deployment is urgently needed based on how close the date is");
         factToNaturalMap.put("normalbasedondate", "the deployment request appears to be on a normal schedule based on the date");
 
@@ -858,13 +858,13 @@ public String fullOrNotControl(@ModelAttribute("form") WorkflowForm form,
                     phrase.append(lastPriority)
                           .append(" is stronger than ")
                           .append(weakerPriority)
-                          .append(" also supported by the fact that ");
+                          .append(", also supported by the fact that ");
                     for (int j = 0; j < facts.size(); j++) {
                         phrase.append(facts.get(j));
                         if (j < facts.size() - 2) {
                             phrase.append(", ");
                         } else if (j == facts.size() - 2) {
-                            phrase.append(" and ");
+                            phrase.append(", because ");
                         }
                     }
                     phrase.append(".");
