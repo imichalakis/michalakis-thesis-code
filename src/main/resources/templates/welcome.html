@@ -677,9 +677,17 @@
             </a>
             <div class="ms-auto">
                 <!-- Dynamic connection status with Gorgias Cloud -->
-                <div th:if="${userSession.connectionStatus}" class="connection-badge">
-                    <i class="fas fa-circle-check"></i> Connected to Gorgias Cloud
+                <div th:if="${userSession.connectionStatus}" class="d-flex gap-2 align-items-center">
+                    <div class="connection-badge">
+                        <i class="fas fa-circle-check"></i> Connected to Gorgias Cloud
+                        <img src="/images/gorgias-logo.jpg" alt="Gorgias Cloud" style="height: 1rem; margin-left: 0.5rem;" />
+                    </div>
+                    <div class="connection-badge">
+                        <span>Powered by Raison AI</span>
+                        <img src="/images/raison-logo.jpg" alt="Raison AI" style="height: 1rem; margin-left: 0.25rem;" />
+                    </div>
                 </div>
+                
             </div>
         </div>
     </nav>
